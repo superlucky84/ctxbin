@@ -1,0 +1,40 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules/
+
+# Build output
+/dist/
+/build/
+/coverage/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Tooling caches
+.cache/
+.tmp/
+.tmp-*
+*.tgz
+
+# IDE
+.vscode/
+.idea/
+
+# Agent files (local)
+AGENTS.md
+CLAUDE.md
+.claude
