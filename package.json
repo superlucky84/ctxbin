@@ -1,0 +1,29 @@
+{
+  "name": "ctxbin",
+  "version": "0.1.0",
+  "description": "Minimal deterministic CLI to store/load context, agents, and skills via Redis hashes",
+  "type": "commonjs",
+  "bin": {
+    "ctxbin": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "pnpm build && node --test \"tests/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "tar": "^6.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  }
+}
