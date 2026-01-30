@@ -337,6 +337,7 @@ Extraction:
 * Existing files at the same paths are overwritten; extra files are left untouched.
 * Only regular files and directories are allowed; hardlinks, device files, and other types are rejected.
 * Permissions are normalized: directories `0755`, files `0644`, executable files `0755`; strip setuid/setgid/sticky.
+* Windows note: permission normalization is best-effort on Windows; chmod failures should be ignored.
 * Do not preserve timestamps, owners, or groups.
 
 Size limits:
@@ -379,6 +380,7 @@ Load behavior:
 * Target overwrite policy: existing files at the same paths are overwritten; other files remain untouched.
 * Content-type is not trusted; validate gzip magic bytes and tar parsing before extraction.
 * No retries. Use a temp directory for extraction and atomically move into place only on success; failures must not leave partial files in the target.
+* Windows note: permission normalization is best-effort on Windows; chmod failures should be ignored.
 
 Tarball handling:
 
