@@ -131,6 +131,7 @@ skillref
 - [ ] 오류 메시지 포맷(CTXBIN_ERR) 스냅샷 검증
 - [ ] list 출력 형식/정렬/type 매핑 테스트
 - [ ] Windows 호환성 테스트(권한 처리 best-effort)
+- [ ] Upstash 통합 테스트 추가(CTXBIN_STORE_URL/CTXBIN_STORE_TOKEN 없으면 skip)
 
 ## 구현 메모
 - `AGENTS.md`, `CLAUDE.md`, `.claude`는 `.gitignore`에 등록됨(커밋 제외)
