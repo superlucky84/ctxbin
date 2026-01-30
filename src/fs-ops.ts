@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fail } from "./errors";
+import { safeChmod } from "./chmod";
 
 export async function ensureDir(dir: string): Promise<void> {
   await fs.mkdir(dir, { recursive: true });
@@ -19,14 +20,14 @@ export async function copyDirContents(src: string, dest: string): Promise<void> 
     if (entry.isDirectory()) {
       await copyDirContents(srcPath, destPath);
       const stat = await fs.stat(srcPath);
-      await fs.chmod(destPath, stat.mode & 0o777);
+      await safeChmod(destPath, stat.mode & 0o777);
       continue;
     }
     if (entry.isFile()) {
       await ensureDir(path.dirname(destPath));
       await fs.copyFile(srcPath, destPath);
       const stat = await fs.stat(srcPath);
-      await fs.chmod(destPath, stat.mode & 0o777);
+      await safeChmod(destPath, stat.mode & 0o777);
       continue;
     }
     return fail("IO", `unsupported file type during copy: ${srcPath}`);
