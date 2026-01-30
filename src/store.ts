@@ -4,6 +4,7 @@ export interface Store {
   get(hash: string, field: string): Promise<string | null>;
   set(hash: string, field: string, value: string): Promise<void>;
   delete(hash: string, field: string): Promise<void>;
+  list(hash: string): Promise<Array<{ field: string; value: string }>>;
 }
 
 interface UpstashResponse<T> {
@@ -58,6 +59,24 @@ export function createStore(url: string, token: string): Store {
     },
     async delete(hash, field) {
       await command<number>("HDEL", hash, field);
+    },
+    async list(hash) {
+      const result = await command<unknown>("HGETALL", hash);
+      if (!result) return [];
+      if (!Array.isArray(result)) {
+        return fail("NETWORK", "store response for HGETALL was not an array");
+      }
+      const pairs: Array<{ field: string; value: string }> = [];
+      for (let i = 0; i < result.length; i += 2) {
+        const field = result[i];
+        const value = result[i + 1];
+        if (typeof field !== "string" || typeof value !== "string") {
+          return fail("NETWORK", "store response for HGETALL contained invalid entries");
+        }
+        pairs.push({ field, value });
+      }
+      pairs.sort((a, b) => a.field.localeCompare(b.field));
+      return pairs;
     },
   };
 }

@@ -65,6 +65,16 @@ async function main(): Promise<void> {
   const store = createStore(storeConfig.url, storeConfig.token);
 
   const hash = resolveHash(resource);
+
+  if (command === "list") {
+    if (keyArg) {
+      return fail("INVALID_INPUT", "list does not accept a key");
+    }
+    ensureNoListFlags(opts);
+    await handleList(store, resource, hash);
+    return;
+  }
+
   const key = await resolveKey(resource, keyArg);
 
   switch (command) {
@@ -223,6 +233,27 @@ async function handleDelete(
   await store.delete(hash, key);
 }
 
+async function handleList(
+  store: ReturnType<typeof createStore>,
+  resource: string,
+  hash: string
+): Promise<void> {
+  const entries = await store.list(hash);
+  if (entries.length === 0) return;
+
+  const lines = entries.map(({ field, value }) => {
+    let type = "--value";
+    if (resource === "skill") {
+      const kind = detectSkillValueType(value);
+      if (kind === "skillpack") type = "--dir";
+      if (kind === "skillref") type = "--url";
+    }
+    return `${field}\t${type}`;
+  });
+
+  process.stdout.write(lines.join("\n"));
+}
+
 async function resolveSaveInput(
   resource: string,
   opts: {
@@ -298,6 +329,20 @@ function ensureNoSaveInput(
 ): void {
   if (opts.append || opts.file || opts.value || opts.url || opts.ref || opts.path) {
     return fail("INVALID_INPUT", `${command} does not accept input flags`);
+  }
+}
+
+function ensureNoListFlags(opts: {
+  append: boolean;
+  file?: string;
+  value?: string;
+  dir?: string;
+  url?: string;
+  ref?: string;
+  path?: string;
+}): void {
+  if (opts.append || opts.file || opts.value || opts.dir || opts.url || opts.ref || opts.path) {
+    return fail("INVALID_INPUT", "list does not accept input flags");
   }
 }
 

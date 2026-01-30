@@ -8,6 +8,7 @@
 - 최소 테스트 일부 작성(검증 유틸 중심)
 - 빌드/테스트 재확인 필요(최근 빌드 오류 수정됨)
 - `list` 명령은 문서에만 추가됨(구현 필요)
+- `list` 명령 구현 완료(스토어 list + 출력 규칙 포함)
 - Windows 호환성(권한 처리/테스트)은 문서화만 되어 있고 구현 미반영
 - 계획 문서: `DESIGN.md`
 - 패키지 매니저: **pnpm**
@@ -85,20 +86,20 @@ CLI 파서/입력 규칙
 - [x] 명령 구조 + `ctx` key 추론 규칙
 - [x] 입력 소스 단일화( `--file`/`--value`/stdin/`--dir`/`--url+--ref+--path` )
 - [x] skill 전용 플래그 검증(`--dir`, `--url/--ref/--path`)
-- [ ] `list` 명령 파싱(키/플래그 금지)
+- [x] `list` 명령 파싱(키/플래그 금지)
 
 스토리지(Upstash REST)
 - [x] env/설정 로딩 순서(ENV → ~/.ctxbin/config.json)
 - [x] hash get/set/delete + 네트워크 에러 처리
-- [ ] hash list(HGETALL) 구현
+- [x] hash list(HGETALL) 구현
 
 ctx/agent
 - [x] load/save/delete + 출력 규칙
-- [ ] list 출력(키 + 타입)
+- [x] list 출력(키 + 타입)
 
 skill (문자열)
 - [x] load/save/delete + `--append`
-- [ ] list 출력(키 + 타입)
+- [x] list 출력(키 + 타입)
 
 skillpack
 - [x] tar.gz 생성 규칙(정렬/mtime=0/uid/gid=0/기본 제외, symlink 금지)
