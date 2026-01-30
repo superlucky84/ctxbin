@@ -167,7 +167,7 @@ ctxbin <resource> <command> [key] [flags]
 ```
 
 * `resource`: `ctx | agent | skill`
-* `command`: `load | save | delete`
+* `command`: `load | save | delete | list`
 * `key`: optional **only** for `ctx`
 
 ---
@@ -182,6 +182,14 @@ ctxbin ctx load
 
 # explicit key
 ctxbin ctx load my-project/main
+```
+
+---
+
+### List
+
+```bash
+ctxbin ctx list
 ```
 
 ---
@@ -231,6 +239,12 @@ Behavior:
 ctxbin agent load frontend-reviewer
 ```
 
+### List
+
+```bash
+ctxbin agent list
+```
+
 ### Save
 
 ```bash
@@ -264,6 +278,12 @@ Behavior:
 ```bash
 ctxbin skill load fp-pack
 ctxbin skill load fp-pack --dir ./skills/fp-pack
+```
+
+### List
+
+```bash
+ctxbin skill list
 ```
 
 ### Save
@@ -431,6 +451,17 @@ If the key does not exist, behaves the same as normal `save`.
 * `--dir` on string values → error
 * `load --dir` produces no stdout output
 
+### list
+
+* Print one entry per line: `<key>\t<type>`
+* Entries are sorted lexicographically by key
+* `list` does not accept a key or input flags
+* `type` values:
+  * `--value` for string values (original input source is not retained; `--file` and stdin are reported as `--value`)
+  * `--dir` for skillpacks
+  * `--url` for skillrefs
+* Empty hash → no output
+
 ### save / delete
 
 * No output
@@ -535,6 +566,7 @@ interface Store {
   get(hash: string, field: string): string | null
   set(hash: string, field: string, value: string): void
   delete(hash: string, field: string): void
+  list(hash: string): Array<{ field: string; value: string }>
 }
 ```
 

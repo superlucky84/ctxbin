@@ -7,6 +7,7 @@
 - 핵심 모듈 초안 구현(CLI, store, skillpack, skillref, config)
 - 최소 테스트 일부 작성(검증 유틸 중심)
 - 빌드/테스트 재확인 필요(최근 빌드 오류 수정됨)
+- `list` 명령은 문서에만 추가됨(구현 필요)
 - 계획 문서: `DESIGN.md`
 - 패키지 매니저: **pnpm**
 - 기본 구조: `src/`, `tests/`
@@ -83,16 +84,20 @@ CLI 파서/입력 규칙
 - [x] 명령 구조 + `ctx` key 추론 규칙
 - [x] 입력 소스 단일화( `--file`/`--value`/stdin/`--dir`/`--url+--ref+--path` )
 - [x] skill 전용 플래그 검증(`--dir`, `--url/--ref/--path`)
+- [ ] `list` 명령 파싱(키/플래그 금지)
 
 스토리지(Upstash REST)
 - [x] env/설정 로딩 순서(ENV → ~/.ctxbin/config.json)
 - [x] hash get/set/delete + 네트워크 에러 처리
+- [ ] hash list(HGETALL) 구현
 
 ctx/agent
 - [x] load/save/delete + 출력 규칙
+- [ ] list 출력(키 + 타입)
 
 skill (문자열)
 - [x] load/save/delete + `--append`
+- [ ] list 출력(키 + 타입)
 
 skillpack
 - [x] tar.gz 생성 규칙(정렬/mtime=0/uid/gid=0/기본 제외, symlink 금지)
@@ -121,6 +126,7 @@ skillref
 - [ ] skillpack 추출 권한 정규화 검증
 - [ ] skillref 다운로드 제한(리다이렉트/타임아웃/사이즈)
 - [ ] 오류 메시지 포맷(CTXBIN_ERR) 스냅샷 검증
+- [ ] list 출력 형식/정렬/type 매핑 테스트
 
 ## 구현 메모
 - `AGENTS.md`, `CLAUDE.md`, `.claude`는 `.gitignore`에 등록됨(커밋 제외)
