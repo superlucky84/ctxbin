@@ -33,7 +33,10 @@
   ],
   "scripts": {
     "build": "tsup && node scripts/copy-skills.js",
-    "test": "pnpm build && node --test \"tests/**/*.test.js\""
+    "test": "pnpm build && node --test \"tests/**/*.test.js\"",
+    "clean": "pnpm clean:dist && pnpm clean:module",
+    "clean:dist": "rm -rf dist docs/dist",
+    "clean:module": "rm -rf dist docs/dist node_modules"
   },
   "engines": {
     "node": ">=18"
