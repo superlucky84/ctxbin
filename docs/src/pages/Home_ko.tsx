@@ -38,12 +38,13 @@ export const HomeKo = mount(() => {
         <h2 class="text-indigo-700 dark:text-indigo-300">Agent Workflow (핵심)</h2>
         <p>
           <strong>가장 중요한 사용법입니다.</strong> 에이전트 지시 파일에 add-on을 붙여넣어
-          에이전트가 일관되게 브랜치 컨텍스트를 저장하고 로드하도록 하세요.
+          에이전트가 일관되게 브랜치 컨텍스트를 저장하고 로드하도록 하세요. 이 워크플로는
+          git 기반 프로젝트에서 키 자동 추론을 전제로 합니다.
         </p>
         <ol>
           <li>
             <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank">agent-addon.md</a>를
-            <code>AGENT.md</code> 또는 <code>CLAUDE.md</code>에 복사
+            프로젝트의 에이전트 지침 파일에 복사 (예: <code>AGENT.md</code>, <code>CLAUDE.md</code>, 또는 유사한 파일)
           </li>
           <li>그런 다음 AI 에이전트에게 간단히 요청:</li>
         </ol>
@@ -60,7 +61,11 @@ export const HomeKo = mount(() => {
 
       <div class="mb-12">
         <h2>직접 CLI 사용</h2>
-        <p>커맨드 라인에서 직접 ctxbin을 사용할 수도 있습니다:</p>
+        <p>
+          커맨드 라인에서 직접 ctxbin을 사용할 수도 있습니다. git 저장소 안에서는 키가 자동
+          추론되며, git 밖에서는 명시적으로 키를 넣어야 합니다. 자세한 내용은{' '}
+          <a href="/ko/guide/ctx-commands" class="text-indigo-600 hover:underline">ctx 명령어</a>를 참고하세요.
+        </p>
         <CodeBlock
           language="bash"
           code={`$ npx ctxbin ctx save --value "프로젝트 컨텍스트"

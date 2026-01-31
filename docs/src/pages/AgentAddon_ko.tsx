@@ -1,15 +1,105 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
 
+const addonBlock = [
+  '<!-- BEGIN CTXBIN AGENT ADDON -->',
+  '',
+  '## ctxbin (Context Persistence)',
+  '',
+  'Use `ctxbin ctx save` to store **branch-scoped context** so the next agent can continue without re-explanation.',
+  '> Tip: `npx ctxbin skill load ctxbin` prints the bundled ctxbin skill text',
+  '> so agents can reference the full ctxbin guidance.',
+  '',
+  '### How ctx keys are inferred (when key is omitted)',
+  '```',
+  'key = {project}/{branch}',
+  'project = git repository root directory name',
+  'branch  = git rev-parse --abbrev-ref HEAD',
+  '```',
+  '',
+  '### Save context (preferred)',
+  '```bash',
+  'ctxbin ctx save --value "<summary + next steps + decisions>"',
+  '```',
+  '',
+  '### Save via stdin',
+  '```bash',
+  'echo "<context>" | ctxbin ctx save',
+  '```',
+  '',
+  '### Load context',
+  '```bash',
+  'ctxbin ctx load',
+  '```',
+  '',
+  '### What to include in ctx',
+  '- What changed (summary)',
+  '- What remains (next steps)',
+  '- Completed vs remaining checklist items',
+  '- Important decisions/constraints',
+  '- Files touched and why',
+  '- Failing tests or warnings',
+  '',
+  '### Do not',
+  "- Don't store secrets",
+  "- Don't overwrite with trivial messages",
+  '',
+  '<!-- END CTXBIN AGENT ADDON -->',
+].join('\n');
+
+async function copyAddonBlock(event: Event) {
+  const button = event.currentTarget as HTMLButtonElement | null;
+  const original = button?.textContent || '복사';
+
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(addonBlock);
+    } else if (typeof document !== 'undefined') {
+      const textarea = document.createElement('textarea');
+      textarea.value = addonBlock;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    if (button) {
+      button.textContent = '복사됨';
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1500);
+    }
+  } catch {
+    if (button) {
+      button.textContent = '복사 실패';
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1500);
+    }
+  }
+}
+
 export const AgentAddonKo = mount(() => {
   return () => (
     <div class="page-sheet">
       <h1>AI Agent Addon</h1>
 
       <p>
-        아래 블록을 <code>AGENT.md</code> 또는 <code>CLAUDE.md</code>에 복사/붙여넣기하여
+        아래 블록을 프로젝트의 에이전트 지침 파일에 복사/붙여넣기하여
         AI 에이전트의 ctxbin 컨텍스트 지속성을 활성화하세요.
       </p>
+
+      <div class="relative mb-8">
+        <button
+          type="button"
+          onClick={copyAddonBlock}
+          class="absolute right-3 top-3 z-10 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+        >
+          복사
+        </button>
+        <CodeBlock language="text" code={addonBlock} />
+      </div>
 
       <h2>ctxbin (컨텍스트 지속성)</h2>
 

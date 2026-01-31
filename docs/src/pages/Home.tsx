@@ -38,12 +38,13 @@ export const Home = mount(() => {
         <h2 class="text-indigo-700 dark:text-indigo-300">Agent Workflow (Core)</h2>
         <p>
           <strong>This is the most important usage.</strong> Paste the add-on into your agent instruction file
-          so agents consistently save and load branch context.
+          so agents consistently save and load branch context. This workflow assumes a git-based project
+          for automatic key inference.
         </p>
         <ol>
           <li>
             Copy <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank">agent-addon.md</a> into
-            your <code>AGENT.md</code> or <code>CLAUDE.md</code>
+            your project's agent instruction file (e.g. <code>AGENT.md</code>, <code>CLAUDE.md</code>, or any equivalent)
           </li>
           <li>Then simply ask your AI agent:</li>
         </ol>
@@ -60,7 +61,11 @@ export const Home = mount(() => {
 
       <div class="mb-12">
         <h2>Direct CLI Usage</h2>
-        <p>You can also use ctxbin directly from the command line:</p>
+        <p>
+          You can also use ctxbin directly from the command line. Inside a git repo, ctx keys are
+          inferred automatically. Outside git, you must pass an explicit key. See{' '}
+          <a href="/guide/ctx-commands" class="text-indigo-600 hover:underline">ctx commands</a> for details.
+        </p>
         <CodeBlock
           language="bash"
           code={`$ npx ctxbin ctx save --value "project context here"

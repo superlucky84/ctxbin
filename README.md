@@ -1,7 +1,8 @@
 # ctxbin
 
 Minimal, deterministic CLI to save and load **context**, **agents**, and **skills** in Upstash Redis hashes.
-It is designed for fast handoff between AI agents working on the same repo/branch.
+It is designed for fast handoff between AI agents working on the same repo/branch,
+with branch-based context keys inferred inside git repositories.
 
 > **Core idea:** ctxbin exists to make AI-agent handoffs reliable and repeatable.
 
@@ -63,7 +64,7 @@ ctxbin ctx list
 ctxbin ctx delete
 ```
 
-When the key is omitted (inside a git repo):
+When the key is omitted, ctxbin infers it **only inside a git repository**:
 ```
 key = {project}/{branch}
 project = git repository root directory name

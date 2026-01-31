@@ -34,6 +34,7 @@ $ ctxbin ctx load my-project/main`}
 
       <h2>Save (교체)</h2>
       <p>새 컨텍스트 저장, 기존 값 교체:</p>
+      <p>명시적 키는 git 밖에서 유용하지만 일반적인 사용에는 비추천입니다.</p>
       <CodeBlock
         language="bash"
         code={`# --value 플래그에서

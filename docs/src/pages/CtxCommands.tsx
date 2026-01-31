@@ -34,6 +34,9 @@ $ ctxbin ctx load my-project/main`}
 
       <h2>Save (Replace)</h2>
       <p>Save new context, replacing any existing value:</p>
+      <p>
+        Explicit keys are useful outside git repos, but are not recommended for normal use.
+      </p>
       <CodeBlock
         language="bash"
         code={`# From --value flag
