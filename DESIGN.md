@@ -170,6 +170,10 @@ ctxbin <resource> <command> [key] [flags]
 * `command`: `load | save | delete | list`
 * `key`: optional **only** for `ctx`
 
+Global flags:
+
+* `--version` / `-v` prints the CLI version and exits
+
 ---
 
 ## ctx Commands
@@ -312,6 +316,21 @@ Behavior:
 
 * Maps to `HDEL skill {skill-name}`
 * Missing key → immediate error
+
+---
+
+## Bundled ctxbin Skill
+
+To improve first-time usability, the packaged CLI includes a bundled skill text at:
+
+```
+dist/skills/ctxbin/SKILL.md
+```
+
+Behavior:
+
+* `ctxbin skill load ctxbin` returns the bundled skill text when Redis is not configured **or** the key is missing.
+* This fallback returns a **string value** (same behavior as `--value`).
 
 ---
 
@@ -555,6 +574,7 @@ Recommendations:
 * Include only build output and required docs via the `files` field (e.g., `dist/`, `README.md`, `LICENSE`).
 * Run build in `prepublishOnly` to ensure published tarballs are always up to date.
 * If using TypeScript, prefer `tsup` (esbuild-powered) for CLI bundling.
+* Copy `skills/ctxbin/SKILL.md` into `dist/skills/ctxbin/SKILL.md` during build for the bundled skill fallback.
 * Recommended `tsup` defaults (CLI-focused):
   * `format: ["cjs"]`, `platform: "node"`, `target: "es2022"`
   * `bundle: true`, `splitting: false`, `sourcemap: true`

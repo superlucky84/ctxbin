@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
 import process from "node:process";
+import path from "node:path";
+import fs from "node:fs/promises";
 import { formatError, fail } from "./errors";
 import { loadConfig, writeConfig } from "./config";
 import { createStore } from "./store";
@@ -17,13 +19,14 @@ async function main(): Promise<void> {
     ({ positionals, values } = parseArgs({
       args: process.argv.slice(2),
       options: {
-        append: { type: "boolean" },
-        file: { type: "string" },
-        value: { type: "string" },
-        dir: { type: "string" },
-        url: { type: "string" },
-        ref: { type: "string" },
-        path: { type: "string" },
+      append: { type: "boolean" },
+      version: { type: "boolean", short: "v" },
+      file: { type: "string" },
+      value: { type: "string" },
+      dir: { type: "string" },
+      url: { type: "string" },
+      ref: { type: "string" },
+      path: { type: "string" },
       },
       allowPositionals: true,
     }));
@@ -32,6 +35,10 @@ async function main(): Promise<void> {
   }
 
   const [resource, command, keyArg, ...extra] = positionals;
+  if (values.version) {
+    process.stdout.write(getVersion() + "\n");
+    return;
+  }
   if (!resource) {
     return fail("INVALID_INPUT", "missing resource");
   }
@@ -61,8 +68,20 @@ async function main(): Promise<void> {
     path: values.path as string | undefined,
   };
 
-  const storeConfig = await loadConfig();
-  const store = createStore(storeConfig.url, storeConfig.token);
+  let store: ReturnType<typeof createStore>;
+  try {
+    const storeConfig = await loadConfig();
+    store = createStore(storeConfig.url, storeConfig.token);
+  } catch (err) {
+    if (resource === "skill" && command === "load" && keyArg === "ctxbin") {
+      const fallback = await loadBundledSkill();
+      if (fallback) {
+        process.stdout.write(fallback);
+        return;
+      }
+    }
+    throw err;
+  }
 
   const hash = resolveHash(resource);
 
@@ -143,6 +162,13 @@ async function handleLoad(
 
   const value = await store.get(hash, key);
   if (value === null) {
+    if (resource === "skill" && key === "ctxbin") {
+      const fallback = await loadBundledSkill();
+      if (fallback) {
+        process.stdout.write(fallback);
+        return;
+      }
+    }
     return fail("NOT_FOUND", `no value for ${hash}:${key}`);
   }
 
@@ -290,3 +316,26 @@ main().catch((err) => {
   process.stderr.write(formatError(err) + "\n");
   process.exit(1);
 });
+
+async function loadBundledSkill(): Promise<string | null> {
+  try {
+    const bundled = path.resolve(__dirname, "skills", "ctxbin", "SKILL.md");
+    return await fs.readFile(bundled, "utf8");
+  } catch {
+    return null;
+  }
+}
+
+function getVersion(): string {
+  try {
+    const pkgPath = path.resolve(__dirname, "..", "package.json");
+    const raw = fs.readFileSync(pkgPath, "utf8");
+    const data = JSON.parse(raw);
+    if (data && typeof data.version === "string") {
+      return data.version;
+    }
+  } catch {
+    // ignore
+  }
+  return "0.0.0";
+}

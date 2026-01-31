@@ -117,3 +117,33 @@ test("skillref default branch tracking payload", () => {
   assert.equal(parsed.path, "skills/example");
   assert.equal(parsed.track, "default");
 });
+
+test("--version prints package version", async () => {
+  const pkg = JSON.parse(await fs.readFile(path.join(__dirname, "..", "package.json"), "utf8"));
+  const { execFileSync } = require("node:child_process");
+  const stdout = execFileSync(
+    "node",
+    [path.join(__dirname, "..", "dist", "cli.js"), "--version"],
+    { encoding: "utf8" }
+  );
+  assert.equal(stdout.trim(), pkg.version);
+});
+
+test("skill load ctxbin falls back to bundled skill text", async () => {
+  const skillPath = path.join(__dirname, "..", "dist", "skills", "ctxbin", "SKILL.md");
+  const expected = await fs.readFile(skillPath, "utf8");
+  const { execFileSync } = require("node:child_process");
+  const stdout = execFileSync(
+    "node",
+    [path.join(__dirname, "..", "dist", "cli.js"), "skill", "load", "ctxbin"],
+    {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        CTXBIN_STORE_URL: "invalid",
+        CTXBIN_STORE_TOKEN: "",
+      },
+    }
+  );
+  assert.equal(stdout.trim(), expected.trim());
+});

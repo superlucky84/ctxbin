@@ -10,6 +10,7 @@
 - `list` 명령 구현 완료(스토어 list + 출력 규칙 포함)
 - Windows 호환성(권한 처리 best-effort) 구현 완료, 테스트는 미작성
 - skillref 기본 브랜치 추적(`--ref` 생략) 구현 완료
+- ctxbin 번들 skill 로드 fallback 구현 완료
 - skillref 기본 브랜치 추적(`--ref` 생략) 구현 완료, 테스트 보강 필요
 - 계획 문서: `DESIGN.md`
 - 패키지 매니저: **pnpm**
@@ -101,6 +102,7 @@ ctx/agent
 skill (문자열)
 - [x] load/save/delete + `--append`
 - [x] list 출력(키 + 타입)
+- [x] `skill load ctxbin` 로컬 번들 fallback
 
 skillpack
 - [x] tar.gz 생성 규칙(정렬/mtime=0/uid/gid=0/기본 제외, symlink 금지)
@@ -137,6 +139,8 @@ skillref
 - [ ] Windows 호환성 테스트(권한 처리 best-effort)
 - [ ] Upstash 통합 테스트 추가(CTXBIN_STORE_URL/CTXBIN_STORE_TOKEN 없으면 skip)
 - [x] skillref default branch 추적 시나리오 테스트
+- [x] `--version` 출력 테스트
+- [x] `skill load ctxbin` 번들 fallback 테스트
 
 ## 구현 메모
 - `AGENTS.md`, `CLAUDE.md`, `.claude`는 `.gitignore`에 등록됨(커밋 제외)

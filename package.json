@@ -8,11 +8,13 @@
   },
   "files": [
     "dist",
+    "skills",
+    "agent-addon.md",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node scripts/copy-skills.js",
     "test": "pnpm build && node --test \"tests/**/*.test.js\""
   },
   "engines": {
