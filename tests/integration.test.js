@@ -4,6 +4,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
 const http = require("node:http");
+const crypto = require("node:crypto");
 const { execFileSync, spawn } = require("node:child_process");
 
 const {
@@ -448,10 +449,77 @@ test("upstash integration (manual)", {
     CTXBIN_STORE_TOKEN: process.env.CTXBIN_STORE_TOKEN,
   };
 
-  const save = await runCli(["ctx", "save", "integration-test", "--value", "hello"], { env });
-  assert.equal(save.status, 0, save.stderr);
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const ctxKey = `integration-ctx-${suffix}`;
+  const agentKey = `integration-agent-${suffix}`;
+  const skillKey = `integration-skill-${suffix}`;
+  const skillpackKey = `integration-skillpack-${suffix}`;
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-upstash-"));
+  const srcDir = path.join(tmp, "skillpack-src");
+  const outDir = path.join(tmp, "skillpack-out");
 
-  const load = await runCli(["ctx", "load", "integration-test"], { env });
-  assert.equal(load.status, 0, load.stderr);
-  assert.equal(load.stdout.trim(), "hello");
+  try {
+    // ctx save/load + append
+    let result = await runCli(["ctx", "save", ctxKey, "--value", "hello"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    result = await runCli(["ctx", "load", ctxKey], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), "hello");
+
+    result = await runCli(["ctx", "save", ctxKey, "--append", "--value", "more"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    result = await runCli(["ctx", "load", ctxKey], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), "hello\n\nmore");
+
+    // ctx list contains key
+    result = await runCli(["ctx", "list"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    const ctxLines = result.stdout.trim().split("\n");
+    assert.ok(ctxLines.some((line) => line === `${ctxKey}\t--value`));
+
+    // agent save/load/delete
+    result = await runCli(["agent", "save", agentKey, "--value", "agent"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    result = await runCli(["agent", "load", agentKey], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), "agent");
+    result = await runCli(["agent", "delete", agentKey], { env });
+    assert.equal(result.status, 0, result.stderr);
+
+    // skill string save/load/list/delete
+    result = await runCli(["skill", "save", skillKey, "--value", "skill"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    result = await runCli(["skill", "load", skillKey], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), "skill");
+    result = await runCli(["skill", "list"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    const skillLines = result.stdout.trim().split("\n");
+    assert.ok(skillLines.some((line) => line === `${skillKey}\t--value`));
+
+    // skillpack save/load
+    await fs.mkdir(srcDir);
+    await fs.writeFile(path.join(srcDir, "note.txt"), "skillpack");
+    result = await runCli(["skill", "save", skillpackKey, "--dir", srcDir], { env });
+    assert.equal(result.status, 0, result.stderr);
+    result = await runCli(["skill", "load", skillpackKey, "--dir", outDir], { env });
+    assert.equal(result.status, 0, result.stderr);
+    const contents = await fs.readFile(path.join(outDir, "note.txt"), "utf8");
+    assert.equal(contents, "skillpack");
+
+    result = await runCli(["skill", "delete", skillKey], { env });
+    assert.equal(result.status, 0, result.stderr);
+    result = await runCli(["skill", "delete", skillpackKey], { env });
+    assert.equal(result.status, 0, result.stderr);
+
+    // delete ctx and verify missing
+    result = await runCli(["ctx", "delete", ctxKey], { env });
+    assert.equal(result.status, 0, result.stderr);
+    result = await runCli(["ctx", "load", ctxKey], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR NOT_FOUND:/);
+  } finally {
+    await fs.rm(tmp, { recursive: true, force: true });
+  }
 });
