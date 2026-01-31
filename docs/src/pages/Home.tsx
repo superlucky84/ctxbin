@@ -6,7 +6,9 @@ export const Home = mount(() => {
   return () => (
     <div class="page-sheet">
       <div class="text-center py-12">
-        <span class="text-6xl mb-6 block">📦</span>
+        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center bg-white/80 shadow-md ring-1 ring-gray-200 dark:bg-white/10 dark:ring-gray-700 md:h-24 md:w-24">
+          <img src="/ctxbin/ctxbin.png" alt="ctxbin logo" class="h-14 w-14 md:h-16 md:w-16" />
+        </div>
         <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
           ctxbin
         </h1>
@@ -58,6 +60,9 @@ export const Home = mount(() => {
           and how to use <code>ctxbin ctx save/load</code> correctly.
         </p>
       </div>
+      <p class="text-sm text-indigo-700/80 dark:text-indigo-200/80 mb-12">
+        Tip: <code>npx ctxbin skill load ctxbin</code> prints the bundled ctxbin skill text.
+      </p>
 
       <div class="mb-12">
         <h2>Direct CLI Usage</h2>

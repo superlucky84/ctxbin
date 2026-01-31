@@ -18,7 +18,7 @@ export const Header = mount(renew => {
               }}
               class="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <span class="text-2xl">📦</span>
+              <img src="/ctxbin/ctxbin.png" alt="StateRef Logo" class="w-8 h-8 rounded-lg" />
               <span class="text-xl font-bold text-gray-900 dark:text-white">
                 ctxbin
               </span>

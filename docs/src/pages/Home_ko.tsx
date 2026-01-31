@@ -6,7 +6,9 @@ export const HomeKo = mount(() => {
   return () => (
     <div class="page-sheet">
       <div class="text-center py-12">
-        <span class="text-6xl mb-6 block">📦</span>
+        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center bg-white/80 shadow-md ring-1 ring-gray-200 dark:bg-white/10 dark:ring-gray-700 md:h-24 md:w-24">
+          <img src="/ctxbin/ctxbin.png" alt="ctxbin logo" class="h-14 w-14 md:h-16 md:w-16" />
+        </div>
         <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
           ctxbin
         </h1>
@@ -58,6 +60,9 @@ export const HomeKo = mount(() => {
           <code>ctxbin ctx save/load</code> 사용법을 알려줍니다.
         </p>
       </div>
+      <p class="text-sm text-indigo-700/80 dark:text-indigo-200/80 mb-12">
+        팁: <code>npx ctxbin skill load ctxbin</code> 명령으로 번들된 ctxbin 스킬 텍스트를 볼 수 있습니다.
+      </p>
 
       <div class="mb-12">
         <h2>직접 CLI 사용</h2>

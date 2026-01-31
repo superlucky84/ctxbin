@@ -117,7 +117,7 @@ ctxbin skill save fp-pack \
 > `skill load` for skillpack/skillref requires `--dir`.
 
 ## Built-in guidance
-Print the bundled ctxbin skill text:
+Print the bundled ctxbin skill text (built-in):
 ```bash
 npx ctxbin skill load ctxbin
 ```
