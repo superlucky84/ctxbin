@@ -25,7 +25,7 @@ ctxbin-skillref@1
       <h2>Skillref 저장 (고정)</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill save my-skill \\
+        code={`$ npx ctxbin skill save my-skill \\
   --url https://github.com/OWNER/REPO \\
   --ref a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0 \\
   --path skills/my-skill`}
@@ -34,7 +34,7 @@ ctxbin-skillref@1
       <h2>Skillref 저장 (기본 브랜치 추적)</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill save my-skill \\
+        code={`$ npx ctxbin skill save my-skill \\
   --url https://github.com/OWNER/REPO \\
   --path skills/my-skill`}
       />
@@ -43,7 +43,7 @@ ctxbin-skillref@1
       <h2>Skillref 로드</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill load my-skill --dir ./output/my-skill`}
+        code={`$ npx ctxbin skill load my-skill --dir ./output/my-skill`}
       />
       <p>skillref 로드에는 <code>--dir</code>이 필수입니다.</p>
 

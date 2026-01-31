@@ -48,7 +48,7 @@ CTXBIN_STORE_TOKEN=your-token-here`}
       </ol>
 
       <p>
-        환경 변수가 설정되면 <code>ctxbin init</code>이 필요하지 않습니다.
+        환경 변수가 설정되면 <code>npx ctxbin init</code>이 필요하지 않습니다.
       </p>
 
       <h2>Upstash 자격 증명 얻기</h2>

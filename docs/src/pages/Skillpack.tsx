@@ -21,13 +21,13 @@ export const Skillpack = mount(() => {
       <h2>Save a Skillpack</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill save fp-pack --dir ./skills/fp-pack`}
+        code={`$ npx ctxbin skill save fp-pack --dir ./skills/fp-pack`}
       />
 
       <h2>Load a Skillpack</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill load fp-pack --dir ./output/fp-pack`}
+        code={`$ npx ctxbin skill load fp-pack --dir ./output/fp-pack`}
       />
       <p>
         <code>--dir</code> is required for skillpack load. Without it, an error is returned.

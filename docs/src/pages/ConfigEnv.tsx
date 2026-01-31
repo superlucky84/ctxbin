@@ -48,7 +48,7 @@ CTXBIN_STORE_TOKEN=your-token-here`}
       </ol>
 
       <p>
-        If environment variables are set, <code>ctxbin init</code> is not required.
+        If environment variables are set, <code>npx ctxbin init</code> is not required.
       </p>
 
       <h2>Getting Upstash Credentials</h2>

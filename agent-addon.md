@@ -6,7 +6,8 @@ Copy/paste the block between the markers below into your AGENT.md / CLAUDE.md.
 
 ## ctxbin (Context Persistence)
 
-Use `ctxbin ctx save` to store **branch‑scoped context** so the next agent can continue without re‑explanation.
+Use `npx ctxbin ...` when running commands in agent workflows.
+Use `npx ctxbin ctx save` to store **branch‑scoped context** so the next agent can continue without re‑explanation.
 > Tip: `npx ctxbin skill load ctxbin` prints the bundled ctxbin skill text
 > so agents can reference the full ctxbin guidance.
 
@@ -19,17 +20,17 @@ branch  = git rev-parse --abbrev-ref HEAD
 
 ### Save context (preferred)
 ```bash
-ctxbin ctx save --value "<summary + next steps + decisions>"
+npx ctxbin ctx save --value "<summary + next steps + decisions>"
 ```
 
 ### Save via stdin
 ```bash
-echo "<context>" | ctxbin ctx save
+echo "<context>" | npx ctxbin ctx save
 ```
 
 ### Load context
 ```bash
-ctxbin ctx load
+npx ctxbin ctx load
 ```
 
 ### What to include in ctx

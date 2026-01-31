@@ -52,12 +52,12 @@ export const Home = mount(() => {
         </ol>
         <CodeBlock
           language="text"
-          code={`"Use ctxbin to save the current context."
-"Use ctxbin to load the current context."`}
+          code={`"Use npx ctxbin to save the current context."
+"Use npx ctxbin to load the current context."`}
         />
         <p>
           The add-on tells agents how to format context (summary, next steps, decisions)
-          and how to use <code>ctxbin ctx save/load</code> correctly.
+          and how to use <code>npx ctxbin ctx save/load</code> correctly.
         </p>
       </div>
       <p class="text-sm text-indigo-700/80 dark:text-indigo-200/80 mb-12">

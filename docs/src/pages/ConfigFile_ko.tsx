@@ -28,7 +28,7 @@ export const ConfigFileKo = mount(() => {
 
       <h2>대화형 설정</h2>
       <p>
-        대화형 설정에는 <code>ctxbin init</code> 사용 (사람만 해당):
+        대화형 설정에는 <code>npx ctxbin init</code> 사용 (사람만 해당):
       </p>
       <CodeBlock
         language="bash"

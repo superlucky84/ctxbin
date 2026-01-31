@@ -52,25 +52,25 @@ export const IntroductionKo = mount(() => {
       <p>브랜치 범위의 프로젝트 컨텍스트. git에서 키를 자동 추론할 수 있습니다.</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx save --value "프로젝트 컨텍스트"
-$ ctxbin ctx load`}
+        code={`$ npx ctxbin ctx save --value "프로젝트 컨텍스트"
+$ npx ctxbin ctx load`}
       />
 
       <h3>2. Agent</h3>
       <p>에이전트 역할 정의. 키는 항상 필수입니다.</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent save reviewer --value "# 에이전트 역할"
-$ ctxbin agent load reviewer`}
+        code={`$ npx ctxbin agent save reviewer --value "# 에이전트 역할"
+$ npx ctxbin agent load reviewer`}
       />
 
       <h3>3. Skill</h3>
       <p>문자열, skillpack (디렉터리), 또는 skillref (GitHub 참조)로 스킬 정의.</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill save my-skill --value "# 스킬 마크다운"
-$ ctxbin skill save my-skill --dir ./skills/my-skill
-$ ctxbin skill save my-skill --url https://github.com/owner/repo --path skills/my-skill`}
+        code={`$ npx ctxbin skill save my-skill --value "# 스킬 마크다운"
+$ npx ctxbin skill save my-skill --dir ./skills/my-skill
+$ npx ctxbin skill save my-skill --url https://github.com/owner/repo --path skills/my-skill`}
       />
 
       <h2>비대화형 보장</h2>

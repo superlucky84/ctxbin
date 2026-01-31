@@ -53,25 +53,25 @@ export const Introduction = mount(() => {
       <p>Branch-scoped project context. Key can be auto-inferred from git.</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx save --value "project context"
-$ ctxbin ctx load`}
+        code={`$ npx ctxbin ctx save --value "project context"
+$ npx ctxbin ctx load`}
       />
 
       <h3>2. Agent</h3>
       <p>Agent role definitions. Key is always required.</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent save reviewer --value "# Agent role"
-$ ctxbin agent load reviewer`}
+        code={`$ npx ctxbin agent save reviewer --value "# Agent role"
+$ npx ctxbin agent load reviewer`}
       />
 
       <h3>3. Skill</h3>
       <p>Skill definitions as string, skillpack (directory), or skillref (GitHub reference).</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill save my-skill --value "# Skill markdown"
-$ ctxbin skill save my-skill --dir ./skills/my-skill
-$ ctxbin skill save my-skill --url https://github.com/owner/repo --path skills/my-skill`}
+        code={`$ npx ctxbin skill save my-skill --value "# Skill markdown"
+$ npx ctxbin skill save my-skill --dir ./skills/my-skill
+$ npx ctxbin skill save my-skill --url https://github.com/owner/repo --path skills/my-skill`}
       />
 
       <h2>Non-Interactive Guarantee</h2>

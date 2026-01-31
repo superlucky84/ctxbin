@@ -5,6 +5,7 @@ Help agents preserve and restore **branch-scoped project context** so the next a
 
 ## Core Usage (ctx)
 `ctx` automatically derives a key from the current Git repo and branch when omitted.
+Prefer `npx ctxbin ...` when running commands in agent workflows.
 
 ```
 key = {project}/{branch}
@@ -14,54 +15,54 @@ branch  = git rev-parse --abbrev-ref HEAD
 
 ### Save (most common)
 ```bash
-ctxbin ctx save --value "summary / next steps / notes"
+npx ctxbin ctx save --value "summary / next steps / notes"
 ```
 Or via stdin:
 ```bash
-echo "summary" | ctxbin ctx save
+echo "summary" | npx ctxbin ctx save
 ```
 
 ### Load
 ```bash
-ctxbin ctx load
+npx ctxbin ctx load
 ```
 
 ### List
 ```bash
-ctxbin ctx list
+npx ctxbin ctx list
 ```
 
 ### Delete
 ```bash
-ctxbin ctx delete
+npx ctxbin ctx delete
 ```
 
 ## agent Save/Load
 `agent` requires a key and stores **string values only**.
 
 ```bash
-ctxbin agent save reviewer --value "# Agent role"
-ctxbin agent load reviewer
+npx ctxbin agent save reviewer --value "# Agent role"
+npx ctxbin agent load reviewer
 ```
 
 ### List/Delete
 ```bash
-ctxbin agent list
-ctxbin agent delete reviewer
+npx ctxbin agent list
+npx ctxbin agent delete reviewer
 ```
 
 ## skill Save/Load
 `skill` requires a key.
 
 ```bash
-ctxbin skill save my-skill --value "# Skill markdown"
-ctxbin skill load my-skill
+npx ctxbin skill save my-skill --value "# Skill markdown"
+npx ctxbin skill load my-skill
 ```
 
 ### List/Delete
 ```bash
-ctxbin skill list
-ctxbin skill delete my-skill
+npx ctxbin skill list
+npx ctxbin skill delete my-skill
 ```
 
 ## Input Options (`--file`, `--value`, `--dir`, `--url`)
@@ -69,34 +70,34 @@ Use **exactly one** input method.
 
 - `--value`: store a literal string
   ```bash
-  ctxbin ctx save --value "summary"
-  ctxbin agent save reviewer --value "# Agent role"
-  ctxbin skill save my-skill --value "# Skill markdown"
+  npx ctxbin ctx save --value "summary"
+  npx ctxbin agent save reviewer --value "# Agent role"
+  npx ctxbin skill save my-skill --value "# Skill markdown"
   ```
 
 - `--file`: store file contents
   ```bash
-  ctxbin ctx save --file context.md
-  ctxbin agent save reviewer --file agent.md
-  ctxbin skill save my-skill --file SKILL.md
+  npx ctxbin ctx save --file context.md
+  npx ctxbin agent save reviewer --file agent.md
+  npx ctxbin skill save my-skill --file SKILL.md
   ```
 
 - `--dir`: store a directory as a skillpack (skill-only)
   ```bash
-  ctxbin skill save my-skill --dir ./skills/my-skill
-  ctxbin skill load my-skill --dir ./tmp/my-skill
+  npx ctxbin skill save my-skill --dir ./skills/my-skill
+  npx ctxbin skill load my-skill --dir ./tmp/my-skill
   ```
 
 - `--url` (+ `--path`, optional `--ref`): GitHub directory reference (skill-only)
   ```bash
   # Pin to a specific commit
-  ctxbin skill save my-skill \
+  npx ctxbin skill save my-skill \
     --url https://github.com/OWNER/REPO \
     --ref <40-hex-commit-sha> \
     --path skills/my-skill
 
   # Track default branch (omit --ref)
-  ctxbin skill save my-skill \
+  npx ctxbin skill save my-skill \
     --url https://github.com/OWNER/REPO \
     --path skills/my-skill
   ```
@@ -105,9 +106,9 @@ Use **exactly one** input method.
 `--append` works with **string inputs only**.
 
 ```bash
-ctxbin ctx save --append --value "more notes"
-ctxbin agent save reviewer --append --value "extra role details"
-ctxbin skill save my-skill --append --value "extra string"
+npx ctxbin ctx save --append --value "more notes"
+npx ctxbin agent save reviewer --append --value "extra role details"
+npx ctxbin skill save my-skill --append --value "extra string"
 ```
 
 ## What agents must include in ctx
@@ -126,4 +127,3 @@ Context is stored in Upstash Redis hash `ctx` under field `{project}/{branch}`.
 ## Do Not
 - Don’t store secrets
 - Don’t overwrite with trivial messages
-

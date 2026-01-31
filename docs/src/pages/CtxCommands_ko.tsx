@@ -26,10 +26,10 @@ branch  = git rev-parse --abbrev-ref HEAD`}
       <CodeBlock
         language="bash"
         code={`# 자동 키 (git에서 추론)
-$ ctxbin ctx load
+$ npx ctxbin ctx load
 
 # 명시적 키
-$ ctxbin ctx load my-project/main`}
+$ npx ctxbin ctx load my-project/main`}
       />
 
       <h2>Save (교체)</h2>
@@ -38,24 +38,24 @@ $ ctxbin ctx load my-project/main`}
       <CodeBlock
         language="bash"
         code={`# --value 플래그에서
-$ ctxbin ctx save --value "마크다운 문자열"
+$ npx ctxbin ctx save --value "마크다운 문자열"
 
 # 파일에서
-$ ctxbin ctx save --file context.md
+$ npx ctxbin ctx save --file context.md
 
 # stdin에서
-$ cat context.md | ctxbin ctx save
+$ cat context.md | npx ctxbin ctx save
 
 # 명시적 키 사용
-$ ctxbin ctx save my-project/main --file context.md`}
+$ npx ctxbin ctx save my-project/main --file context.md`}
       />
 
       <h2>Save (추가)</h2>
       <p>기존 컨텍스트에 추가 (구분자: <code>\n\n</code>):</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx save --append --file note.md
-$ ctxbin ctx save my-project/main --append --value "추가 노트"`}
+        code={`$ npx ctxbin ctx save --append --file note.md
+$ npx ctxbin ctx save my-project/main --append --value "추가 노트"`}
       />
       <p>키가 존재하지 않으면 일반 save와 동일하게 동작합니다.</p>
 
@@ -63,7 +63,7 @@ $ ctxbin ctx save my-project/main --append --value "추가 노트"`}
       <p>저장된 모든 컨텍스트 목록:</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx list
+        code={`$ npx ctxbin ctx list
 my-project/main    --value
 my-project/feature --value`}
       />
@@ -73,10 +73,10 @@ my-project/feature --value`}
       <CodeBlock
         language="bash"
         code={`# 자동 키
-$ ctxbin ctx delete
+$ npx ctxbin ctx delete
 
 # 명시적 키
-$ ctxbin ctx delete my-project/main`}
+$ npx ctxbin ctx delete my-project/main`}
       />
       <ul>
         <li>확인 프롬프트 없음 (에이전트 안전)</li>

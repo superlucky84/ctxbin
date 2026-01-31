@@ -6,7 +6,7 @@ const addonBlock = [
   '',
   '## ctxbin (Context Persistence)',
   '',
-  'Use `ctxbin ctx save` to store **branch-scoped context** so the next agent can continue without re-explanation.',
+  'Use `npx ctxbin ctx save` to store **branch-scoped context** so the next agent can continue without re-explanation.',
   '> Tip: `npx ctxbin skill load ctxbin` prints the bundled ctxbin skill text',
   '> so agents can reference the full ctxbin guidance.',
   '',
@@ -19,17 +19,17 @@ const addonBlock = [
   '',
   '### Save context (preferred)',
   '```bash',
-  'ctxbin ctx save --value "<summary + next steps + decisions>"',
+  'npx ctxbin ctx save --value "<summary + next steps + decisions>"',
   '```',
   '',
   '### Save via stdin',
   '```bash',
-  'echo "<context>" | ctxbin ctx save',
+  'echo "<context>" | npx ctxbin ctx save',
   '```',
   '',
   '### Load context',
   '```bash',
-  'ctxbin ctx load',
+  'npx ctxbin ctx load',
   '```',
   '',
   '### What to include in ctx',
@@ -104,7 +104,7 @@ export const AgentAddonKo = mount(() => {
       <h2>ctxbin (컨텍스트 지속성)</h2>
 
       <p>
-        <code>ctxbin ctx save</code>를 사용하여 <strong>브랜치 범위 컨텍스트</strong>를 저장하면
+        <code>npx ctxbin ctx save</code>를 사용하여 <strong>브랜치 범위 컨텍스트</strong>를 저장하면
         다음 에이전트가 재설명 없이 작업을 계속할 수 있습니다.
       </p>
 
@@ -124,19 +124,19 @@ branch  = git rev-parse --abbrev-ref HEAD`}
       <h3>컨텍스트 저장 (권장)</h3>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx save --value "<요약 + 다음 단계 + 결정사항>"`}
+        code={`$ npx ctxbin ctx save --value "<요약 + 다음 단계 + 결정사항>"`}
       />
 
       <h3>stdin으로 저장</h3>
       <CodeBlock
         language="bash"
-        code={`$ echo "<context>" | ctxbin ctx save`}
+        code={`$ echo "<context>" | npx ctxbin ctx save`}
       />
 
       <h3>컨텍스트 로드</h3>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx load`}
+        code={`$ npx ctxbin ctx load`}
       />
 
       <h2>ctx에 포함할 내용</h2>

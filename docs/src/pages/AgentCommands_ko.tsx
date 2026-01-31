@@ -14,29 +14,29 @@ export const AgentCommandsKo = mount(() => {
       <h2>Load</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent load frontend-reviewer`}
+        code={`$ npx ctxbin agent load frontend-reviewer`}
       />
 
       <h2>Save</h2>
       <CodeBlock
         language="bash"
         code={`# --value 플래그에서
-$ ctxbin agent save frontend-reviewer --value "# 에이전트 역할 마크다운"
+$ npx ctxbin agent save frontend-reviewer --value "# 에이전트 역할 마크다운"
 
 # 파일에서
-$ ctxbin agent save frontend-reviewer --file agent.md`}
+$ npx ctxbin agent save frontend-reviewer --file agent.md`}
       />
 
       <h2>Append</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent save frontend-reviewer --append --file addition.md`}
+        code={`$ npx ctxbin agent save frontend-reviewer --append --file addition.md`}
       />
 
       <h2>List</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent list
+        code={`$ npx ctxbin agent list
 frontend-reviewer --value
 backend-reviewer  --value`}
       />
@@ -44,7 +44,7 @@ backend-reviewer  --value`}
       <h2>Delete</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent delete frontend-reviewer`}
+        code={`$ npx ctxbin agent delete frontend-reviewer`}
       />
       <ul>
         <li>키가 없으면 즉시 에러</li>

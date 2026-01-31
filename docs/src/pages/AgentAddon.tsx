@@ -6,7 +6,7 @@ const addonBlock = [
   '',
   '## ctxbin (Context Persistence)',
   '',
-  'Use `ctxbin ctx save` to store **branch-scoped context** so the next agent can continue without re-explanation.',
+  'Use `npx ctxbin ctx save` to store **branch-scoped context** so the next agent can continue without re-explanation.',
   '> Tip: `npx ctxbin skill load ctxbin` prints the bundled ctxbin skill text',
   '> so agents can reference the full ctxbin guidance.',
   '',
@@ -19,17 +19,17 @@ const addonBlock = [
   '',
   '### Save context (preferred)',
   '```bash',
-  'ctxbin ctx save --value "<summary + next steps + decisions>"',
+  'npx ctxbin ctx save --value "<summary + next steps + decisions>"',
   '```',
   '',
   '### Save via stdin',
   '```bash',
-  'echo "<context>" | ctxbin ctx save',
+  'echo "<context>" | npx ctxbin ctx save',
   '```',
   '',
   '### Load context',
   '```bash',
-  'ctxbin ctx load',
+  'npx ctxbin ctx load',
   '```',
   '',
   '### What to include in ctx',
@@ -104,7 +104,7 @@ export const AgentAddon = mount(() => {
       <h2>ctxbin (Context Persistence)</h2>
 
       <p>
-        Use <code>ctxbin ctx save</code> to store <strong>branch-scoped context</strong> so the next
+        Use <code>npx ctxbin ctx save</code> to store <strong>branch-scoped context</strong> so the next
         agent can continue without re-explanation.
       </p>
 
@@ -124,19 +124,19 @@ branch  = git rev-parse --abbrev-ref HEAD`}
       <h3>Save context (preferred)</h3>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx save --value "<summary + next steps + decisions>"`}
+        code={`$ npx ctxbin ctx save --value "<summary + next steps + decisions>"`}
       />
 
       <h3>Save via stdin</h3>
       <CodeBlock
         language="bash"
-        code={`$ echo "<context>" | ctxbin ctx save`}
+        code={`$ echo "<context>" | npx ctxbin ctx save`}
       />
 
       <h3>Load context</h3>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx load`}
+        code={`$ npx ctxbin ctx load`}
       />
 
       <h2>What to include in ctx</h2>

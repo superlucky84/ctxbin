@@ -20,24 +20,24 @@ export const SkillCommandsKo = mount(() => {
       <CodeBlock
         language="bash"
         code={`# 문자열 값 (stdout으로 출력)
-$ ctxbin skill load my-skill
+$ npx ctxbin skill load my-skill
 
 # Skillpack 또는 skillref (디렉터리로 추출)
-$ ctxbin skill load my-skill --dir ./skills/my-skill`}
+$ npx ctxbin skill load my-skill --dir ./skills/my-skill`}
       />
 
       <h2>Save (문자열)</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill save my-skill --value "# 스킬 마크다운"
-$ ctxbin skill save my-skill --file SKILL.md`}
+        code={`$ npx ctxbin skill save my-skill --value "# 스킬 마크다운"
+$ npx ctxbin skill save my-skill --file SKILL.md`}
       />
 
       <h2>Save (Skillpack)</h2>
       <p>디렉터리를 skillpack으로 번들:</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill save my-skill --dir ./skills/my-skill`}
+        code={`$ npx ctxbin skill save my-skill --dir ./skills/my-skill`}
       />
 
       <h2>Save (Skillref)</h2>
@@ -45,13 +45,13 @@ $ ctxbin skill save my-skill --file SKILL.md`}
       <CodeBlock
         language="bash"
         code={`# 특정 커밋에 고정
-$ ctxbin skill save my-skill \\
+$ npx ctxbin skill save my-skill \\
   --url https://github.com/OWNER/REPO \\
   --ref <40자-16진수-커밋-sha> \\
   --path skills/my-skill
 
 # 기본 브랜치 추적
-$ ctxbin skill save my-skill \\
+$ npx ctxbin skill save my-skill \\
   --url https://github.com/OWNER/REPO \\
   --path skills/my-skill`}
       />
@@ -60,13 +60,13 @@ $ ctxbin skill save my-skill \\
       <p>문자열 값에서만 작동:</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill save my-skill --append --value "추가 컨텐츠"`}
+        code={`$ npx ctxbin skill save my-skill --append --value "추가 컨텐츠"`}
       />
 
       <h2>List</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill list
+        code={`$ npx ctxbin skill list
 my-skill   --value
 fp-pack    --dir
 react-lib  --url`}
@@ -75,12 +75,12 @@ react-lib  --url`}
       <h2>Delete</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin skill delete my-skill`}
+        code={`$ npx ctxbin skill delete my-skill`}
       />
 
       <h2>번들된 ctxbin 스킬</h2>
       <p>
-        특별한 폴백: Redis가 설정되지 않았을 때도 <code>ctxbin skill load ctxbin</code>은
+        특별한 폴백: Redis가 설정되지 않았을 때도 <code>npx ctxbin skill load ctxbin</code>은
         번들된 스킬 텍스트를 반환합니다.
       </p>
       <CodeBlock

@@ -26,10 +26,10 @@ branch  = git rev-parse --abbrev-ref HEAD`}
       <CodeBlock
         language="bash"
         code={`# Auto-key (inferred from git)
-$ ctxbin ctx load
+$ npx ctxbin ctx load
 
 # Explicit key
-$ ctxbin ctx load my-project/main`}
+$ npx ctxbin ctx load my-project/main`}
       />
 
       <h2>Save (Replace)</h2>
@@ -40,24 +40,24 @@ $ ctxbin ctx load my-project/main`}
       <CodeBlock
         language="bash"
         code={`# From --value flag
-$ ctxbin ctx save --value "markdown string"
+$ npx ctxbin ctx save --value "markdown string"
 
 # From file
-$ ctxbin ctx save --file context.md
+$ npx ctxbin ctx save --file context.md
 
 # From stdin
-$ cat context.md | ctxbin ctx save
+$ cat context.md | npx ctxbin ctx save
 
 # With explicit key
-$ ctxbin ctx save my-project/main --file context.md`}
+$ npx ctxbin ctx save my-project/main --file context.md`}
       />
 
       <h2>Save (Append)</h2>
       <p>Append to existing context (separator: <code>\n\n</code>):</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx save --append --file note.md
-$ ctxbin ctx save my-project/main --append --value "additional notes"`}
+        code={`$ npx ctxbin ctx save --append --file note.md
+$ npx ctxbin ctx save my-project/main --append --value "additional notes"`}
       />
       <p>If the key does not exist, behaves the same as normal save.</p>
 
@@ -65,7 +65,7 @@ $ ctxbin ctx save my-project/main --append --value "additional notes"`}
       <p>List all stored contexts:</p>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin ctx list
+        code={`$ npx ctxbin ctx list
 my-project/main    --value
 my-project/feature --value`}
       />
@@ -75,10 +75,10 @@ my-project/feature --value`}
       <CodeBlock
         language="bash"
         code={`# Auto-key
-$ ctxbin ctx delete
+$ npx ctxbin ctx delete
 
 # Explicit key
-$ ctxbin ctx delete my-project/main`}
+$ npx ctxbin ctx delete my-project/main`}
       />
       <ul>
         <li>No confirmation prompt (agent-safe)</li>

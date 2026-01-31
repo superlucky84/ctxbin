@@ -28,7 +28,7 @@ export const ConfigFile = mount(() => {
 
       <h2>Interactive Setup</h2>
       <p>
-        Use <code>ctxbin init</code> for interactive setup (human-only):
+        Use <code>npx ctxbin init</code> for interactive setup (human-only):
       </p>
       <CodeBlock
         language="bash"

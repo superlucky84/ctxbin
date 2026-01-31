@@ -14,29 +14,29 @@ export const AgentCommands = mount(() => {
       <h2>Load</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent load frontend-reviewer`}
+        code={`$ npx ctxbin agent load frontend-reviewer`}
       />
 
       <h2>Save</h2>
       <CodeBlock
         language="bash"
         code={`# From --value flag
-$ ctxbin agent save frontend-reviewer --value "# Agent role markdown"
+$ npx ctxbin agent save frontend-reviewer --value "# Agent role markdown"
 
 # From file
-$ ctxbin agent save frontend-reviewer --file agent.md`}
+$ npx ctxbin agent save frontend-reviewer --file agent.md`}
       />
 
       <h2>Append</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent save frontend-reviewer --append --file addition.md`}
+        code={`$ npx ctxbin agent save frontend-reviewer --append --file addition.md`}
       />
 
       <h2>List</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent list
+        code={`$ npx ctxbin agent list
 frontend-reviewer --value
 backend-reviewer  --value`}
       />
@@ -44,7 +44,7 @@ backend-reviewer  --value`}
       <h2>Delete</h2>
       <CodeBlock
         language="bash"
-        code={`$ ctxbin agent delete frontend-reviewer`}
+        code={`$ npx ctxbin agent delete frontend-reviewer`}
       />
       <ul>
         <li>Missing key results in immediate error</li>

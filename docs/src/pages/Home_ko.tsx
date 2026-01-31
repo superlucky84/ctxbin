@@ -52,12 +52,12 @@ export const HomeKo = mount(() => {
         </ol>
         <CodeBlock
           language="text"
-          code={`"ctxbin으로 현재 컨텍스트를 저장해줘."
-"ctxbin으로 현재 컨텍스트를 불러와줘."`}
+          code={`"npx ctxbin으로 현재 컨텍스트를 저장해줘."
+"npx ctxbin으로 현재 컨텍스트를 불러와줘."`}
         />
         <p>
           add-on은 에이전트에게 컨텍스트 형식(요약, 다음 단계, 결정사항)과
-          <code>ctxbin ctx save/load</code> 사용법을 알려줍니다.
+          <code>npx ctxbin ctx save/load</code> 사용법을 알려줍니다.
         </p>
       </div>
       <p class="text-sm text-indigo-700/80 dark:text-indigo-200/80 mb-12">

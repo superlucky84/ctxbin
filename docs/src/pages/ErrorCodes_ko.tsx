@@ -88,10 +88,10 @@ CTXBIN_ERR TYPE_MISMATCH: --dir cannot be used with string values`}
       <CodeBlock
         language="bash"
         code={`# 에러 코드 추출
-$ ctxbin ctx load 2>&1 | grep -oP 'CTXBIN_ERR \\K[A-Z_]+'
+$ npx ctxbin ctx load 2>&1 | grep -oP 'CTXBIN_ERR \\K[A-Z_]+'
 
 # 특정 에러 확인
-$ ctxbin ctx load 2>&1 | grep -q "CTXBIN_ERR NOT_FOUND" && echo "not found"`}
+$ npx ctxbin ctx load 2>&1 | grep -q "CTXBIN_ERR NOT_FOUND" && echo "not found"`}
       />
     </div>
   );
