@@ -130,14 +130,14 @@ skillref
 - [x] 타입 불일치 에러
 
 테스트 확장(완성도 향상)
-- [ ] ctx 키 자동 추론(깃 레포 유무 케이스)
-- [ ] `--append` with 기존 값 유무
-- [ ] skillpack 추출 권한 정규화 검증
-- [ ] skillref 다운로드 제한(리다이렉트/타임아웃/사이즈)
-- [ ] 오류 메시지 포맷(CTXBIN_ERR) 스냅샷 검증
-- [ ] list 출력 형식/정렬/type 매핑 테스트
-- [ ] Windows 호환성 테스트(권한 처리 best-effort)
-- [ ] Upstash 통합 테스트 추가(CTXBIN_STORE_URL/CTXBIN_STORE_TOKEN 없으면 skip)
+- [x] ctx 키 자동 추론(깃 레포 유무 케이스)
+- [x] `--append` with 기존 값 유무
+- [x] skillpack 추출 권한 정규화 검증
+- [x] skillref 다운로드 제한(리다이렉트/타임아웃/사이즈)
+- [x] 오류 메시지 포맷(CTXBIN_ERR) 스냅샷 검증
+- [x] list 출력 형식/정렬/type 매핑 테스트
+- [x] Windows 호환성 테스트(권한 처리 best-effort, Windows에서만 실행)
+- [x] Upstash 통합 테스트 추가(CTXBIN_STORE_URL/CTXBIN_STORE_TOKEN 없으면 skip)
 - [x] skillref default branch 추적 시나리오 테스트
 - [x] `--version` 출력 테스트
 - [x] `skill load ctxbin` 번들 fallback 테스트

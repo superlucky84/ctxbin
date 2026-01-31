@@ -26,13 +26,14 @@ export async function resolveSaveInput(
   const hasDir = typeof opts.dir === "string";
   const urlFlagsUsed = Boolean(opts.url || opts.ref || opts.path);
   const hasUrl = Boolean(opts.url && opts.path);
-  const hasStdin = !stdinIsTTY;
+  const explicitCount = [hasFile, hasValue, hasDir, hasUrl].filter(Boolean).length;
+  const hasStdin = !stdinIsTTY && explicitCount === 0;
 
   if (urlFlagsUsed && !hasUrl) {
     return fail("INVALID_INPUT", "--url and --path must be provided together");
   }
 
-  const methods = [hasFile, hasValue, hasDir, hasUrl, hasStdin].filter(Boolean).length;
+  const methods = explicitCount + (hasStdin ? 1 : 0);
   if (methods !== 1) {
     return fail("INVALID_INPUT", "exactly one input method must be used");
   }

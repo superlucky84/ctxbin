@@ -3,7 +3,7 @@ import path from "node:path";
 import os from "node:os";
 import { createWriteStream } from "node:fs";
 import { SKILLREF_HEADER, MAX_SKILLREF_DOWNLOAD_BYTES, MAX_SKILLREF_EXTRACT_BYTES, MAX_SKILLREF_FILES, SKILLREF_CONNECT_TIMEOUT_MS, SKILLREF_DOWNLOAD_TIMEOUT_MS } from "./constants";
-import { fail } from "./errors";
+import { fail, CtxbinError } from "./errors";
 import { normalizeGithubUrl, normalizeSkillPath, validateCommitSha, assertSafeTarPath } from "./validators";
 import { listTarEntries, TarEntryInfo } from "./tar-utils";
 import tar from "tar";
@@ -150,6 +150,9 @@ async function downloadArchive(repoUrl: string, ref: string, outPath: string): P
   } catch (err) {
     fileStream.close();
     clearTimeout(totalTimer);
+    if (err instanceof CtxbinError) {
+      throw err;
+    }
     return fail("NETWORK", `download failed: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
     clearTimeout(totalTimer);
