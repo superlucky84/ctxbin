@@ -4,6 +4,8 @@ Minimal, deterministic CLI to save and load **context**, **agents**, and **skill
 It is designed for fast handoff between AI agents working on the same repo/branch,
 with branch-based context keys inferred inside git repositories.
 
+Docs: https://superlucky84.github.io/ctxbin/
+
 > **Core idea:** ctxbin exists to make AI-agent handoffs reliable and repeatable.
 
 ## Agent workflow (core)
