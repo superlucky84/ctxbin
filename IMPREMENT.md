@@ -7,9 +7,10 @@
 - 핵심 모듈 초안 구현(CLI, store, skillpack, skillref, config)
 - 최소 테스트 일부 작성(검증 유틸 중심)
 - 빌드/테스트 재확인 필요(최근 빌드 오류 수정됨)
-- `list` 명령은 문서에만 추가됨(구현 필요)
 - `list` 명령 구현 완료(스토어 list + 출력 규칙 포함)
 - Windows 호환성(권한 처리 best-effort) 구현 완료, 테스트는 미작성
+- skillref 기본 브랜치 추적(`--ref` 생략) 구현 완료
+- skillref 기본 브랜치 추적(`--ref` 생략) 구현 완료, 테스트 보강 필요
 - 계획 문서: `DESIGN.md`
 - 패키지 매니저: **pnpm**
 - 기본 구조: `src/`, `tests/`
@@ -113,16 +114,18 @@ skillref
 - [x] gzip/tar 검증 + 파일 수 제한
 - [x] 임시 디렉터리 추출 + 덮어쓰기 정책
 - [x] Windows에서 chmod 실패는 best-effort로 무시
+- [x] `--ref` optional 지원 및 기본 브랜치 추적 로직
+- [x] GitHub API 호출로 default_branch 조회
 
 에러/출력
 - [x] 에러 포맷/exit code/stdout·stderr 규칙
 
 최소 테스트
-- [ ] 입력 소스 단일화 규칙
+- [x] 입력 소스 단일화 규칙
 - [x] `--url/--ref/--path` 검증
-- [ ] skillpack 헤더/사이즈 제한
-- [ ] skillref 헤더 파싱
-- [ ] 타입 불일치 에러
+- [x] skillpack 헤더/사이즈 제한
+- [x] skillref 헤더 파싱
+- [x] 타입 불일치 에러
 
 테스트 확장(완성도 향상)
 - [ ] ctx 키 자동 추론(깃 레포 유무 케이스)
@@ -133,6 +136,7 @@ skillref
 - [ ] list 출력 형식/정렬/type 매핑 테스트
 - [ ] Windows 호환성 테스트(권한 처리 best-effort)
 - [ ] Upstash 통합 테스트 추가(CTXBIN_STORE_URL/CTXBIN_STORE_TOKEN 없으면 skip)
+- [x] skillref default branch 추적 시나리오 테스트
 
 ## 구현 메모
 - `AGENTS.md`, `CLAUDE.md`, `.claude`는 `.gitignore`에 등록됨(커밋 제외)

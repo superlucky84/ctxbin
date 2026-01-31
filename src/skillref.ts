@@ -14,15 +14,17 @@ const ALLOWED_TYPES = new Set(["File", "Directory"]);
 
 export interface Skillref {
   url: string;
-  ref: string;
   path: string;
+  ref?: string;
+  track?: "default";
 }
 
-export function createSkillrefValue(url: string, ref: string, skillPath: string): string {
+export function createSkillrefValue(url: string, skillPath: string, ref?: string): string {
   const normalizedUrl = normalizeGithubUrl(url);
-  const normalizedRef = validateCommitSha(ref);
   const normalizedPath = normalizeSkillPath(skillPath);
-  const payload = JSON.stringify({ url: normalizedUrl, ref: normalizedRef, path: normalizedPath });
+  const payload = ref
+    ? JSON.stringify({ url: normalizedUrl, path: normalizedPath, ref: validateCommitSha(ref) })
+    : JSON.stringify({ url: normalizedUrl, path: normalizedPath, track: "default" });
   return SKILLREF_HEADER + payload;
 }
 
@@ -37,23 +39,33 @@ export function parseSkillrefValue(value: string): Skillref {
   } catch {
     return fail("IO", "invalid skillref payload JSON");
   }
-  if (!parsed || typeof parsed.url !== "string" || typeof parsed.ref !== "string" || typeof parsed.path !== "string") {
+  if (!parsed || typeof parsed.url !== "string" || typeof parsed.path !== "string") {
     return fail("IO", "invalid skillref payload fields");
   }
-  return {
+  const normalized = {
     url: normalizeGithubUrl(parsed.url),
-    ref: validateCommitSha(parsed.ref),
     path: normalizeSkillPath(parsed.path),
-  };
+  } satisfies Pick<Skillref, "url" | "path">;
+
+  if (typeof parsed.ref === "string") {
+    return { ...normalized, ref: validateCommitSha(parsed.ref) };
+  }
+
+  if (parsed.track === "default") {
+    return { ...normalized, track: "default" };
+  }
+
+  return fail("IO", "invalid skillref payload fields");
 }
 
 export async function loadSkillrefToDir(value: string, targetDir: string): Promise<void> {
   const skillref = parseSkillrefValue(value);
+  const resolvedRef = skillref.ref ?? (await fetchDefaultBranch(skillref.url));
   const tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-skillref-"));
   const tarPath = path.join(tmpRoot, "skillref.tar.gz");
 
   try {
-    await downloadArchive(skillref.url, skillref.ref, tarPath);
+    await downloadArchive(skillref.url, resolvedRef, tarPath);
 
     const entries = await listTarEntries(tarPath).catch(() => fail("IO", "failed to parse tar archive"));
     const analysis = analyzeEntries(entries, skillref.path);
@@ -89,7 +101,7 @@ async function downloadArchive(repoUrl: string, ref: string, outPath: string): P
   const totalTimer = setTimeout(() => controller.abort(), SKILLREF_DOWNLOAD_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetchWithRedirect(url, 1, controller);
+    res = await fetchWithRedirect(url, 1, controller, ["github.com", "codeload.github.com"]);
   } catch (err) {
     clearTimeout(totalTimer);
     return fail("NETWORK", `download failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -157,11 +169,17 @@ async function downloadArchive(repoUrl: string, ref: string, outPath: string): P
 async function fetchWithRedirect(
   url: string,
   redirectsLeft: number,
-  controller: AbortController
+  controller: AbortController,
+  allowedHosts: string[],
+  init?: RequestInit
 ): Promise<Response> {
   const connectTimer = setTimeout(() => controller.abort(), SKILLREF_CONNECT_TIMEOUT_MS);
 
-  const res = await fetch(url, { signal: controller.signal, redirect: "manual" });
+  const res = await fetch(url, {
+    ...init,
+    signal: controller.signal,
+    redirect: "manual",
+  });
 
   clearTimeout(connectTimer);
 
@@ -175,10 +193,10 @@ async function fetchWithRedirect(
     }
     const nextUrl = new URL(location, url).toString();
     const host = new URL(nextUrl).hostname;
-    if (host !== "github.com" && host !== "codeload.github.com") {
+    if (!allowedHosts.includes(host)) {
       return fail("NETWORK", `redirected to unsupported host: ${host}`);
     }
-    return fetchWithRedirect(nextUrl, redirectsLeft - 1, controller);
+    return fetchWithRedirect(nextUrl, redirectsLeft - 1, controller, allowedHosts, init);
   }
 
   return res;
@@ -195,6 +213,45 @@ function splitGithubUrl(repoUrl: string): { owner: string; repo: string } {
     return fail("INVALID_URL", "URL must be https://github.com/<owner>/<repo>");
   }
   return { owner: parts[0], repo: parts[1] };
+}
+
+async function fetchDefaultBranch(repoUrl: string): Promise<string> {
+  const { owner, repo } = splitGithubUrl(repoUrl);
+  const url = `https://api.github.com/repos/${owner}/${repo}`;
+  const controller = new AbortController();
+  const totalTimer = setTimeout(() => controller.abort(), SKILLREF_DOWNLOAD_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetchWithRedirect(url, 1, controller, ["github.com", "api.github.com"], {
+      headers: {
+        "User-Agent": "ctxbin",
+        Accept: "application/vnd.github+json",
+      },
+    });
+  } catch (err) {
+    clearTimeout(totalTimer);
+    return fail("NETWORK", `default branch lookup failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  if (!res.ok) {
+    clearTimeout(totalTimer);
+    const text = await res.text();
+    return fail("NETWORK", `default branch lookup failed (${res.status}): ${text}`);
+  }
+
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    clearTimeout(totalTimer);
+    return fail("NETWORK", "default branch lookup returned invalid JSON");
+  }
+
+  clearTimeout(totalTimer);
+  if (!data || typeof data.default_branch !== "string" || data.default_branch.length === 0) {
+    return fail("NETWORK", "default branch lookup returned no default_branch");
+  }
+  return data.default_branch;
 }
 
 function analyzeEntries(entries: TarEntryInfo[], requestedPath: string): {

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
-import fs from "node:fs/promises";
 import process from "node:process";
 import { formatError, fail } from "./errors";
 import { loadConfig, writeConfig } from "./config";
 import { createStore } from "./store";
 import { inferCtxKey } from "./git";
-import { createSkillpackFromDir, extractSkillpackToDir } from "./skillpack";
-import { createSkillrefValue, loadSkillrefToDir } from "./skillref";
+import { extractSkillpackToDir } from "./skillpack";
+import { loadSkillrefToDir } from "./skillref";
 import { detectSkillValueType } from "./value";
+import { resolveSaveInput } from "./input";
 
 async function main(): Promise<void> {
   let positionals: string[];
@@ -254,66 +254,6 @@ async function handleList(
   process.stdout.write(lines.join("\n"));
 }
 
-async function resolveSaveInput(
-  resource: string,
-  opts: {
-    append: boolean;
-    file?: string;
-    value?: string;
-    dir?: string;
-    url?: string;
-    ref?: string;
-    path?: string;
-  }
-): Promise<{ kind: "string" | "skillpack" | "skillref"; value: string }> {
-  const hasFile = typeof opts.file === "string";
-  const hasValue = typeof opts.value === "string";
-  const hasDir = typeof opts.dir === "string";
-  const urlFlagsUsed = Boolean(opts.url || opts.ref || opts.path);
-  const hasUrl = Boolean(opts.url && opts.ref && opts.path);
-  const hasStdin = !process.stdin.isTTY;
-
-  if (urlFlagsUsed && !hasUrl) {
-    return fail("INVALID_INPUT", "--url, --ref, and --path must be provided together");
-  }
-
-  const methods = [hasFile, hasValue, hasDir, hasUrl, hasStdin].filter(Boolean).length;
-  if (methods !== 1) {
-    return fail("INVALID_INPUT", "exactly one input method must be used");
-  }
-
-  if (hasDir && resource !== "skill") {
-    return fail("INVALID_INPUT", "--dir is only valid for skill save");
-  }
-  if (hasUrl && resource !== "skill") {
-    return fail("INVALID_INPUT", "--url/--ref/--path are only valid for skill save");
-  }
-  if (opts.append && (hasDir || hasUrl)) {
-    return fail("INVALID_INPUT", "--append cannot be used with --dir or --url");
-  }
-
-  if (hasDir) {
-    const value = await createSkillpackFromDir(opts.dir as string);
-    return { kind: "skillpack", value };
-  }
-
-  if (hasUrl) {
-    const value = createSkillrefValue(opts.url as string, opts.ref as string, opts.path as string);
-    return { kind: "skillref", value };
-  }
-
-  if (hasFile) {
-    const content = await fs.readFile(opts.file as string, "utf8");
-    return { kind: "string", value: content };
-  }
-
-  if (hasValue) {
-    return { kind: "string", value: opts.value as string };
-  }
-
-  const stdin = await readStdin();
-  return { kind: "string", value: stdin };
-}
 
 function ensureNoSaveInput(
   opts: {
@@ -344,18 +284,6 @@ function ensureNoListFlags(opts: {
   if (opts.append || opts.file || opts.value || opts.dir || opts.url || opts.ref || opts.path) {
     return fail("INVALID_INPUT", "list does not accept input flags");
   }
-}
-
-async function readStdin(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let data = "";
-    process.stdin.setEncoding("utf8");
-    process.stdin.on("data", (chunk) => {
-      data += chunk;
-    });
-    process.stdin.on("end", () => resolve(data));
-    process.stdin.on("error", reject);
-  });
 }
 
 main().catch((err) => {

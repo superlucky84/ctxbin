@@ -293,6 +293,7 @@ ctxbin skill save fp-pack --file SKILL.md
 ctxbin skill save fp-pack --value "markdown string"
 ctxbin skill save fp-pack --dir ../fp-kit/skills/fp-pack
 ctxbin skill save fp-pack --url https://github.com/acme/skills --ref <commit_sha> --path skills/fp-pack
+ctxbin skill save fp-pack --url https://github.com/acme/skills --path skills/fp-pack
 ```
 
 ### Append
@@ -353,15 +354,17 @@ Size limits:
 Skillrefs store a GitHub directory pointer as a single Redis value. The on-wire format is:
 
 ```text
-ctxbin-skillref@1\n{"url":"https://github.com/OWNER/REPO","ref":"<40-hex-sha>","path":"skills/react-native-skills"}
+ctxbin-skillref@1\n{"url":"https://github.com/OWNER/REPO","path":"skills/react-native-skills","ref":"<40-hex-sha>"}
+ctxbin-skillref@1\n{"url":"https://github.com/OWNER/REPO","path":"skills/react-native-skills","track":"default"}
 ```
 
 Rules:
 
-* `--url`, `--ref`, and `--path` are **all required** and must be provided together.
+* `--url` and `--path` are required.
+* `--ref` is optional. If provided, it must be a **full 40-hex commit SHA** (tags/branches are not allowed).
+* If `--ref` is omitted, the skillref **tracks the repository default branch**.
 * `--url` must be HTTPS GitHub repo root: `https://github.com/<owner>/<repo>` (no `/tree/...`).
   * `.git` suffix is allowed and should be stripped during normalization.
-* `--ref` must be a **full 40-hex commit SHA** (tags/branches are not allowed).
 * `--path` must be a **directory path** within the repo (no leading `/`, no `..`).
 * `save --url ...` **does not fetch**; it only stores the reference.
 * Fetch method: download `https://codeload.github.com/<owner>/<repo>/tar.gz/<ref>` and extract.
@@ -369,14 +372,16 @@ Rules:
 Load behavior:
 
 * `load --dir` is required for skillrefs; otherwise error.
-* The loader fetches a tar.gz archive from GitHub at `ref`, extracts `path` into the target dir.
+* If `ref` is set (40-hex), fetch `ref`. If `track` is `default`, resolve the default branch at load time and fetch it.
+* Resolve default branch via GitHub API: `https://api.github.com/repos/<owner>/<repo>` (read `default_branch`).
+* The loader fetches a tar.gz archive from GitHub, extracts `path` into the target dir.
 * Network failures or missing paths must fail fast with a clear error.
 * Timeouts: connect `5s`, total download `30s`.
 * Size limits: max download `20 MB` (compressed), max extracted total `100 MB`.
 * Permissions: directories `0755`, files `0644`, executable files `0755`; strip setuid/setgid/sticky.
 * Symlinks: reject and fail with a clear error (no symlink traversal).
 * File count limit: max `5,000` entries after extraction.
-* Redirects: allow at most `1`, and only within `github.com` / `codeload.github.com`.
+* Redirects: allow at most `1`, and only within `github.com` / `codeload.github.com` / `api.github.com`.
 * Target overwrite policy: existing files at the same paths are overwritten; other files remain untouched.
 * Content-type is not trusted; validate gzip magic bytes and tar parsing before extraction.
 * No retries. Use a temp directory for extraction and atomically move into place only on success; failures must not leave partial files in the target.
@@ -414,10 +419,10 @@ Exactly **one** input method must be used:
 2. `--value <string>`
 3. `stdin`
 4. `--dir <path>` (skill save only)
-5. `--url <repo> --ref <sha> --path <dir>` (skill save only)
+5. `--url <repo> --path <dir> [--ref <sha>]` (skill save only)
 
 If zero or multiple inputs are provided → error.
-`--url`, `--ref`, and `--path` are treated as a single combined input method.
+`--url` and `--path` (plus optional `--ref`) are treated as a single combined input method.
 
 ---
 
