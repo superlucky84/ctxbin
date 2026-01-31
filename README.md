@@ -1,29 +1,29 @@
-<p align="center">
-  <img
-    src="https://superlucky84.github.io/ctxbin/ctxbin.png"
-    alt="ctxbin"
-    width="640"
-    style="max-width: 100%; height: auto;"
-  />
-</p>
-
-<h1 align="center">ctxbin</h1>
-
-<p align="center">
-  Minimal, deterministic CLI to save and load <strong>context</strong>, <strong>agents</strong>, and <strong>skills</strong> in Upstash Redis hashes.
-</p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/ctxbin"><img alt="npm version" src="https://img.shields.io/npm/v/ctxbin?color=2b6cb0" /></a>
-  &nbsp;
-  <a href="https://www.npmjs.com/package/ctxbin"><img alt="npm downloads" src="https://img.shields.io/npm/dm/ctxbin?color=2b6cb0" /></a>
-  &nbsp;
-  <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-2b6cb0" /></a>
-</p>
-
-<p align="center">
-  <sub>Fast, deterministic context handoffs for AI agents.</sub>
-</p>
+<table>
+  <tr>
+    <td width="72" valign="middle">
+      <img
+        src="https://superlucky84.github.io/ctxbin/ctxbin.png"
+        alt="ctxbin"
+        width="56"
+        height="56"
+      />
+    </td>
+    <td valign="middle">
+      <h1>ctxbin</h1>
+      <p>
+        Minimal, deterministic CLI to save and load <strong>context</strong>, <strong>agents</strong>, and <strong>skills</strong> in Upstash Redis hashes.
+      </p>
+      <p>
+        <a href="https://www.npmjs.com/package/ctxbin"><img alt="npm version" src="https://img.shields.io/npm/v/ctxbin?color=2b6cb0" /></a>
+        &nbsp;
+        <a href="https://www.npmjs.com/package/ctxbin"><img alt="npm downloads" src="https://img.shields.io/npm/dm/ctxbin?color=2b6cb0" /></a>
+        &nbsp;
+        <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-2b6cb0" /></a>
+      </p>
+      <p><sub>Fast, deterministic context handoffs for AI agents.</sub></p>
+    </td>
+  </tr>
+</table>
 
 Minimal, deterministic CLI to save and load **context**, **agents**, and **skills** in Upstash Redis hashes.
 It is designed for fast handoff between AI agents working on the same repo/branch,
