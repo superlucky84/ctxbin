@@ -1,30 +1,8 @@
-<h1 align="center">
-  <img
-    src="https://superlucky84.github.io/ctxbin/ctxbin.png"
-    alt="ctxbin"
-    width="28"
-    height="28"
-    style="vertical-align: -5px; margin-right: 10px;"
-  />
-  ctxbin
-</h1>
+# <img src="https://superlucky84.github.io/ctxbin/ctxbin.png" alt="ctxbin" width="24" height="24" style="vertical-align: -4px; margin-right: 8px;" /> ctxbin
 
-<p align="center">
-  Minimal, deterministic CLI to save and load <strong>context</strong>, <strong>agents</strong>, and <strong>skills</strong> in Upstash Redis hashes.
-</p>
-<p align="center">
-  Designed for fast handoff between AI agents working on the same repo/branch, with branch-based context keys inferred inside git repositories.
-</p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/ctxbin"><img alt="npm version" src="https://img.shields.io/npm/v/ctxbin?color=2b6cb0" /></a>
-  &nbsp;
-  <a href="https://www.npmjs.com/package/ctxbin"><img alt="npm downloads" src="https://img.shields.io/npm/dm/ctxbin?color=2b6cb0" /></a>
-  &nbsp;
-  <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-2b6cb0" /></a>
-</p>
-
-<p align="center"><sub>Fast, deterministic context handoffs for AI agents.</sub></p>
+Minimal, deterministic CLI to save and load **context**, **agents**, and **skills** in Upstash Redis hashes.
+It is designed for fast handoff between AI agents working on the same repo/branch,
+with branch-based context keys inferred inside git repositories.
 
 > **Core idea:** ctxbin exists to make AI-agent handoffs reliable and repeatable.
 
