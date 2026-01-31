@@ -2,10 +2,28 @@
   "name": "ctxbin",
   "version": "0.1.0",
   "description": "Minimal deterministic CLI to store/load context, agents, and skills via Redis hashes",
+  "author": "superlucky84",
+  "license": "MIT",
   "type": "commonjs",
   "bin": {
     "ctxbin": "dist/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/superlucky84/ctxbin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/superlucky84/ctxbin/issues"
+  },
+  "homepage": "https://github.com/superlucky84/ctxbin#readme",
+  "keywords": [
+    "cli",
+    "redis",
+    "upstash",
+    "context",
+    "skill",
+    "agent"
+  ],
   "files": [
     "dist",
     "skills",
