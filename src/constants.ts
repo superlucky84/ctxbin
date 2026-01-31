@@ -10,3 +10,5 @@ export const SKILLREF_CONNECT_TIMEOUT_MS = 5000;
 export const SKILLREF_DOWNLOAD_TIMEOUT_MS = 30000;
 
 export const DEFAULT_EXCLUDES = [".git", "node_modules", ".DS_Store"];
+
+export const STORE_REQUEST_TIMEOUT_MS = 5000;

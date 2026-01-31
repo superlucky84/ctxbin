@@ -1,4 +1,5 @@
 import { fail } from "./errors";
+import { STORE_REQUEST_TIMEOUT_MS } from "./constants";
 
 export interface Store {
   get(hash: string, field: string): Promise<string | null>;
@@ -17,6 +18,8 @@ export function createStore(url: string, token: string): Store {
 
   async function command<T>(cmd: string, ...args: string[]): Promise<T> {
     let res: Response;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), STORE_REQUEST_TIMEOUT_MS);
     try {
       res = await fetch(baseUrl, {
         method: "POST",
@@ -25,9 +28,15 @@ export function createStore(url: string, token: string): Store {
           "Content-Type": "application/json",
         },
         body: JSON.stringify([cmd, ...args]),
+        signal: controller.signal,
       });
     } catch (err) {
+      if (controller.signal.aborted) {
+        return fail("NETWORK", `store request timed out after ${STORE_REQUEST_TIMEOUT_MS}ms`);
+      }
       return fail("NETWORK", `store request failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      clearTimeout(timeout);
     }
 
     if (!res.ok) {

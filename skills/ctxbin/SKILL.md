@@ -27,6 +27,23 @@ echo "summary" | npx ctxbin ctx save
 npx ctxbin ctx load
 ```
 
+### If load returns NOT_FOUND
+`CTXBIN_ERR NOT_FOUND: no value for ctx:<project>/<branch>` means nothing has been saved for this branch yet.
+Tell the user and suggest:
+- `npx ctxbin ctx save --value "<summary + next steps>"`, or
+- Provide the current context directly.
+
+### If load returns NOT_IN_GIT
+`CTXBIN_ERR NOT_IN_GIT` means the command ran outside a git repository.
+Tell the user to run it inside the project repo, or use an explicit key:
+```bash
+npx ctxbin ctx load <project>/<branch>
+```
+
+### If load returns INVALID_INPUT
+`CTXBIN_ERR INVALID_INPUT` usually means flags were used incorrectly.
+For `ctx load`, do not pass `--value`, `--file`, or other input flags.
+
 ### List
 ```bash
 npx ctxbin ctx list

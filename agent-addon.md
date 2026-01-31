@@ -33,6 +33,23 @@ echo "<context>" | npx ctxbin ctx save
 npx ctxbin ctx load
 ```
 
+### If load returns NOT_FOUND
+If you see `CTXBIN_ERR NOT_FOUND: no value for ctx:<project>/<branch>`, it means no context was saved yet.
+Tell the user and suggest one of:
+- Ask them to run `npx ctxbin ctx save --value "<summary + next steps>"`, or
+- Ask them to provide the current context directly.
+
+### If load returns NOT_IN_GIT
+If you see `CTXBIN_ERR NOT_IN_GIT`, the command was run outside a git repository.
+Tell the user to run it inside the project repo, or use an explicit key:
+```bash
+npx ctxbin ctx load <project>/<branch>
+```
+
+### If load returns INVALID_INPUT
+If you see `CTXBIN_ERR INVALID_INPUT`, check the command flags.
+For `ctx load`, do not pass `--value`, `--file`, or other input flags.
+
 ### What to include in ctx
 - What changed (summary)
 - What remains (next steps)
