@@ -1,0 +1,23 @@
+{
+  "type": "module",
+  "private": true,
+  "name": "ctxbin-docs",
+  "version": "0.1.0",
+  "description": "ctxbin documentation",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "author": "superlucky84",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "highlight.js": "^11.8.0",
+    "lithent": "^1.21.4",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.3.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vite-plugin-checker": "^0.6.1"
+  }
+}

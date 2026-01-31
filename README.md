@@ -3,6 +3,21 @@
 Minimal, deterministic CLI to save and load **context**, **agents**, and **skills** in Upstash Redis hashes.
 It is designed for fast handoff between AI agents working on the same repo/branch.
 
+> **Core idea:** ctxbin exists to make AI-agent handoffs reliable and repeatable.
+
+## Agent workflow (core)
+This is the most important usage. Paste the add-on into your agent instruction file
+so agents consistently save and load branch context.
+
+- Add: [`agent-addon.md`](agent-addon.md) → copy the block into your project's agent instruction file
+  (e.g. `AGENT.md`, `CLAUDE.md`, or any equivalent).
+- Then you can simply ask:
+  - “Use ctxbin to save the current context.”
+  - “Use ctxbin to load the current context.”
+
+The add-on tells agents how to format context (summary, next steps, decisions) and how to use
+`ctxbin ctx save/load` correctly.
+
 ## Features
 - Branch-scoped `ctx` keys (auto-inferred from git repo + branch)
 - `agent` and `skill` storage for reusable prompts and workflows
@@ -11,7 +26,7 @@ It is designed for fast handoff between AI agents working on the same repo/branc
 - `list` command with type mapping (`--value`, `--dir`, `--url`)
 
 ## Install
-No install required:
+Recommended (no install):
 ```bash
 npx ctxbin --version
 ```
@@ -20,6 +35,12 @@ Or add it to your toolchain:
 ```bash
 pnpm add -g ctxbin
 ```
+
+## Upstash requirement
+ctxbin stores data in **Upstash Redis**. You need an Upstash database and its REST URL/token.
+
+- Create a database at: https://upstash.com/
+- Use the REST URL and token as `CTXBIN_STORE_URL` / `CTXBIN_STORE_TOKEN`
 
 ## Configure storage
 Use environment variables (recommended):
