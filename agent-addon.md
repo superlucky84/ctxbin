@@ -1,15 +1,14 @@
 # ctxbin Agent Add‑On
 
-Copy/paste this block into your AGENT.md / CLAUDE.md when you want agents to consistently capture and restore project context.
+Copy/paste the block between the markers below into your AGENT.md / CLAUDE.md.
 
-> Tip: `npx ctxbin skill load ctxbin` prints the bundled ctxbin skill text
-> (works even if Redis is not configured).
-
----
+<!-- BEGIN CTXBIN AGENT ADDON -->
 
 ## ctxbin (Context Persistence)
 
 Use `ctxbin ctx save` to store **branch‑scoped context** so the next agent can continue without re‑explanation.
+> Tip: `npx ctxbin skill load ctxbin` prints the bundled ctxbin skill text
+> so agents can reference the full ctxbin guidance.
 
 ### How ctx keys are inferred (when key is omitted)
 ```
@@ -45,4 +44,4 @@ ctxbin ctx load
 - Don’t store secrets
 - Don’t overwrite with trivial messages
 
----
+<!-- END CTXBIN AGENT ADDON -->

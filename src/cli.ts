@@ -1,8 +1,8 @@
-#!/usr/bin/env node
 import { parseArgs } from "node:util";
 import process from "node:process";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { formatError, fail } from "./errors";
 import { loadConfig, writeConfig } from "./config";
 import { createStore } from "./store";
@@ -329,7 +329,7 @@ async function loadBundledSkill(): Promise<string | null> {
 function getVersion(): string {
   try {
     const pkgPath = path.resolve(__dirname, "..", "package.json");
-    const raw = fs.readFileSync(pkgPath, "utf8");
+    const raw = readFileSync(pkgPath, "utf8");
     const data = JSON.parse(raw);
     if (data && typeof data.version === "string") {
       return data.version;
