@@ -70,6 +70,10 @@ export const AgentAddonKo = mount(() => {
 
       <p>이 애드온은 의도적으로 최소화되어 있습니다. 전체 ctxbin 사용 가이드는 아래로 확인하세요:</p>
       <CodeBlock language="bash" code={`$ npx ctxbin skill load ctxbin`} />
+
+      <p class="mt-6 text-sm">
+        원본: <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank" rel="noopener noreferrer">GitHub의 agent-addon.md</a>
+      </p>
     </div>
   );
 });

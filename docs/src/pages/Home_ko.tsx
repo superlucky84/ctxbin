@@ -46,9 +46,6 @@ export const HomeKo = mount(() => {
         <ol>
           <li>
             <a href="https://superlucky84.github.io/ctxbin/#/guide/agent-addon" target="_blank" rel="noopener noreferrer">agent-addon.md</a>를
-            {' '}(원본:{' '}
-            <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank" rel="noopener noreferrer">GitHub</a>
-            ){' '}
             프로젝트의 에이전트 지침 파일에 복사 (예: <code>AGENT.md</code>, <code>CLAUDE.md</code>, 또는 유사한 파일)
           </li>
           <li>그런 다음 AI 에이전트에게 간단히 요청:</li>

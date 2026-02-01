@@ -72,6 +72,10 @@ export const AgentAddon = mount(() => {
         This add-on is intentionally minimal. For the full, canonical ctxbin usage guide, run:
       </p>
       <CodeBlock language="bash" code={`$ npx ctxbin skill load ctxbin`} />
+
+      <p class="mt-6 text-sm">
+        Source: <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank" rel="noopener noreferrer">agent-addon.md on GitHub</a>
+      </p>
     </div>
   );
 });
