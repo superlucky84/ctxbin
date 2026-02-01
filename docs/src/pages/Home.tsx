@@ -45,7 +45,10 @@ export const Home = mount(() => {
         </p>
         <ol>
           <li>
-            Copy <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank">agent-addon.md</a> into
+            Copy <a href="https://superlucky84.github.io/ctxbin/#/guide/agent-addon" target="_blank" rel="noopener noreferrer">agent-addon.md</a>
+            {' '}(source:{' '}
+            <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank" rel="noopener noreferrer">GitHub</a>
+            ){' '}into
             your project's agent instruction file (e.g. <code>AGENT.md</code>, <code>CLAUDE.md</code>, or any equivalent)
           </li>
           <li>Then simply ask your AI agent:</li>

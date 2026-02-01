@@ -12,7 +12,7 @@ Docs: https://superlucky84.github.io/ctxbin/
 This is the most important usage. Paste the add-on into your agent instruction file
 so agents consistently save and load branch context.
 
-- Add: [`agent-addon.md`](agent-addon.md) → copy the block into your project's agent instruction file
+- Add: [agent add-on guide](https://superlucky84.github.io/ctxbin/#/guide/agent-addon) → copy the block into your project's agent instruction file
   (e.g. `AGENT.md`, `CLAUDE.md`, or any equivalent).
 - Then you can simply ask:
   - “Use npx ctxbin to save the current context.”
