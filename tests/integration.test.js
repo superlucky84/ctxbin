@@ -343,6 +343,27 @@ test("error output follows CTXBIN_ERR format", async () => {
   }
 });
 
+test("missing config shows setup guidance", async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-noconfig-"));
+  const env = {
+    ...process.env,
+    HOME: dir,
+    USERPROFILE: dir,
+  };
+  delete env.CTXBIN_STORE_URL;
+  delete env.CTXBIN_STORE_TOKEN;
+
+  try {
+    const result = await runCli(["ctx", "list"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT:/);
+    assert.match(result.stderr, /https:\/\/upstash\.com/);
+    assert.match(result.stderr, /npx ctxbin init/);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("safeChmod ignores chmod errors on Windows", async (t) => {
   if (process.platform !== "win32") {
     t.skip("windows-only behavior");

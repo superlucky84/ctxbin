@@ -27,7 +27,7 @@ export async function loadConfig(): Promise<StoreConfig> {
   try {
     raw = await fs.readFile(configPath, "utf8");
   } catch {
-    return fail("INVALID_INPUT", "missing CTXBIN_STORE_URL/CTXBIN_STORE_TOKEN and no ~/.ctxbin/config.json");
+    return fail("INVALID_INPUT", "missing CTXBIN_STORE_URL/CTXBIN_STORE_TOKEN and no ~/.ctxbin/config.json. Create a Redis database at https://upstash.com and run `npx ctxbin init` to configure.");
   }
 
   let parsed: any;
