@@ -35,6 +35,17 @@ export const HomeKo = mount(() => {
         </div>
       </div>
 
+      {/* Prerequisite Notice */}
+      <div class="mb-8 p-4 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/20">
+        <p class="text-amber-800 dark:text-amber-200 text-center">
+          ⚠️ <strong>필수 조건:</strong> ctxbin은 저장소로{' '}
+          <a href="https://upstash.com/" target="_blank" rel="noopener noreferrer" class="underline font-semibold">
+            Upstash Redis
+          </a>가{' '}
+          필요합니다. 무료 데이터베이스를 생성한 후 <code class="bg-amber-100 dark:bg-amber-800 px-1 rounded">npx ctxbin init</code>으로 설정하세요.
+        </p>
+      </div>
+
       {/* Agent Workflow - Core Usage */}
       <div class="mb-12 p-6 rounded-lg border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20">
         <h2 class="text-indigo-700 dark:text-indigo-300">Agent Workflow (핵심)</h2>

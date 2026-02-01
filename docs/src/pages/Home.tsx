@@ -35,6 +35,17 @@ export const Home = mount(() => {
         </div>
       </div>
 
+      {/* Prerequisite Notice */}
+      <div class="mb-8 p-4 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/20">
+        <p class="text-amber-800 dark:text-amber-200 text-center">
+          ⚠️ <strong>Prerequisite:</strong> ctxbin requires{' '}
+          <a href="https://upstash.com/" target="_blank" rel="noopener noreferrer" class="underline font-semibold">
+            Upstash Redis
+          </a>{' '}
+          for storage. Create a free database, then run <code class="bg-amber-100 dark:bg-amber-800 px-1 rounded">npx ctxbin init</code> to configure.
+        </p>
+      </div>
+
       {/* Agent Workflow - Core Usage */}
       <div class="mb-12 p-6 rounded-lg border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20">
         <h2 class="text-indigo-700 dark:text-indigo-300">Agent Workflow (Core)</h2>

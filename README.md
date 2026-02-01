@@ -8,6 +8,9 @@ Docs: https://superlucky84.github.io/ctxbin/
 
 > **Core idea:** ctxbin exists to make AI-agent handoffs reliable and repeatable.
 
+> ⚠️ **Prerequisite:** ctxbin requires [Upstash Redis](https://upstash.com/) for storage.
+> Create a free database, then run `npx ctxbin init` to configure.
+
 ## Agent workflow (core)
 This is the most important usage. Let agents consistently save and load branch context.
 
