@@ -39,10 +39,22 @@ export const Home = mount(() => {
       <div class="mb-12 p-6 rounded-lg border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20">
         <h2 class="text-indigo-700 dark:text-indigo-300">Agent Workflow (Core)</h2>
         <p>
-          <strong>This is the most important usage.</strong> Paste the add-on into your agent instruction file
-          so agents consistently save and load branch context. This workflow assumes a git-based project
-          for automatic key inference.
+          <strong>This is the most important usage.</strong> Let agents consistently save and load branch context.
+          This workflow assumes a git-based project for automatic key inference.
         </p>
+
+        <h3 class="text-lg font-semibold mt-4 mb-2">Option 1: Zero-setup (simplest)</h3>
+        <p>Just ask your AI agent directly:</p>
+        <CodeBlock
+          language="text"
+          code={`"Run \`npx ctxbin skill load ctxbin\`, read the output, then save the current context."`}
+        />
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          The agent will self-discover the usage guide and follow it.
+        </p>
+
+        <h3 class="text-lg font-semibold mt-6 mb-2">Option 2: Add-on file</h3>
+        <p>For consistent behavior across sessions, copy the add-on into your agent instruction file:</p>
         <ol>
           <li>
             Copy <a href="https://superlucky84.github.io/ctxbin/#/guide/agent-addon" target="_blank" rel="noopener noreferrer">agent-addon.md</a> into
@@ -60,9 +72,6 @@ export const Home = mount(() => {
           and how to use <code>npx ctxbin ctx save/load</code> correctly.
         </p>
       </div>
-      <p class="text-sm text-indigo-700/80 dark:text-indigo-200/80 mb-12">
-        Tip: <code>npx ctxbin skill load ctxbin</code> prints the bundled ctxbin skill text.
-      </p>
 
       <div class="mb-12">
         <h2>Direct CLI Usage</h2>

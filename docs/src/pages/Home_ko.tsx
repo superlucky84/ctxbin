@@ -39,10 +39,22 @@ export const HomeKo = mount(() => {
       <div class="mb-12 p-6 rounded-lg border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20">
         <h2 class="text-indigo-700 dark:text-indigo-300">Agent Workflow (핵심)</h2>
         <p>
-          <strong>가장 중요한 사용법입니다.</strong> 에이전트 지시 파일에 add-on을 붙여넣어
-          에이전트가 일관되게 브랜치 컨텍스트를 저장하고 로드하도록 하세요. 이 워크플로는
-          git 기반 프로젝트에서 키 자동 추론을 전제로 합니다.
+          <strong>가장 중요한 사용법입니다.</strong> 에이전트가 일관되게 브랜치 컨텍스트를 저장하고 로드하도록 합니다.
+          이 워크플로는 git 기반 프로젝트에서 키 자동 추론을 전제로 합니다.
         </p>
+
+        <h3 class="text-lg font-semibold mt-4 mb-2">방법 1: 제로 셋업 (가장 간단)</h3>
+        <p>AI 에이전트에게 바로 요청하세요:</p>
+        <CodeBlock
+          language="text"
+          code={`"npx ctxbin skill load ctxbin 실행해서 사용법 확인하고, 현재 컨텍스트 저장해줘."`}
+        />
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          에이전트가 사용법 가이드를 스스로 확인하고 따릅니다.
+        </p>
+
+        <h3 class="text-lg font-semibold mt-6 mb-2">방법 2: Add-on 파일</h3>
+        <p>세션 간 일관된 동작을 위해 에이전트 지시 파일에 add-on을 복사하세요:</p>
         <ol>
           <li>
             <a href="https://superlucky84.github.io/ctxbin/#/guide/agent-addon" target="_blank" rel="noopener noreferrer">agent-addon.md</a>를
@@ -60,9 +72,6 @@ export const HomeKo = mount(() => {
           <code>npx ctxbin ctx save/load</code> 사용법을 알려줍니다.
         </p>
       </div>
-      <p class="text-sm text-indigo-700/80 dark:text-indigo-200/80 mb-12">
-        팁: <code>npx ctxbin skill load ctxbin</code> 명령으로 번들된 ctxbin 스킬 텍스트를 볼 수 있습니다.
-      </p>
 
       <div class="mb-12">
         <h2>직접 CLI 사용</h2>

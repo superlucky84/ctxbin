@@ -9,14 +9,23 @@ Docs: https://superlucky84.github.io/ctxbin/
 > **Core idea:** ctxbin exists to make AI-agent handoffs reliable and repeatable.
 
 ## Agent workflow (core)
-This is the most important usage. Paste the add-on into your agent instruction file
-so agents consistently save and load branch context.
+This is the most important usage. Let agents consistently save and load branch context.
+
+### Option 1: Zero-setup (simplest)
+Just ask your AI agent directly:
+```
+"Run `npx ctxbin skill load ctxbin`, read the output, then save the current context."
+```
+The agent will self-discover the usage guide and follow it.
+
+### Option 2: Add-on file
+For consistent behavior across sessions, copy the add-on into your agent instruction file:
 
 - Add: [agent add-on guide](https://superlucky84.github.io/ctxbin/#/guide/agent-addon) → copy the block into your project's agent instruction file
   (e.g. `AGENT.md`, `CLAUDE.md`, or any equivalent).
 - Then you can simply ask:
-  - “Use npx ctxbin to save the current context.”
-  - “Use npx ctxbin to load the current context.”
+  - "Use npx ctxbin to save the current context."
+  - "Use npx ctxbin to load the current context."
 
 The add-on tells agents how to format context (summary, next steps, decisions) and how to use
 `npx ctxbin ctx save/load` correctly.
