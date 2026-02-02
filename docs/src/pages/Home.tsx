@@ -58,7 +58,7 @@ export const Home = mount(() => {
         <p>Just ask your AI agent directly:</p>
         <CodeBlock
           language="text"
-          code={`"Run \`npx ctxbin skill load ctxbin\`, read the output, then save the current context."`}
+          code={`"Run \`npx ctxbin help\`, read the output, then save the current context."`}
         />
         <p class="text-sm text-gray-600 dark:text-gray-400">
           The agent will self-discover the usage guide and follow it.

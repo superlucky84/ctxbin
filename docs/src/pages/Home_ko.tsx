@@ -58,7 +58,7 @@ export const HomeKo = mount(() => {
         <p>AI 에이전트에게 바로 요청하세요:</p>
         <CodeBlock
           language="text"
-          code={`"npx ctxbin skill load ctxbin 실행해서 사용법 확인하고, 현재 컨텍스트 저장해줘."`}
+          code={`"npx ctxbin help 실행해서 사용법 확인하고, 현재 컨텍스트 저장해줘."`}
         />
         <p class="text-sm text-gray-600 dark:text-gray-400">
           에이전트가 사용법 가이드를 스스로 확인하고 따릅니다.

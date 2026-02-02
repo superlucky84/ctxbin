@@ -8,7 +8,7 @@ Copy/paste the block between the markers below into your AGENT.md / CLAUDE.md.
 
 Before using ctxbin, review the built-in usage guide:
 ```bash
-npx ctxbin skill load ctxbin
+npx ctxbin help
 ```
 
 <!-- END CTXBIN AGENT ADDON -->

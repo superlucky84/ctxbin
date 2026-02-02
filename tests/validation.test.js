@@ -147,3 +147,15 @@ test("skill load ctxbin falls back to bundled skill text", async () => {
   );
   assert.equal(stdout.trim(), expected.trim());
 });
+
+test("help command outputs bundled skill text", async () => {
+  const skillPath = path.join(__dirname, "..", "dist", "skills", "ctxbin", "SKILL.md");
+  const expected = await fs.readFile(skillPath, "utf8");
+  const { execFileSync } = require("node:child_process");
+  const stdout = execFileSync(
+    "node",
+    [path.join(__dirname, "..", "dist", "cli.js"), "help"],
+    { encoding: "utf8" }
+  );
+  assert.equal(stdout.trim(), expected.trim());
+});

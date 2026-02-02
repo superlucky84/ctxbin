@@ -81,13 +81,13 @@ branch  = git rev-parse --abbrev-ref HEAD`}
 
       <h2>Using with AI Agents</h2>
       <p>
-        ctxbin is designed for AI agents. For best results, include the bundled skill:
+        ctxbin is designed for AI agents. For best results, include the bundled usage guide:
       </p>
       <CodeBlock
         language="bash"
-        code={`$ npx ctxbin skill load ctxbin`}
+        code={`$ npx ctxbin help`}
       />
-      <p>This prints the full ctxbin skill documentation for agents to reference.</p>
+      <p>This prints the full ctxbin usage documentation for agents to reference.</p>
     </div>
   );
 });

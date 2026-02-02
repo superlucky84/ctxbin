@@ -78,14 +78,13 @@ react-lib  --url`}
         code={`$ npx ctxbin skill delete my-skill`}
       />
 
-      <h2>번들된 ctxbin 스킬</h2>
+      <h2>내장 사용 가이드</h2>
       <p>
-        특별한 폴백: Redis가 설정되지 않았을 때도 <code>npx ctxbin skill load ctxbin</code>은
-        번들된 스킬 텍스트를 반환합니다.
+        내장된 ctxbin 사용 가이드 출력 (Redis가 설정되지 않아도 동작):
       </p>
       <CodeBlock
         language="bash"
-        code={`$ npx ctxbin skill load ctxbin`}
+        code={`$ npx ctxbin help`}
       />
     </div>
   );

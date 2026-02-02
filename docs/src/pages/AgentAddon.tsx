@@ -8,7 +8,7 @@ const addonBlock = [
   '',
   'Before using ctxbin, review the built-in usage guide:',
   '```bash',
-  'npx ctxbin skill load ctxbin',
+  'npx ctxbin help',
   '```',
   '',
   '<!-- END CTXBIN AGENT ADDON -->',
@@ -71,7 +71,7 @@ export const AgentAddon = mount(() => {
       <p>
         This add-on is intentionally minimal. For the full, canonical ctxbin usage guide, run:
       </p>
-      <CodeBlock language="bash" code={`$ npx ctxbin skill load ctxbin`} />
+      <CodeBlock language="bash" code={`$ npx ctxbin help`} />
 
       <p class="mt-6 text-sm">
         Source: <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank" rel="noopener noreferrer">agent-addon.md on GitHub</a>

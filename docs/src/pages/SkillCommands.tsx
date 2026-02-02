@@ -78,14 +78,13 @@ react-lib  --url`}
         code={`$ npx ctxbin skill delete my-skill`}
       />
 
-      <h2>Bundled ctxbin Skill</h2>
+      <h2>Built-in Usage Guide</h2>
       <p>
-        A special fallback: <code>npx ctxbin skill load ctxbin</code> returns the bundled
-        skill text even when Redis is not configured.
+        Print the bundled ctxbin usage guide (works even when Redis is not configured):
       </p>
       <CodeBlock
         language="bash"
-        code={`$ npx ctxbin skill load ctxbin`}
+        code={`$ npx ctxbin help`}
       />
     </div>
   );

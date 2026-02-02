@@ -51,6 +51,18 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (resource === "help") {
+    if (command || keyArg || extra.length) {
+      return fail("INVALID_INPUT", "help does not accept additional arguments");
+    }
+    const content = await loadBundledSkill();
+    if (content) {
+      process.stdout.write(content);
+      return;
+    }
+    return fail("IO", "bundled skill not found");
+  }
+
   if (!command) {
     return fail("INVALID_INPUT", "missing command");
   }

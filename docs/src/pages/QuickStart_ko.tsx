@@ -81,13 +81,13 @@ branch  = git rev-parse --abbrev-ref HEAD`}
 
       <h2>AI 에이전트와 함께 사용</h2>
       <p>
-        ctxbin은 AI 에이전트용으로 설계되었습니다. 최상의 결과를 위해 번들 스킬을 포함하세요:
+        ctxbin은 AI 에이전트용으로 설계되었습니다. 최상의 결과를 위해 내장 사용 가이드를 포함하세요:
       </p>
       <CodeBlock
         language="bash"
-        code={`$ npx ctxbin skill load ctxbin`}
+        code={`$ npx ctxbin help`}
       />
-      <p>이 명령어는 에이전트가 참조할 전체 ctxbin 스킬 문서를 출력합니다.</p>
+      <p>이 명령어는 에이전트가 참조할 전체 ctxbin 사용 문서를 출력합니다.</p>
     </div>
   );
 });

@@ -8,7 +8,7 @@ Copy/paste the block between the markers below into your AGENT.md / CLAUDE.md.
 
 Use `npx ctxbin ...` when running commands in agent workflows.
 Use `npx ctxbin ctx save` to store **branch‑scoped context** so the next agent can continue without re‑explanation.
-> Tip: `npx ctxbin skill load ctxbin` prints the bundled ctxbin skill text
+> Tip: `npx ctxbin help` prints the bundled ctxbin usage guide
 > so agents can reference the full ctxbin guidance.
 
 ### How ctx keys are inferred (when key is omitted)

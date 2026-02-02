@@ -8,7 +8,7 @@ const addonBlock = [
   '',
   'ctxbin을 사용하기 전에 내장 사용 가이드를 확인하세요:',
   '```bash',
-  'npx ctxbin skill load ctxbin',
+  'npx ctxbin help',
   '```',
   '',
   '<!-- END CTXBIN AGENT ADDON -->',
@@ -69,7 +69,7 @@ export const AgentAddonKo = mount(() => {
       </div>
 
       <p>이 애드온은 의도적으로 최소화되어 있습니다. 전체 ctxbin 사용 가이드는 아래로 확인하세요:</p>
-      <CodeBlock language="bash" code={`$ npx ctxbin skill load ctxbin`} />
+      <CodeBlock language="bash" code={`$ npx ctxbin help`} />
 
       <p class="mt-6 text-sm">
         원본: <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank" rel="noopener noreferrer">GitHub의 agent-addon.md</a>

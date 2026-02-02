@@ -17,7 +17,7 @@ This is the most important usage. Let agents consistently save and load branch c
 ### Option 1: Zero-setup (simplest)
 Just ask your AI agent directly:
 ```
-"Run `npx ctxbin skill load ctxbin`, read the output, then save the current context."
+"Run `npx ctxbin help`, read the output, then save the current context."
 ```
 The agent will self-discover the usage guide and follow it.
 
@@ -131,9 +131,9 @@ npx ctxbin skill save fp-pack \
 > `skill load` for skillpack/skillref requires `--dir`.
 
 ## Built-in guidance
-Print the bundled ctxbin skill text (built-in):
+Print the bundled ctxbin usage guide:
 ```bash
-npx ctxbin skill load ctxbin
+npx ctxbin help
 ```
 
 ## Development
