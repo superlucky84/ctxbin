@@ -89,7 +89,7 @@ export const Home = mount(() => {
         <p>
           You can also use ctxbin directly from the command line. Inside a git repo, ctx keys are
           inferred automatically. Outside git, you must pass an explicit key. See{' '}
-          <span onClick={() => navigateTo('/guide/ctx-commands')} class="text-indigo-600 hover:underline cursor-pointer">ctx commands</span> for details.
+          <span onClick={() => navigateTo('/commands/ctx')} class="text-indigo-600 hover:underline cursor-pointer">ctx commands</span> for details.
         </p>
         <CodeBlock
           language="bash"
