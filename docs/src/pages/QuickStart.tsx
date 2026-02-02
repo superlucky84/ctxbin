@@ -28,7 +28,38 @@ CTXBIN_STORE_URL: https://...
 CTXBIN_STORE_TOKEN: ...`}
       />
 
-      <h2>2. Save Context</h2>
+      <h2>2. Using with AI Agents (Core Usage)</h2>
+      <p>
+        <strong>This is the primary way to use ctxbin.</strong> Let AI agents save and load context for you.
+      </p>
+
+      <h3>Option 1: Zero-setup (simplest)</h3>
+      <p>Just ask your AI agent directly:</p>
+      <CodeBlock
+        language="text"
+        code={`"Run \`npx ctxbin help\`, read the output, then save the current context."`}
+      />
+      <p>The agent will self-discover the usage guide and follow it.</p>
+
+      <h3>Option 2: Add-on file</h3>
+      <p>For consistent behavior across sessions, copy the add-on into your agent instruction file:</p>
+      <ol>
+        <li>
+          Copy <a href="https://superlucky84.github.io/ctxbin/#/guide/agent-addon" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">agent-addon.md</a> into
+          your project's agent instruction file (e.g. <code>AGENT.md</code>, <code>CLAUDE.md</code>)
+        </li>
+        <li>Then simply ask your AI agent:</li>
+      </ol>
+      <CodeBlock
+        language="text"
+        code={`"Use npx ctxbin to save the current context."
+"Use npx ctxbin to load the current context."`}
+      />
+
+      <h2>3. Direct CLI Usage</h2>
+      <p>You can also use ctxbin directly from the command line.</p>
+
+      <h3>Save Context</h3>
       <p>Inside a git repository, save context (key is auto-inferred):</p>
       <CodeBlock
         language="bash"
@@ -43,20 +74,20 @@ CTXBIN_STORE_TOKEN: ...`}
 - Implement session management"`}
       />
 
-      <h2>3. Load Context</h2>
+      <h3>Load Context</h3>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx load`}
       />
 
-      <h2>4. Append to Context</h2>
+      <h3>Append to Context</h3>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx save --append --value "## Update
 - Fixed bug in login flow"`}
       />
 
-      <h2>5. List All Contexts</h2>
+      <h3>List All Contexts</h3>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx list
@@ -64,7 +95,7 @@ my-project/main    --value
 my-project/feature --value`}
       />
 
-      <h2>6. Delete Context</h2>
+      <h3>Delete Context</h3>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx delete`}
@@ -78,16 +109,6 @@ my-project/feature --value`}
 project = git repository root directory name
 branch  = git rev-parse --abbrev-ref HEAD`}
       />
-
-      <h2>Using with AI Agents</h2>
-      <p>
-        ctxbin is designed for AI agents. For best results, include the bundled usage guide:
-      </p>
-      <CodeBlock
-        language="bash"
-        code={`$ npx ctxbin help`}
-      />
-      <p>This prints the full ctxbin usage documentation for agents to reference.</p>
     </div>
   );
 });

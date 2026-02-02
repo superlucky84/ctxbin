@@ -28,7 +28,38 @@ CTXBIN_STORE_URL: https://...
 CTXBIN_STORE_TOKEN: ...`}
       />
 
-      <h2>2. 컨텍스트 저장</h2>
+      <h2>2. AI 에이전트와 함께 사용 (핵심 사용법)</h2>
+      <p>
+        <strong>이것이 ctxbin의 주된 사용 방법입니다.</strong> AI 에이전트가 컨텍스트를 저장하고 로드하도록 하세요.
+      </p>
+
+      <h3>방법 1: 제로 셋업 (가장 간단)</h3>
+      <p>AI 에이전트에게 바로 요청하세요:</p>
+      <CodeBlock
+        language="text"
+        code={`"npx ctxbin help 실행해서 사용법 확인하고, 현재 컨텍스트 저장해줘."`}
+      />
+      <p>에이전트가 사용법 가이드를 스스로 확인하고 따릅니다.</p>
+
+      <h3>방법 2: Add-on 파일</h3>
+      <p>세션 간 일관된 동작을 위해 에이전트 지시 파일에 add-on을 복사하세요:</p>
+      <ol>
+        <li>
+          <a href="https://superlucky84.github.io/ctxbin/#/guide/agent-addon" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">agent-addon.md</a>를
+          프로젝트의 에이전트 지침 파일에 복사 (예: <code>AGENT.md</code>, <code>CLAUDE.md</code>)
+        </li>
+        <li>그런 다음 AI 에이전트에게 간단히 요청:</li>
+      </ol>
+      <CodeBlock
+        language="text"
+        code={`"npx ctxbin으로 현재 컨텍스트를 저장해줘."
+"npx ctxbin으로 현재 컨텍스트를 불러와줘."`}
+      />
+
+      <h2>3. 직접 CLI 사용</h2>
+      <p>커맨드 라인에서 직접 ctxbin을 사용할 수도 있습니다.</p>
+
+      <h3>컨텍스트 저장</h3>
       <p>git 저장소 안에서 컨텍스트 저장 (키는 자동 추론):</p>
       <CodeBlock
         language="bash"
@@ -43,20 +74,20 @@ CTXBIN_STORE_TOKEN: ...`}
 - 세션 관리 구현"`}
       />
 
-      <h2>3. 컨텍스트 로드</h2>
+      <h3>컨텍스트 로드</h3>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx load`}
       />
 
-      <h2>4. 컨텍스트에 추가</h2>
+      <h3>컨텍스트에 추가</h3>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx save --append --value "## 업데이트
 - 로그인 플로우 버그 수정"`}
       />
 
-      <h2>5. 모든 컨텍스트 목록</h2>
+      <h3>모든 컨텍스트 목록</h3>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx list
@@ -64,7 +95,7 @@ my-project/main    --value
 my-project/feature --value`}
       />
 
-      <h2>6. 컨텍스트 삭제</h2>
+      <h3>컨텍스트 삭제</h3>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx delete`}
@@ -78,16 +109,6 @@ my-project/feature --value`}
 project = git 저장소 루트 디렉터리 이름
 branch  = git rev-parse --abbrev-ref HEAD`}
       />
-
-      <h2>AI 에이전트와 함께 사용</h2>
-      <p>
-        ctxbin은 AI 에이전트용으로 설계되었습니다. 최상의 결과를 위해 내장 사용 가이드를 포함하세요:
-      </p>
-      <CodeBlock
-        language="bash"
-        code={`$ npx ctxbin help`}
-      />
-      <p>이 명령어는 에이전트가 참조할 전체 ctxbin 사용 문서를 출력합니다.</p>
     </div>
   );
 });
