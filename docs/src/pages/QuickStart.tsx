@@ -61,10 +61,15 @@ CTXBIN_STORE_TOKEN: ...`}
       <p>You can also ask agents to save skills to ctxbin:</p>
       <CodeBlock
         language="text"
-        code={`"Save the skill to ctxbin using --url. URL is https://github.com/user/repo, path is skills/my-skill, skip --ref."
+        code={`"Save this skill to ctxbin: https://github.com/user/repo/tree/main/skills/my-skill (skip --ref)"
+
+Or:
 
 "Save the skill at ./claude/skills/my-skill to ctxbin using --dir."`}
       />
+      <p>
+        The agent will parse the GitHub URL and convert it to the appropriate <code>--url</code> and <code>--path</code> options.
+      </p>
 
       <h2>3. Direct CLI Usage</h2>
       <p>You can also use ctxbin directly from the command line.</p>

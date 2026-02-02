@@ -61,10 +61,15 @@ CTXBIN_STORE_TOKEN: ...`}
       <p>에이전트에게 스킬 저장도 요청할 수 있습니다:</p>
       <CodeBlock
         language="text"
-        code={`"ctxbin에 --url 방식으로 스킬 저장해줘. URL은 https://github.com/user/repo, path는 skills/my-skill, --ref는 생략해."
+        code={`"이 스킬을 ctxbin에 저장해줘: https://github.com/user/repo/tree/main/skills/my-skill (--ref는 생략)"
 
-"ctxbin에 --dir 방식으로 ./claude/skills/my-skill에 있는 스킬을 저장해줘."`}
+또는:
+
+"./claude/skills/my-skill에 있는 스킬을 ctxbin에 --dir로 저장해줘."`}
       />
+      <p>
+        에이전트가 GitHub URL을 파싱해서 적절한 <code>--url</code>과 <code>--path</code> 옵션으로 변환합니다.
+      </p>
 
       <h2>3. 직접 CLI 사용</h2>
       <p>커맨드 라인에서 직접 ctxbin을 사용할 수도 있습니다.</p>
