@@ -289,7 +289,7 @@ async function handleList(
     return `${field}\t${type}`;
   });
 
-  process.stdout.write(lines.join("\n"));
+  process.stdout.write(lines.join("\n") + "\n");
 }
 
 

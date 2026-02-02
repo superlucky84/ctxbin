@@ -326,6 +326,30 @@ test("list output is sorted with type mapping", async () => {
   }
 });
 
+test("list output ends with newline", async () => {
+  const store = await createMockUpstash();
+  const env = {
+    ...process.env,
+    CTXBIN_STORE_URL: store.url,
+    CTXBIN_STORE_TOKEN: "test",
+  };
+
+  try {
+    await runCli(["skill", "save", "test-skill", "--value", "content"], { env });
+    await runCli(["ctx", "save", "test-ctx", "--value", "content"], { env });
+
+    let result = await runCli(["skill", "list"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stdout.endsWith("\n"), "skill list output should end with newline");
+
+    result = await runCli(["ctx", "list"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stdout.endsWith("\n"), "ctx list output should end with newline");
+  } finally {
+    await store.close();
+  }
+});
+
 test("error output follows CTXBIN_ERR format", async () => {
   const store = await createMockUpstash();
   const env = {

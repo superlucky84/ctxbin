@@ -1,6 +1,6 @@
 {
   "name": "ctxbin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Minimal deterministic CLI to store/load context, agents, and skills via Redis hashes",
   "author": "superlucky84",
   "license": "MIT",

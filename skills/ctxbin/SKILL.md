@@ -9,13 +9,20 @@ Prefer `npx ctxbin ...` when running commands in agent workflows.
 
 ```
 key = {project}/{branch}
-project = git repository root directory name
+project = git repository root folder name (not remote URL)
 branch  = git rev-parse --abbrev-ref HEAD
 ```
 
+> **Note:** The project name is derived from the local folder name, not the git remote URL.
+> If the folder name differs from expected, use an explicit key.
+
 ### Save (most common)
 ```bash
+# Auto-key (inferred from git)
 npx ctxbin ctx save --value "summary / next steps / notes"
+
+# Explicit key (when folder name differs or outside git)
+npx ctxbin ctx save my-project/main --value "summary / next steps / notes"
 ```
 Or via stdin:
 ```bash
@@ -51,7 +58,11 @@ npx ctxbin ctx list
 
 ### Delete
 ```bash
+# Auto-key
 npx ctxbin ctx delete
+
+# Explicit key
+npx ctxbin ctx delete my-project/main
 ```
 
 ## agent Save/Load

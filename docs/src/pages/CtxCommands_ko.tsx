@@ -16,10 +16,15 @@ export const CtxCommandsKo = mount(() => {
       <CodeBlock
         language="text"
         code={`key = {project}/{branch}
-project = git 저장소 루트 디렉터리 이름
+project = git 저장소 루트 폴더 이름 (remote URL 아님)
 branch  = git rev-parse --abbrev-ref HEAD`}
       />
       <p>이 기능은 git 저장소 안에서 실행해야 합니다.</p>
+      <p class="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+        <strong>참고:</strong> 프로젝트 이름은 git remote URL이 아닌 <strong>로컬 폴더 이름</strong>에서 가져옵니다.
+        이는 의도된 동작입니다—다양한 git 서비스(GitHub, GitLab, Bitbucket, Azure DevOps, 자체 호스팅 등)의 remote URL을 파싱하는 것은 불안정하고 오류가 발생하기 쉽습니다.
+        같은 저장소를 다른 폴더 이름으로 클론하면 추론되는 키가 달라집니다.
+      </p>
 
       <h2>Load</h2>
       <p>Redis에서 컨텍스트 로드:</p>

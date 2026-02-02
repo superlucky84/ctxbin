@@ -107,8 +107,25 @@ my-project/feature --value`}
       <CodeBlock
         language="text"
         code={`key = {project}/{branch}
-project = git repository root directory name
+project = git repository root folder name (not remote URL)
 branch  = git rev-parse --abbrev-ref HEAD`}
+      />
+      <p class="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+        <strong>Note:</strong> The project name is derived from the <strong>local folder name</strong>, not from the git remote URL.
+        This is intentional—parsing remote URLs across different git services (GitHub, GitLab, Bitbucket, Azure DevOps, self-hosted, etc.) is fragile and error-prone.
+        If you clone the same repository into different folder names, the inferred keys will differ.
+      </p>
+
+      <h2>Using Explicit Keys</h2>
+      <p>
+        If the folder name differs from the expected project name, or you're outside a git repository,
+        you can specify the key explicitly:
+      </p>
+      <CodeBlock
+        language="bash"
+        code={`$ npx ctxbin ctx save my-project/main --value "context"
+$ npx ctxbin ctx load my-project/main
+$ npx ctxbin ctx delete my-project/main`}
       />
     </div>
   );
