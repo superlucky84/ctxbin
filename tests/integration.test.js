@@ -350,6 +350,96 @@ test("list output ends with newline", async () => {
   }
 });
 
+test("ctx key inference uses package.json name when available", async () => {
+  if (!hasGit()) return;
+
+  const store = await createMockUpstash();
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-pkgname-"));
+  const repoDir = path.join(tmpDir, "my-folder");
+  await fs.mkdir(repoDir);
+
+  const env = {
+    ...process.env,
+    CTXBIN_STORE_URL: store.url,
+    CTXBIN_STORE_TOKEN: "test",
+  };
+
+  try {
+    // Initialize git repo
+    execFileSync("git", ["init"], { cwd: repoDir, stdio: "ignore" });
+    execFileSync("git", ["config", "user.email", "test@test.com"], { cwd: repoDir, stdio: "ignore" });
+    execFileSync("git", ["config", "user.name", "Test"], { cwd: repoDir, stdio: "ignore" });
+    await fs.writeFile(path.join(repoDir, "README.md"), "# Test");
+    execFileSync("git", ["add", "."], { cwd: repoDir, stdio: "ignore" });
+    execFileSync("git", ["commit", "-m", "init"], { cwd: repoDir, stdio: "ignore" });
+
+    // Create package.json with different name than folder
+    await fs.writeFile(
+      path.join(repoDir, "package.json"),
+      JSON.stringify({ name: "my-package" })
+    );
+
+    // Save context (should use package.json name)
+    let result = await runCli(["ctx", "save", "--value", "test content"], { cwd: repoDir, env });
+    assert.equal(result.status, 0, result.stderr);
+    // Should warn about name mismatch
+    assert.match(result.stderr, /CTXBIN_WARN.*my-package.*my-folder/);
+
+    // List should show my-package/master (or main)
+    result = await runCli(["ctx", "list"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /my-package\//);
+
+    // Load using explicit key should work
+    const branch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: repoDir, encoding: "utf8" }).trim();
+    result = await runCli(["ctx", "load", `my-package/${branch}`], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, "test content");
+  } finally {
+    await store.close();
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("ctx key inference falls back to folder name without package.json", async () => {
+  if (!hasGit()) return;
+
+  const store = await createMockUpstash();
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-nopkg-"));
+  const repoDir = path.join(tmpDir, "my-folder");
+  await fs.mkdir(repoDir);
+
+  const env = {
+    ...process.env,
+    CTXBIN_STORE_URL: store.url,
+    CTXBIN_STORE_TOKEN: "test",
+  };
+
+  try {
+    // Initialize git repo without package.json
+    execFileSync("git", ["init"], { cwd: repoDir, stdio: "ignore" });
+    execFileSync("git", ["config", "user.email", "test@test.com"], { cwd: repoDir, stdio: "ignore" });
+    execFileSync("git", ["config", "user.name", "Test"], { cwd: repoDir, stdio: "ignore" });
+    await fs.writeFile(path.join(repoDir, "README.md"), "# Test");
+    execFileSync("git", ["add", "."], { cwd: repoDir, stdio: "ignore" });
+    execFileSync("git", ["commit", "-m", "init"], { cwd: repoDir, stdio: "ignore" });
+
+    // Save context (should use folder name)
+    let result = await runCli(["ctx", "save", "--value", "test content"], { cwd: repoDir, env });
+    assert.equal(result.status, 0, result.stderr);
+    // No warning expected
+    assert.equal(result.stderr, "");
+
+    // List should show my-folder/master (or main)
+    result = await runCli(["ctx", "list"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /my-folder\//);
+  } finally {
+    await store.close();
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
 test("error output follows CTXBIN_ERR format", async () => {
   const store = await createMockUpstash();
   const env = {

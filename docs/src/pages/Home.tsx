@@ -114,7 +114,7 @@ $ npx ctxbin ctx load`}
             🔑 Key Inference
           </h3>
           <p class="text-gray-600 dark:text-gray-400">
-            Automatic key inference from git repository folder name and branch for context storage.
+            Automatic key inference from package.json name (or folder name) and branch for context storage.
           </p>
         </div>
 

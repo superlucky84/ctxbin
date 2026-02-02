@@ -107,13 +107,13 @@ my-project/feature --value`}
       <CodeBlock
         language="text"
         code={`key = {project}/{branch}
-project = git repository root folder name (not remote URL)
+project = package.json "name" field, or folder name if no package.json
 branch  = git rev-parse --abbrev-ref HEAD`}
       />
       <p class="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
-        <strong>Note:</strong> The project name is derived from the <strong>local folder name</strong>, not from the git remote URL.
-        This is intentional—parsing remote URLs across different git services (GitHub, GitLab, Bitbucket, Azure DevOps, self-hosted, etc.) is fragile and error-prone.
-        If you clone the same repository into different folder names, the inferred keys will differ.
+        <strong>Note:</strong> If <code>package.json</code> exists, the <code>name</code> field is used as the project name.
+        If the name differs from the folder name, a warning is printed to stderr.
+        Without <code>package.json</code>, the folder name is used (not the git remote URL—parsing remote URLs across different git services is fragile).
       </p>
 
       <h2>Using Explicit Keys</h2>

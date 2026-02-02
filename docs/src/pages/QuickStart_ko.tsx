@@ -107,13 +107,13 @@ my-project/feature --value`}
       <CodeBlock
         language="text"
         code={`key = {project}/{branch}
-project = git 저장소 루트 폴더 이름 (remote URL 아님)
+project = package.json의 "name" 필드, 없으면 폴더 이름
 branch  = git rev-parse --abbrev-ref HEAD`}
       />
       <p class="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
-        <strong>참고:</strong> 프로젝트 이름은 git remote URL이 아닌 <strong>로컬 폴더 이름</strong>에서 가져옵니다.
-        이는 의도된 동작입니다—다양한 git 서비스(GitHub, GitLab, Bitbucket, Azure DevOps, 자체 호스팅 등)의 remote URL을 파싱하는 것은 불안정하고 오류가 발생하기 쉽습니다.
-        같은 저장소를 다른 폴더 이름으로 클론하면 추론되는 키가 달라집니다.
+        <strong>참고:</strong> <code>package.json</code>이 있으면 <code>name</code> 필드를 프로젝트 이름으로 사용합니다.
+        name과 폴더 이름이 다르면 stderr에 경고가 출력됩니다.
+        <code>package.json</code>이 없으면 폴더 이름을 사용합니다 (git remote URL은 사용하지 않음—다양한 git 서비스의 URL 파싱은 불안정함).
       </p>
 
       <h2>명시적 키 사용</h2>

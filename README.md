@@ -81,13 +81,13 @@ npx ctxbin ctx delete
 When the key is omitted, ctxbin infers it **only inside a git repository**:
 ```
 key = {project}/{branch}
-project = git repository root folder name (not remote URL)
+project = package.json "name" field, or folder name if no package.json
 branch  = git rev-parse --abbrev-ref HEAD
 ```
 
-> **Note:** The project name is derived from the **local folder name**, not from the git remote URL.
-> This is intentional—parsing remote URLs across different git services (GitHub, GitLab, Bitbucket, Azure DevOps, self-hosted, etc.) is fragile and error-prone.
-> If you clone the same repository into different folder names, the inferred keys will differ.
+> **Note:** If `package.json` exists, the `name` field is used as the project name.
+> If the name differs from the folder name, a warning is printed to stderr.
+> Without `package.json`, the folder name is used (not the git remote URL—parsing remote URLs across different git services is fragile).
 
 Explicit key example (useful outside git repos; not recommended for normal use):
 ```bash

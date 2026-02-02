@@ -9,12 +9,13 @@ Prefer `npx ctxbin ...` when running commands in agent workflows.
 
 ```
 key = {project}/{branch}
-project = git repository root folder name (not remote URL)
+project = package.json "name" field, or folder name if no package.json
 branch  = git rev-parse --abbrev-ref HEAD
 ```
 
-> **Note:** The project name is derived from the local folder name, not the git remote URL.
-> If the folder name differs from expected, use an explicit key.
+> **Note:** If `package.json` exists, the `name` field is used as the project name.
+> If the name differs from the folder name, a warning is printed.
+> Without `package.json`, the folder name is used. Use an explicit key if needed.
 
 ### Save (most common)
 ```bash

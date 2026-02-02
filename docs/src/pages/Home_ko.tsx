@@ -114,7 +114,7 @@ $ npx ctxbin ctx load`}
             🔑 키 추론
           </h3>
           <p class="text-gray-600 dark:text-gray-400">
-            git 저장소 폴더 이름과 브랜치로부터 컨텍스트 저장 키를 자동 추론합니다.
+            package.json name (또는 폴더 이름)과 브랜치로부터 컨텍스트 저장 키를 자동 추론합니다.
           </p>
         </div>
 
