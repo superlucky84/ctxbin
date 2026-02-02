@@ -19,7 +19,7 @@ export const HomeKo = mount(() => {
 
         <div class="flex flex-wrap justify-center gap-4 mb-12">
           <button
-            onClick={() => navigateTo('/guide/introduction')}
+            onClick={() => navigateTo('/guide/quick-start')}
             class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
           >
             시작하기
