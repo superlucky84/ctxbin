@@ -40,6 +40,22 @@ ctxbin-skillref@1
       />
       <p>Omitting <code>--ref</code> tracks the repository's default branch.</p>
 
+      <h2>When to Use --ref</h2>
+      <p>
+        The <code>--ref</code> option determines whether the skill is <strong>pinned</strong> to a specific version
+        or <strong>tracks</strong> the latest code.
+      </p>
+      <ul>
+        <li>
+          <strong>With --ref (pinned)</strong>: Always fetches the exact same code from that commit.
+          Use this for reproducibility, version control, or when you need a stable skill that won't change unexpectedly.
+        </li>
+        <li>
+          <strong>Without --ref (tracking)</strong>: Fetches the latest code from the default branch on every load.
+          Use this when you always want the most up-to-date version of the skill.
+        </li>
+      </ul>
+
       <h2>Load a Skillref</h2>
       <CodeBlock
         language="bash"

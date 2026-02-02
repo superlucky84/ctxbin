@@ -57,6 +57,15 @@ CTXBIN_STORE_TOKEN: ...`}
 "npx ctxbin으로 현재 컨텍스트를 불러와줘."`}
       />
 
+      <h3>에이전트로 스킬 관리</h3>
+      <p>에이전트에게 스킬 저장도 요청할 수 있습니다:</p>
+      <CodeBlock
+        language="text"
+        code={`"ctxbin에 --url 방식으로 스킬 저장해줘. URL은 https://github.com/user/repo, path는 skills/my-skill, --ref는 생략해."
+
+"ctxbin에 --dir 방식으로 ./claude/skills/my-skill에 있는 스킬을 저장해줘."`}
+      />
+
       <h2>3. 직접 CLI 사용</h2>
       <p>커맨드 라인에서 직접 ctxbin을 사용할 수도 있습니다.</p>
 

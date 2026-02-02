@@ -57,6 +57,15 @@ CTXBIN_STORE_TOKEN: ...`}
 "Use npx ctxbin to load the current context."`}
       />
 
+      <h3>Skill management with agents</h3>
+      <p>You can also ask agents to save skills to ctxbin:</p>
+      <CodeBlock
+        language="text"
+        code={`"Save the skill to ctxbin using --url. URL is https://github.com/user/repo, path is skills/my-skill, skip --ref."
+
+"Save the skill at ./claude/skills/my-skill to ctxbin using --dir."`}
+      />
+
       <h2>3. Direct CLI Usage</h2>
       <p>You can also use ctxbin directly from the command line.</p>
 

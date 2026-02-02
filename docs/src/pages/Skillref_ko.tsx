@@ -40,6 +40,22 @@ ctxbin-skillref@1
       />
       <p><code>--ref</code>를 생략하면 저장소의 기본 브랜치를 추적합니다.</p>
 
+      <h2>--ref 사용 시점</h2>
+      <p>
+        <code>--ref</code> 옵션은 스킬을 특정 버전에 <strong>고정</strong>할지,
+        최신 코드를 <strong>추적</strong>할지 결정합니다.
+      </p>
+      <ul>
+        <li>
+          <strong>--ref 사용 (고정)</strong>: 해당 커밋의 동일한 코드를 항상 가져옵니다.
+          재현성, 버전 관리가 필요하거나 예기치 않게 변경되지 않는 안정적인 스킬이 필요할 때 사용하세요.
+        </li>
+        <li>
+          <strong>--ref 생략 (추적)</strong>: 로드할 때마다 기본 브랜치의 최신 코드를 가져옵니다.
+          항상 최신 버전의 스킬을 사용하고 싶을 때 사용하세요.
+        </li>
+      </ul>
+
       <h2>Skillref 로드</h2>
       <CodeBlock
         language="bash"

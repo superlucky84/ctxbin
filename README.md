@@ -33,6 +33,8 @@ For consistent behavior across sessions, copy the add-on into your agent instruc
 The add-on tells agents how to format context (summary, next steps, decisions) and how to use
 `npx ctxbin ctx save/load` correctly.
 
+You can also ask agents to save/load skills with simple commands like `--url` or `--dir`. See [Quick Start](https://superlucky84.github.io/ctxbin/#/guide/quick-start) for examples.
+
 ## Features
 - Branch-scoped `ctx` keys (auto-inferred from git repo + branch)
 - `agent` and `skill` storage for reusable prompts and workflows
