@@ -89,7 +89,7 @@ export const HomeKo = mount(() => {
         <p>
           커맨드 라인에서 직접 ctxbin을 사용할 수도 있습니다. git 저장소 안에서는 키가 자동
           추론되며, git 밖에서는 명시적으로 키를 넣어야 합니다. 자세한 내용은{' '}
-          <a href="/ko/guide/ctx-commands" class="text-indigo-600 hover:underline">ctx 명령어</a>를 참고하세요.
+          <span onClick={() => navigateTo('/ko/guide/ctx-commands')} class="text-indigo-600 hover:underline cursor-pointer">ctx 명령어</span>를 참고하세요.
         </p>
         <CodeBlock
           language="bash"
