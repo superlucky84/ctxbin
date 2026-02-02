@@ -68,7 +68,7 @@ export const HomeKo = mount(() => {
         <p>세션 간 일관된 동작을 위해 에이전트 지시 파일에 add-on을 복사하세요:</p>
         <ol>
           <li>
-            <a href="https://superlucky84.github.io/ctxbin/#/guide/agent-addon" target="_blank" rel="noopener noreferrer">agent-addon.md</a>를
+            <span onClick={() => navigateTo('/ko/guide/agent-addon')} class="text-indigo-600 hover:underline cursor-pointer">agent-addon.md</span>를
             프로젝트의 에이전트 지침 파일에 복사 (예: <code>AGENT.md</code>, <code>CLAUDE.md</code>, 또는 유사한 파일)
           </li>
           <li>그런 다음 AI 에이전트에게 간단히 요청:</li>

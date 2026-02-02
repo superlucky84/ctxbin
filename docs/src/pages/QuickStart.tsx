@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const QuickStart = mount(() => {
   return () => (
@@ -45,7 +46,7 @@ CTXBIN_STORE_TOKEN: ...`}
       <p>For consistent behavior across sessions, copy the add-on into your agent instruction file:</p>
       <ol>
         <li>
-          Copy <a href="https://superlucky84.github.io/ctxbin/#/guide/agent-addon" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">agent-addon.md</a> into
+          Copy <span onClick={() => navigateTo('/guide/agent-addon')} class="text-indigo-600 hover:underline cursor-pointer">agent-addon.md</span> into
           your project's agent instruction file (e.g. <code>AGENT.md</code>, <code>CLAUDE.md</code>)
         </li>
         <li>Then simply ask your AI agent:</li>
