@@ -18,6 +18,7 @@ const menuData: MenuSection[] = [
     items: [
       { text: { en: 'Introduction', ko: '소개' }, link: '/guide/introduction' },
       { text: { en: 'Quick Start', ko: '빠른 시작' }, link: '/guide/quick-start' },
+      { text: { en: 'Key Inference', ko: '키 추론' }, link: '/guide/key-inference' },
       {
         text: { en: 'GitHub', ko: 'GitHub' },
         link: 'https://github.com/superlucky84/ctxbin',

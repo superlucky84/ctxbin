@@ -8,6 +8,8 @@ import { Introduction } from '@/pages/Introduction';
 import { IntroductionKo } from '@/pages/Introduction_ko';
 import { QuickStart } from '@/pages/QuickStart';
 import { QuickStartKo } from '@/pages/QuickStart_ko';
+import { KeyInference } from '@/pages/KeyInference';
+import { KeyInferenceKo } from '@/pages/KeyInference_ko';
 import { AgentAddon } from '@/pages/AgentAddon';
 import { AgentAddonKo } from '@/pages/AgentAddon_ko';
 import { CtxCommands } from '@/pages/CtxCommands';
@@ -44,6 +46,8 @@ const routes: Record<string, PageComponent> = {
   '/ko/guide/introduction': IntroductionKo,
   '/guide/quick-start': QuickStart,
   '/ko/guide/quick-start': QuickStartKo,
+  '/guide/key-inference': KeyInference,
+  '/ko/guide/key-inference': KeyInferenceKo,
   '/guide/agent-addon': AgentAddon,
   '/ko/guide/agent-addon': AgentAddonKo,
   '/commands/ctx': CtxCommands,

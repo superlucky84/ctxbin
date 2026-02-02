@@ -51,7 +51,7 @@ export const HomeKo = mount(() => {
         <h2 class="text-indigo-700 dark:text-indigo-300">Agent Workflow (핵심)</h2>
         <p>
           <strong>가장 중요한 사용법입니다.</strong> 에이전트가 일관되게 브랜치 컨텍스트를 저장하고 로드하도록 합니다.
-          이 워크플로는 git 기반 프로젝트에서 키 자동 추론을 전제로 합니다.
+          이 워크플로는 git 기반 프로젝트에서 <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">키 자동 추론</span>을 전제로 합니다.
         </p>
 
         <h3 class="text-lg font-semibold mt-4 mb-2">방법 1: 제로 셋업 (가장 간단)</h3>
@@ -109,7 +109,7 @@ $ npx ctxbin ctx load`}
           </p>
         </div>
 
-        <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors" onClick={() => navigateTo('/guide/key-inference')}>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             🔑 키 추론
           </h3>

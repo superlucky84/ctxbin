@@ -117,30 +117,14 @@ my-project/feature --value`}
       />
 
       <h2>Key Inference</h2>
-      <p>For <code>ctx</code> commands, when no key is provided, it is automatically inferred:</p>
-      <CodeBlock
-        language="text"
-        code={`key = {project}/{branch}
-project = package.json "name" field, or folder name if no package.json
-branch  = git rev-parse --abbrev-ref HEAD`}
-      />
-      <p class="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
-        <strong>Note:</strong> If <code>package.json</code> exists, the <code>name</code> field is used as the project name.
-        If the name differs from the folder name, a warning is printed to stderr.
-        Without <code>package.json</code>, the folder name is used (not the git remote URL—parsing remote URLs across different git services is fragile).
-      </p>
-
-      <h2>Using Explicit Keys</h2>
       <p>
-        If the folder name differs from the expected project name, or you're outside a git repository,
-        you can specify the key explicitly:
+        For <code>ctx</code> commands, when no key is provided, ctxbin automatically infers
+        the key from your git repository (<code>{'{project}/{branch}'}</code>).
       </p>
-      <CodeBlock
-        language="bash"
-        code={`$ npx ctxbin ctx save my-project/main --value "context"
-$ npx ctxbin ctx load my-project/main
-$ npx ctxbin ctx delete my-project/main`}
-      />
+      <p>
+        See <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">Key Inference</span> for
+        details on how project names are determined and when to use explicit keys.
+      </p>
     </div>
   );
 });

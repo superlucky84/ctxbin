@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const CtxCommands = mount(() => {
   return () => (
@@ -12,7 +13,10 @@ export const CtxCommands = mount(() => {
       </p>
 
       <h2>Key Inference</h2>
-      <p>When no key is provided, ctxbin automatically infers the key:</p>
+      <p>
+        When no key is provided, ctxbin automatically infers the key.
+        See <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">Key Inference</span> for details.
+      </p>
       <CodeBlock
         language="text"
         code={`key = {project}/{branch}

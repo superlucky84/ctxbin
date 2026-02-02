@@ -51,7 +51,7 @@ export const Home = mount(() => {
         <h2 class="text-indigo-700 dark:text-indigo-300">Agent Workflow (Core)</h2>
         <p>
           <strong>This is the most important usage.</strong> Let agents consistently save and load branch context.
-          This workflow assumes a git-based project for automatic key inference.
+          This workflow assumes a git-based project for <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">automatic key inference</span>.
         </p>
 
         <h3 class="text-lg font-semibold mt-4 mb-2">Option 1: Zero-setup (simplest)</h3>
@@ -109,7 +109,7 @@ $ npx ctxbin ctx load`}
           </p>
         </div>
 
-        <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors" onClick={() => navigateTo('/guide/key-inference')}>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             🔑 Key Inference
           </h3>

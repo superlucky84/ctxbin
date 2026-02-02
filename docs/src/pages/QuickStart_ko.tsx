@@ -117,30 +117,14 @@ my-project/feature --value`}
       />
 
       <h2>키 추론</h2>
-      <p><code>ctx</code> 명령어에서 키를 제공하지 않으면 자동으로 추론됩니다:</p>
-      <CodeBlock
-        language="text"
-        code={`key = {project}/{branch}
-project = package.json의 "name" 필드, 없으면 폴더 이름
-branch  = git rev-parse --abbrev-ref HEAD`}
-      />
-      <p class="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
-        <strong>참고:</strong> <code>package.json</code>이 있으면 <code>name</code> 필드를 프로젝트 이름으로 사용합니다.
-        name과 폴더 이름이 다르면 stderr에 경고가 출력됩니다.
-        <code>package.json</code>이 없으면 폴더 이름을 사용합니다 (git remote URL은 사용하지 않음—다양한 git 서비스의 URL 파싱은 불안정함).
-      </p>
-
-      <h2>명시적 키 사용</h2>
       <p>
-        폴더 이름이 예상 프로젝트 이름과 다르거나 git 저장소 밖에 있는 경우,
-        키를 명시적으로 지정할 수 있습니다:
+        <code>ctx</code> 명령어에서 키를 제공하지 않으면, ctxbin이 git 저장소에서
+        자동으로 키를 추론합니다 (<code>{'{project}/{branch}'}</code>).
       </p>
-      <CodeBlock
-        language="bash"
-        code={`$ npx ctxbin ctx save my-project/main --value "컨텍스트"
-$ npx ctxbin ctx load my-project/main
-$ npx ctxbin ctx delete my-project/main`}
-      />
+      <p>
+        프로젝트 이름이 어떻게 결정되는지, 명시적 키를 언제 사용해야 하는지는
+        <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">키 추론</span> 페이지를 참고하세요.
+      </p>
     </div>
   );
 });

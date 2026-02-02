@@ -2,7 +2,7 @@
 
 Minimal, deterministic CLI to save and load **context**, **agents**, and **skills** in Upstash Redis hashes.
 It is designed for fast handoff between AI agents working on the same repo/branch,
-with branch-based context keys inferred inside git repositories.
+with branch-based [context keys inferred](https://superlucky84.github.io/ctxbin/#/guide/key-inference) inside git repositories.
 
 Docs: https://superlucky84.github.io/ctxbin/
 
@@ -80,16 +80,8 @@ npx ctxbin ctx list
 npx ctxbin ctx delete
 ```
 
-When the key is omitted, ctxbin infers it **only inside a git repository**:
-```
-key = {project}/{branch}
-project = package.json "name" field, or folder name if no package.json
-branch  = git rev-parse --abbrev-ref HEAD
-```
-
-> **Note:** If `package.json` exists, the `name` field is used as the project name.
-> If the name differs from the folder name, a warning is printed to stderr.
-> Without `package.json`, the folder name is used (not the git remote URL—parsing remote URLs across different git services is fragile).
+When the key is omitted, ctxbin infers it **only inside a git repository**.
+See [Key Inference](https://superlucky84.github.io/ctxbin/#/guide/key-inference) for details.
 
 Explicit key example (useful outside git repos; not recommended for normal use):
 ```bash

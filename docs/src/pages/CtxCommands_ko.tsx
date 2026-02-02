@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const CtxCommandsKo = mount(() => {
   return () => (
@@ -12,7 +13,10 @@ export const CtxCommandsKo = mount(() => {
       </p>
 
       <h2>키 추론</h2>
-      <p>키를 제공하지 않으면 ctxbin이 자동으로 키를 추론합니다:</p>
+      <p>
+        키를 제공하지 않으면 ctxbin이 자동으로 키를 추론합니다.
+        자세한 내용은 <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">키 추론</span> 페이지를 참고하세요.
+      </p>
       <CodeBlock
         language="text"
         code={`key = {project}/{branch}

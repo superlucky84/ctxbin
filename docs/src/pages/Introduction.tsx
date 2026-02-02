@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const Introduction = mount(() => {
   return () => (
@@ -50,7 +51,7 @@ export const Introduction = mount(() => {
       <h2>Three Resource Types</h2>
 
       <h3>1. Context (ctx)</h3>
-      <p>Branch-scoped project context. Key can be auto-inferred from git.</p>
+      <p>Branch-scoped project context. Key can be <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">auto-inferred from git</span>.</p>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx save --value "project context"

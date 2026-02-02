@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const IntroductionKo = mount(() => {
   return () => (
@@ -49,7 +50,7 @@ export const IntroductionKo = mount(() => {
       <h2>세 가지 리소스 타입</h2>
 
       <h3>1. Context (ctx)</h3>
-      <p>브랜치 범위의 프로젝트 컨텍스트. git에서 키를 자동 추론할 수 있습니다.</p>
+      <p>브랜치 범위의 프로젝트 컨텍스트. git에서 <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">키를 자동 추론</span>할 수 있습니다.</p>
       <CodeBlock
         language="bash"
         code={`$ npx ctxbin ctx save --value "프로젝트 컨텍스트"
