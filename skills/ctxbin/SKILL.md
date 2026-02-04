@@ -141,14 +141,29 @@ npx ctxbin skill save my-skill --append --value "extra string"
 ```
 
 ## What agents must include in ctx
-Ensure the next agent can continue immediately:
+Use this format so the next agent can continue immediately:
 
-- What changed (summary)
-- What remains (next steps)
-- Completed vs remaining checklist items
-- Important decisions/constraints
-- Files touched and why
-- Failing tests or warnings
+```markdown
+# summary
+Brief description of what was done and current state.
+
+# decisions
+Key decisions made and why (alternatives considered, trade-offs).
+
+# open
+Unresolved issues, open questions, or blocked items.
+
+# next
+What to do next, in priority order.
+
+# risks
+Potential problems, warnings, or things to watch out for.
+```
+
+**Guidelines:**
+- Omit sections that don't apply (e.g., no `# risks` if none)
+- Keep each section concise but informative
+- `# decisions` is most valuable for handoffs—capture the "why"
 
 ## Storage Model (ctx)
 Context is stored in Upstash Redis hash `ctx` under field `{project}/{branch}`.
