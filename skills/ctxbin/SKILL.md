@@ -52,6 +52,26 @@ npx ctxbin ctx load <project>/<branch>
 `CTXBIN_ERR INVALID_INPUT` usually means flags were used incorrectly.
 For `ctx load`, do not pass `--value`, `--file`, or other input flags.
 
+### If any command returns NETWORK
+`CTXBIN_ERR NETWORK: fetch failed` means the HTTP request to the remote store failed.
+All `save`, `load`, `list`, and `delete` commands call Upstash Redis over HTTPS, so they require outbound network access.
+
+**Common cause:** sandboxed or CI environments that restrict network by default.
+
+Remediation:
+1. **Grant network permission** — allow outbound HTTPS in the sandbox/runner config, then retry the same command.
+2. **Use `npx --no-install`** — if ctxbin is already installed, skip the npm registry lookup:
+   ```bash
+   npx --no-install ctxbin ctx load
+   ```
+3. **Fallback to local file** — when the network is unavailable, save context to a local file and upload later:
+   ```bash
+   # Save locally first
+   echo "summary + next steps" > ctx-pending.md
+   # Upload when network is available
+   npx ctxbin ctx save --file ctx-pending.md
+   ```
+
 ### List
 ```bash
 npx ctxbin ctx list
