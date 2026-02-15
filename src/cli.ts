@@ -11,6 +11,19 @@ import { extractSkillpackToDir } from "./skillpack";
 import { loadSkillrefToDir } from "./skillref";
 import { detectSkillValueType } from "./value";
 import { resolveSaveInput } from "./input";
+import { injectMetadata, stripMetadata, extractMetadata, formatMetadataBlock } from "./metadata";
+
+type CliOptions = {
+  append: boolean;
+  meta: boolean;
+  by?: string;
+  file?: string;
+  value?: string;
+  dir?: string;
+  url?: string;
+  ref?: string;
+  path?: string;
+};
 
 async function main(): Promise<void> {
   let positionals: string[];
@@ -19,14 +32,16 @@ async function main(): Promise<void> {
     ({ positionals, values } = parseArgs({
       args: process.argv.slice(2),
       options: {
-      append: { type: "boolean" },
-      version: { type: "boolean", short: "v" },
-      file: { type: "string" },
-      value: { type: "string" },
-      dir: { type: "string" },
-      url: { type: "string" },
-      ref: { type: "string" },
-      path: { type: "string" },
+        append: { type: "boolean" },
+        version: { type: "boolean", short: "v" },
+        meta: { type: "boolean" },
+        by: { type: "string" },
+        file: { type: "string" },
+        value: { type: "string" },
+        dir: { type: "string" },
+        url: { type: "string" },
+        ref: { type: "string" },
+        path: { type: "string" },
       },
       allowPositionals: true,
     }));
@@ -70,8 +85,10 @@ async function main(): Promise<void> {
     return fail("INVALID_INPUT", "too many positional arguments");
   }
 
-  const opts = {
+  const opts: CliOptions = {
     append: Boolean(values.append),
+    meta: Boolean(values.meta),
+    by: values.by as string | undefined,
     file: values.file as string | undefined,
     value: values.value as string | undefined,
     dir: values.dir as string | undefined,
@@ -160,15 +177,7 @@ async function handleLoad(
   resource: string,
   hash: string,
   key: string,
-  opts: {
-    append: boolean;
-    file?: string;
-    value?: string;
-    dir?: string;
-    url?: string;
-    ref?: string;
-    path?: string;
-  }
+  opts: CliOptions
 ): Promise<void> {
   ensureNoSaveInput(opts, "load");
 
@@ -190,7 +199,7 @@ async function handleLoad(
       if (opts.dir) {
         return fail("TYPE_MISMATCH", "--dir cannot be used with string values");
       }
-      process.stdout.write(value);
+      outputWithMeta(value, opts.meta);
       return;
     }
     if (!opts.dir) {
@@ -209,7 +218,21 @@ async function handleLoad(
   if (opts.dir) {
     return fail("TYPE_MISMATCH", "--dir is only valid for skill values");
   }
-  process.stdout.write(value);
+  outputWithMeta(value, opts.meta);
+}
+
+function outputWithMeta(value: string, showMeta: boolean): void {
+  if (showMeta) {
+    const meta = extractMetadata(value);
+    const body = stripMetadata(value);
+    if (meta) {
+      process.stdout.write(formatMetadataBlock(meta) + body);
+    } else {
+      process.stdout.write(body);
+    }
+  } else {
+    process.stdout.write(stripMetadata(value));
+  }
 }
 
 async function handleSave(
@@ -217,15 +240,7 @@ async function handleSave(
   resource: string,
   hash: string,
   key: string,
-  opts: {
-    append: boolean;
-    file?: string;
-    value?: string;
-    dir?: string;
-    url?: string;
-    ref?: string;
-    path?: string;
-  }
+  opts: CliOptions
 ): Promise<void> {
   const input = await resolveSaveInput(resource, opts);
 
@@ -237,13 +252,19 @@ async function handleSave(
     if (resource === "skill" && existing && detectSkillValueType(existing) !== "string") {
       return fail("TYPE_MISMATCH", "cannot append to skillpack/skillref values");
     }
-    const merged = existing ? `${existing}\n\n${input.value}` : input.value;
-    await store.set(hash, key, merged);
+    const existingBody = existing ? stripMetadata(existing) : "";
+    const merged = existing ? `${existingBody}\n\n${input.value}` : input.value;
+    await store.set(hash, key, injectMetadata(merged, buildMetadata(opts.by)));
     return;
   }
 
   if (input.kind !== "string" && resource !== "skill") {
-    return fail("TYPE_MISMATCH", "non-string inputs are only valid for skill" );
+    return fail("TYPE_MISMATCH", "non-string inputs are only valid for skill");
+  }
+
+  if (input.kind === "string") {
+    await store.set(hash, key, injectMetadata(input.value, buildMetadata(opts.by)));
+    return;
   }
 
   await store.set(hash, key, input.value);
@@ -254,15 +275,7 @@ async function handleDelete(
   resource: string,
   hash: string,
   key: string,
-  opts: {
-    append: boolean;
-    file?: string;
-    value?: string;
-    dir?: string;
-    url?: string;
-    ref?: string;
-    path?: string;
-  }
+  opts: CliOptions
 ): Promise<void> {
   ensureNoSaveInput(opts, "delete");
   if (opts.dir) {
@@ -292,36 +305,43 @@ async function handleList(
   process.stdout.write(lines.join("\n") + "\n");
 }
 
-
-function ensureNoSaveInput(
-  opts: {
-    append: boolean;
-    file?: string;
-    value?: string;
-    dir?: string;
-    url?: string;
-    ref?: string;
-    path?: string;
-  },
-  command: "load" | "delete"
-): void {
-  if (opts.append || opts.file || opts.value || opts.url || opts.ref || opts.path) {
+function ensureNoSaveInput(opts: CliOptions, command: "load" | "delete"): void {
+  if (
+    opts.append ||
+    opts.file ||
+    opts.value ||
+    opts.url ||
+    opts.ref ||
+    opts.path ||
+    opts.by ||
+    (command === "delete" && opts.meta)
+  ) {
     return fail("INVALID_INPUT", `${command} does not accept input flags`);
   }
 }
 
-function ensureNoListFlags(opts: {
-  append: boolean;
-  file?: string;
-  value?: string;
-  dir?: string;
-  url?: string;
-  ref?: string;
-  path?: string;
-}): void {
-  if (opts.append || opts.file || opts.value || opts.dir || opts.url || opts.ref || opts.path) {
+function ensureNoListFlags(opts: CliOptions): void {
+  if (
+    opts.append ||
+    opts.meta ||
+    opts.by ||
+    opts.file ||
+    opts.value ||
+    opts.dir ||
+    opts.url ||
+    opts.ref ||
+    opts.path
+  ) {
     return fail("INVALID_INPUT", "list does not accept input flags");
   }
+}
+
+function buildMetadata(by?: string): { savedAt: string; by?: string } {
+  const meta: { savedAt: string; by?: string } = { savedAt: new Date().toISOString() };
+  if (by) {
+    meta.by = by;
+  }
+  return meta;
 }
 
 main().catch((err) => {

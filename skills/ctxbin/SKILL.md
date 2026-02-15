@@ -35,6 +35,25 @@ echo "summary" | npx ctxbin ctx save
 npx ctxbin ctx load
 ```
 
+### Metadata (`--meta`, `--by`)
+`ctx save`, `agent save`, and string-based `skill save` automatically add metadata:
+- `savedAt`: ISO timestamp
+- `by` (optional): agent identifier from `--by`
+
+Default load hides metadata and prints only body text.
+Use `--meta` to include metadata in output.
+
+```bash
+# Save with actor id
+npx ctxbin ctx save --by codex --value "summary / next steps"
+
+# Default load (body only)
+npx ctxbin ctx load
+
+# Load with metadata block
+npx ctxbin ctx load --meta
+```
+
 ### If load returns NOT_FOUND
 `CTXBIN_ERR NOT_FOUND: no value for ctx:<project>/<branch>` means nothing has been saved for this branch yet.
 Tell the user and suggest:

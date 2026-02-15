@@ -8,8 +8,6 @@ const crypto = require("node:crypto");
 const { execFileSync, spawn } = require("node:child_process");
 
 const {
-  SKILLPACK_HEADER,
-  SKILLREF_HEADER,
   createSkillrefValue,
   loadSkillrefToDir,
   safeChmod,
@@ -17,6 +15,8 @@ const {
 } = require("../dist/index.js");
 
 const CLI_PATH = path.join(__dirname, "..", "dist", "cli.js");
+const META_HEADER = "ctxbin-meta@1\n";
+const META_SEPARATOR = "\n---\n";
 
 function runCli(args, options = {}) {
   return new Promise((resolve) => {
@@ -35,6 +35,24 @@ function runCli(args, options = {}) {
       resolve({ status, stdout, stderr });
     });
   });
+}
+
+function stripStoredMetadata(value) {
+  if (!value || !value.startsWith(META_HEADER)) return value;
+  const sepIdx = value.indexOf(META_SEPARATOR, META_HEADER.length);
+  if (sepIdx === -1) return value;
+  return value.slice(sepIdx + META_SEPARATOR.length);
+}
+
+function extractStoredMetadata(value) {
+  if (!value || !value.startsWith(META_HEADER)) return null;
+  const sepIdx = value.indexOf(META_SEPARATOR, META_HEADER.length);
+  if (sepIdx === -1) return null;
+  try {
+    return JSON.parse(value.slice(META_HEADER.length, sepIdx));
+  } catch {
+    return null;
+  }
 }
 
 function hasGit() {
@@ -179,7 +197,10 @@ test("ctx key inference uses repo name and branch", async (t) => {
     const result = await runCli(["ctx", "save", "--value", "hello"], { cwd: repo.dir, env });
     assert.equal(result.status, 0, result.stderr);
     const key = `${repo.project}/${repo.branch}`;
-    assert.equal(store.data.get("ctx").get(key), "hello");
+    const stored = store.data.get("ctx").get(key);
+    const meta = extractStoredMetadata(stored);
+    assert.ok(meta && typeof meta.savedAt === "string");
+    assert.equal(stripStoredMetadata(stored), "hello");
   } finally {
     await store.close();
     await fs.rm(repo.dir, { recursive: true, force: true });
@@ -225,7 +246,8 @@ test("--append merges with existing value", async (t) => {
     result = await runCli(["ctx", "save", "--append", "--value", "second"], { cwd: repo.dir, env });
     assert.equal(result.status, 0, result.stderr);
     const key = `${repo.project}/${repo.branch}`;
-    assert.equal(store.data.get("ctx").get(key), "first\n\nsecond");
+    const stored = store.data.get("ctx").get(key);
+    assert.equal(stripStoredMetadata(stored), "first\n\nsecond");
   } finally {
     await store.close();
     await fs.rm(repo.dir, { recursive: true, force: true });
@@ -253,10 +275,108 @@ test("--append sets value when missing", async (t) => {
     });
     assert.equal(result.status, 0, result.stderr);
     const key = `${repo.project}/${repo.branch}`;
-    assert.equal(store.data.get("ctx").get(key), "solo");
+    const stored = store.data.get("ctx").get(key);
+    assert.equal(stripStoredMetadata(stored), "solo");
   } finally {
     await store.close();
     await fs.rm(repo.dir, { recursive: true, force: true });
+  }
+});
+
+test("load hides metadata by default and --meta shows it", async (t) => {
+  if (!hasGit()) {
+    t.skip("git not available");
+    return;
+  }
+
+  const repo = await createTempGitRepo();
+  const store = await createMockUpstash();
+  const env = {
+    ...process.env,
+    CTXBIN_STORE_URL: store.url,
+    CTXBIN_STORE_TOKEN: "test",
+  };
+
+  try {
+    let result = await runCli(["ctx", "save", "--by", "codex", "--value", "body"], { cwd: repo.dir, env });
+    assert.equal(result.status, 0, result.stderr);
+
+    const key = `${repo.project}/${repo.branch}`;
+    const stored = store.data.get("ctx").get(key);
+    const meta = extractStoredMetadata(stored);
+    assert.ok(meta && typeof meta.savedAt === "string");
+    assert.equal(meta.by, "codex");
+    assert.equal(stripStoredMetadata(stored), "body");
+
+    result = await runCli(["ctx", "load"], { cwd: repo.dir, env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, "body");
+
+    result = await runCli(["ctx", "load", "--meta"], { cwd: repo.dir, env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^savedAt: .+\nby: codex\n---\nbody$/);
+  } finally {
+    await store.close();
+    await fs.rm(repo.dir, { recursive: true, force: true });
+  }
+});
+
+test("load rejects --by flag", async () => {
+  const store = await createMockUpstash();
+  const env = {
+    ...process.env,
+    CTXBIN_STORE_URL: store.url,
+    CTXBIN_STORE_TOKEN: "test",
+  };
+
+  try {
+    const result = await runCli(["ctx", "load", "test-key", "--by", "codex"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT:/);
+  } finally {
+    await store.close();
+  }
+});
+
+test("list rejects --meta and --by flags", async () => {
+  const store = await createMockUpstash();
+  const env = {
+    ...process.env,
+    CTXBIN_STORE_URL: store.url,
+    CTXBIN_STORE_TOKEN: "test",
+  };
+
+  try {
+    let result = await runCli(["ctx", "list", "--meta"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT:/);
+
+    result = await runCli(["ctx", "list", "--by", "codex"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT:/);
+  } finally {
+    await store.close();
+  }
+});
+
+test("delete rejects --meta and --by flags", async () => {
+  const store = await createMockUpstash();
+  const env = {
+    ...process.env,
+    CTXBIN_STORE_URL: store.url,
+    CTXBIN_STORE_TOKEN: "test",
+  };
+
+  try {
+    let result = await runCli(["ctx", "delete", "test-key", "--meta"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT:/);
+
+    result = await runCli(["ctx", "delete", "test-key", "--by", "codex"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT:/);
+  } finally {
+    await store.close();
   }
 });
 
@@ -309,13 +429,21 @@ test("list output is sorted with type mapping", async () => {
     CTXBIN_STORE_URL: store.url,
     CTXBIN_STORE_TOKEN: "test",
   };
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-list-"));
+  const packedDir = path.join(tmp, "packed");
 
   try {
+    await fs.mkdir(packedDir);
+    await fs.writeFile(path.join(packedDir, "note.txt"), "packed");
+
     let result = await runCli(["skill", "save", "zeta", "--value", "plain"], { env });
     assert.equal(result.status, 0, result.stderr);
-    result = await runCli(["skill", "save", "alpha", "--value", `${SKILLPACK_HEADER}abc`], { env });
+    result = await runCli(["skill", "save", "alpha", "--dir", packedDir], { env });
     assert.equal(result.status, 0, result.stderr);
-    result = await runCli(["skill", "save", "beta", "--value", `${SKILLREF_HEADER}{}`], { env });
+    result = await runCli(
+      ["skill", "save", "beta", "--url", "https://github.com/acme/repo", "--path", "skills/example"],
+      { env }
+    );
     assert.equal(result.status, 0, result.stderr);
 
     result = await runCli(["skill", "list"], { env });
@@ -323,6 +451,7 @@ test("list output is sorted with type mapping", async () => {
     assert.equal(result.stdout.trim(), "alpha\t--dir\nbeta\t--url\nzeta\t--value");
   } finally {
     await store.close();
+    await fs.rm(tmp, { recursive: true, force: true });
   }
 });
 

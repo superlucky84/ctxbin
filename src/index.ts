@@ -5,5 +5,6 @@ export { createSkillpackFromDir } from "./skillpack";
 export { createSkillrefValue, parseSkillrefValue } from "./skillref";
 export { loadSkillrefToDir } from "./skillref";
 export { resolveSaveInput } from "./input";
+export { injectMetadata, stripMetadata, extractMetadata, formatMetadataBlock } from "./metadata";
 export { CtxbinError, formatError } from "./errors";
 export { safeChmod } from "./chmod";
