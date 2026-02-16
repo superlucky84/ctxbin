@@ -6,6 +6,8 @@ with branch-based [context keys inferred](https://superlucky84.github.io/ctxbin/
 
 Docs: https://superlucky84.github.io/ctxbin/
 
+> Companion: for local-first `ctx` workflows with explicit sync, see [ctxloc](https://github.com/superlucky84/ctxloc).
+
 > **Core idea:** ctxbin exists to make AI-agent handoffs reliable and repeatable.
 
 > ⚠️ **Prerequisite:** ctxbin requires [Upstash Redis](https://upstash.com/) for storage.
