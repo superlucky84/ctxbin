@@ -98,6 +98,23 @@ $ npx ctxbin ctx load`}
         />
       </div>
 
+      <div class="mb-12 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+        <h2>Companion: ctxloc</h2>
+        <p>
+          <strong>ctxbin</strong> remains the remote-storage-oriented CLI.
+          If you want a local-first workflow with explicit sync, use{' '}
+          <a
+            href="https://github.com/superlucky84/ctxloc"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-indigo-600 hover:underline"
+          >
+            ctxloc
+          </a>
+          {' '}and run <code>ctxloc sync</code>.
+        </p>
+      </div>
+
       <div class="grid md:grid-cols-2 gap-6 mb-12">
         <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">

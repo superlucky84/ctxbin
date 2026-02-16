@@ -98,6 +98,23 @@ $ npx ctxbin ctx load`}
         />
       </div>
 
+      <div class="mb-12 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+        <h2>Companion: ctxloc</h2>
+        <p>
+          <strong>ctxbin</strong>은 원격 저장소 중심 CLI로 유지됩니다.
+          로컬 우선 워크플로와 명시적 sync가 필요하면{' '}
+          <a
+            href="https://github.com/superlucky84/ctxloc"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-indigo-600 hover:underline"
+          >
+            ctxloc
+          </a>
+          {' '}을 사용하고 <code>ctxloc sync</code>를 실행하세요.
+        </p>
+      </div>
+
       <div class="grid md:grid-cols-2 gap-6 mb-12">
         <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">

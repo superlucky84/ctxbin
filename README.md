@@ -42,6 +42,11 @@ You can also ask agents to save/load skills with simple commands like `--url` or
 - `skillref`: GitHub directory reference (default branch or pinned commit)
 - `list` command with type mapping (`--value`, `--dir`, `--url`)
 
+## Companion Project: ctxloc
+- `ctxbin` is the remote-storage-oriented CLI.
+- [`ctxloc`](https://github.com/superlucky84/ctxloc) is a local-first companion focused on `ctx` + explicit sync.
+- Sync entrypoint stays in `ctxloc` (`ctxloc sync`), while `ctxbin` remains independent.
+
 ## Install
 Recommended (no install):
 ```bash
