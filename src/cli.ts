@@ -16,6 +16,7 @@ import { injectMetadata, stripMetadata, extractMetadata, formatMetadataBlock } f
 type CliOptions = {
   append: boolean;
   meta: boolean;
+  raw: boolean;
   by?: string;
   file?: string;
   value?: string;
@@ -35,6 +36,7 @@ async function main(): Promise<void> {
         append: { type: "boolean" },
         version: { type: "boolean", short: "v" },
         meta: { type: "boolean" },
+        raw: { type: "boolean" },
         by: { type: "string" },
         file: { type: "string" },
         value: { type: "string" },
@@ -88,6 +90,7 @@ async function main(): Promise<void> {
   const opts: CliOptions = {
     append: Boolean(values.append),
     meta: Boolean(values.meta),
+    raw: Boolean(values.raw),
     by: values.by as string | undefined,
     file: values.file as string | undefined,
     value: values.value as string | undefined,
@@ -193,6 +196,18 @@ async function handleLoad(
     return fail("NOT_FOUND", `no value for ${hash}:${key}`);
   }
 
+  if (opts.raw) {
+    if (opts.meta) {
+      return fail("INVALID_INPUT", "--raw cannot be used with --meta");
+    }
+    if (opts.dir) {
+      return fail("INVALID_INPUT", "--raw cannot be used with --dir");
+    }
+    warnRawUsage("load");
+    process.stdout.write(value);
+    return;
+  }
+
   if (resource === "skill") {
     const kind = detectSkillValueType(value);
     if (kind === "string") {
@@ -242,7 +257,23 @@ async function handleSave(
   key: string,
   opts: CliOptions
 ): Promise<void> {
+  if (opts.raw && opts.append) {
+    return fail("INVALID_INPUT", "--raw cannot be used with --append");
+  }
+  if (opts.raw && opts.by) {
+    return fail("INVALID_INPUT", "--raw cannot be used with --by");
+  }
+
   const input = await resolveSaveInput(resource, opts);
+
+  if (opts.raw) {
+    if (input.kind !== "string") {
+      return fail("INVALID_INPUT", "--raw only applies to string inputs");
+    }
+    warnRawUsage("save");
+    await store.set(hash, key, input.value);
+    return;
+  }
 
   if (opts.append) {
     if (input.kind !== "string") {
@@ -314,7 +345,8 @@ function ensureNoSaveInput(opts: CliOptions, command: "load" | "delete"): void {
     opts.ref ||
     opts.path ||
     opts.by ||
-    (command === "delete" && opts.meta)
+    (command === "delete" && opts.meta) ||
+    (command === "delete" && opts.raw)
   ) {
     return fail("INVALID_INPUT", `${command} does not accept input flags`);
   }
@@ -324,6 +356,7 @@ function ensureNoListFlags(opts: CliOptions): void {
   if (
     opts.append ||
     opts.meta ||
+    opts.raw ||
     opts.by ||
     opts.file ||
     opts.value ||
@@ -342,6 +375,20 @@ function buildMetadata(by?: string): { savedAt: string; by?: string } {
     meta.by = by;
   }
   return meta;
+}
+
+function warnRawUsage(command: "load" | "save"): void {
+  if (isRawWarningSuppressed()) return;
+  process.stderr.write(
+    `CTXBIN_WARN: --raw ${command} is intended for sync/migration exact-payload workflows. Use default ${command} for normal agent context operations.\n`
+  );
+}
+
+function isRawWarningSuppressed(): boolean {
+  const value = process.env.CTXBIN_SUPPRESS_RAW_WARN;
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes";
 }
 
 main().catch((err) => {

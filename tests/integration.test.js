@@ -321,6 +321,62 @@ test("load hides metadata by default and --meta shows it", async (t) => {
   }
 });
 
+test("raw save/load preserves exact payload and rejects append conflict", async () => {
+  const store = await createMockUpstash();
+  const env = {
+    ...process.env,
+    CTXBIN_STORE_URL: store.url,
+    CTXBIN_STORE_TOKEN: "test",
+  };
+  const quietEnv = {
+    ...env,
+    CTXBIN_SUPPRESS_RAW_WARN: "1",
+  };
+  const key = "raw-ctx";
+  const rawPayload =
+    'ctxbin-meta@1\n{"savedAt":"2025-01-02T03:04:05.000Z","by":"sync-winner"}\n---\nline1\nline2\n';
+
+  try {
+    let result = await runCli(["ctx", "save", key, "--raw", "--value", rawPayload], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /^CTXBIN_WARN: --raw save /);
+
+    const stored = store.data.get("ctx").get(key);
+    assert.equal(stored, rawPayload);
+
+    result = await runCli(["ctx", "load", key], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, "line1\nline2\n");
+
+    result = await runCli(["ctx", "load", key, "--raw"], { env });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, rawPayload);
+    assert.match(result.stderr, /^CTXBIN_WARN: --raw load /);
+
+    result = await runCli(["ctx", "load", key, "--raw", "--meta"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT: --raw cannot be used with --meta/);
+
+    result = await runCli(["ctx", "save", key, "--raw", "--append", "--value", "x"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT: --raw cannot be used with --append/);
+
+    result = await runCli(["ctx", "save", key, "--raw", "--by", "sync", "--value", "x"], { env });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /^CTXBIN_ERR INVALID_INPUT: --raw cannot be used with --by/);
+
+    result = await runCli(["ctx", "save", key, "--raw", "--value", rawPayload], { env: quietEnv });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, "");
+
+    result = await runCli(["ctx", "load", key, "--raw"], { env: quietEnv });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, "");
+  } finally {
+    await store.close();
+  }
+});
+
 test("load rejects --by flag", async () => {
   const store = await createMockUpstash();
   const env = {

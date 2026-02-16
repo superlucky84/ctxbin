@@ -54,6 +54,27 @@ npx ctxbin ctx load
 npx ctxbin ctx load --meta
 ```
 
+### Raw passthrough (`--raw`)
+Use `--raw` when you need exact stored payload I/O (including metadata wrapper).
+
+```bash
+# Save exact payload (no savedAt/by injection or update)
+npx ctxbin ctx save my-project/main --raw --value "ctxbin-meta@1
+{\"savedAt\":\"2025-01-01T00:00:00.000Z\"}
+---
+body"
+
+# Load exact payload (no metadata stripping)
+npx ctxbin ctx load my-project/main --raw
+```
+
+Rules:
+- `save --raw` only applies to string input methods (`--value`, `--file`, or stdin)
+- `save --raw` cannot be combined with `--append` or `--by`
+- `load --raw` cannot be combined with `--meta` or `--dir`
+- `--raw` is for sync/migration exact-payload workflows; normal agent work should use default `save`/`load`
+- `--raw` prints `CTXBIN_WARN` by default; automation can set `CTXBIN_SUPPRESS_RAW_WARN=1`
+
 ### If load returns NOT_FOUND
 `CTXBIN_ERR NOT_FOUND: no value for ctx:<project>/<branch>` means nothing has been saved for this branch yet.
 Tell the user and suggest:
@@ -172,6 +193,7 @@ Use **exactly one** input method.
 
 ## `--append` Examples
 `--append` works with **string inputs only**.
+Do not combine `--append` with `--raw`.
 
 ```bash
 npx ctxbin ctx save --append --value "more notes"

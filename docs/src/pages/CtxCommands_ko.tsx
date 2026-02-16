@@ -40,6 +40,17 @@ $ npx ctxbin ctx load
 # 명시적 키
 $ npx ctxbin ctx load my-project/main`}
       />
+      <p>
+        <code>--raw</code>를 사용하면 저장된 값을 그대로 출력합니다 (메타 래퍼 포함):
+      </p>
+      <p>
+        <code>--raw</code>는 sync/migration 같은 원문 복제 용도에 권장되며, 기본적으로 경고를 출력합니다.
+        자동화에서는 <code>CTXBIN_SUPPRESS_RAW_WARN=1</code>로 경고를 숨길 수 있습니다.
+      </p>
+      <CodeBlock
+        language="bash"
+        code={`$ npx ctxbin ctx load my-project/main --raw`}
+      />
 
       <h2>Save (교체)</h2>
       <p>새 컨텍스트 저장, 기존 값 교체:</p>
@@ -58,6 +69,13 @@ $ cat context.md | npx ctxbin ctx save
 # 명시적 키 사용
 $ npx ctxbin ctx save my-project/main --file context.md`}
       />
+      <p>
+        <code>--raw</code>를 사용하면 입력값을 그대로 저장합니다 (메타 자동 주입/갱신 없음):
+      </p>
+      <CodeBlock
+        language="bash"
+        code={`$ npx ctxbin ctx save my-project/main --raw --file context.md`}
+      />
 
       <h2>Save (추가)</h2>
       <p>기존 컨텍스트에 추가 (구분자: <code>\n\n</code>):</p>
@@ -67,6 +85,7 @@ $ npx ctxbin ctx save my-project/main --file context.md`}
 $ npx ctxbin ctx save my-project/main --append --value "추가 노트"`}
       />
       <p>키가 존재하지 않으면 일반 save와 동일하게 동작합니다.</p>
+      <p><code>--append</code>와 <code>--raw</code>는 함께 사용할 수 없습니다.</p>
 
       <h2>List</h2>
       <p>저장된 모든 컨텍스트 목록:</p>

@@ -90,6 +90,18 @@ npx ctxbin ctx load my-project/main
 npx ctxbin ctx delete my-project/main
 ```
 
+Raw passthrough (exact payload I/O for string values):
+```bash
+# Save exactly as provided (no metadata injection/update)
+npx ctxbin ctx save my-project/main --raw --file context.raw
+
+# Load exactly as stored (no metadata stripping)
+npx ctxbin ctx load my-project/main --raw
+```
+
+`--raw` is intended for sync/migration tooling. It prints a warning by default.
+For automation, suppress this warning with `CTXBIN_SUPPRESS_RAW_WARN=1`.
+
 ### agent (string-only)
 ```bash
 npx ctxbin agent save reviewer --value "# Agent role"

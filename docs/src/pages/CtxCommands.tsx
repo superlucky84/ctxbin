@@ -40,6 +40,17 @@ $ npx ctxbin ctx load
 # Explicit key
 $ npx ctxbin ctx load my-project/main`}
       />
+      <p>
+        Use <code>--raw</code> to print the stored value exactly as-is (including metadata wrapper):
+      </p>
+      <p>
+        <code>--raw</code> is intended for sync/migration exact-payload workflows and prints a warning by default.
+        Set <code>CTXBIN_SUPPRESS_RAW_WARN=1</code> in automation to suppress it.
+      </p>
+      <CodeBlock
+        language="bash"
+        code={`$ npx ctxbin ctx load my-project/main --raw`}
+      />
 
       <h2>Save (Replace)</h2>
       <p>Save new context, replacing any existing value:</p>
@@ -60,6 +71,13 @@ $ cat context.md | npx ctxbin ctx save
 # With explicit key
 $ npx ctxbin ctx save my-project/main --file context.md`}
       />
+      <p>
+        Use <code>--raw</code> to store the input value exactly as-is (no metadata injection/update):
+      </p>
+      <CodeBlock
+        language="bash"
+        code={`$ npx ctxbin ctx save my-project/main --raw --file context.md`}
+      />
 
       <h2>Save (Append)</h2>
       <p>Append to existing context (separator: <code>\n\n</code>):</p>
@@ -69,6 +87,7 @@ $ npx ctxbin ctx save my-project/main --file context.md`}
 $ npx ctxbin ctx save my-project/main --append --value "additional notes"`}
       />
       <p>If the key does not exist, behaves the same as normal save.</p>
+      <p><code>--append</code> cannot be combined with <code>--raw</code>.</p>
 
       <h2>List</h2>
       <p>List all stored contexts:</p>

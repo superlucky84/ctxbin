@@ -173,6 +173,8 @@ ctxbin <resource> <command> [key] [flags]
 Global flags:
 
 * `--version` / `-v` prints the CLI version and exits
+* `--raw` enables passthrough I/O for `save`/`load` string values (opt-in)
+* `--raw` emits `CTXBIN_WARN` by default (set `CTXBIN_SUPPRESS_RAW_WARN=1` to suppress in automation)
 
 ---
 
@@ -186,6 +188,9 @@ ctxbin ctx load
 
 # explicit key
 ctxbin ctx load my-project/main
+
+# passthrough (print stored value exactly as-is)
+ctxbin ctx load my-project/main --raw
 ```
 
 ---
@@ -206,6 +211,9 @@ ctxbin ctx save --value "markdown string"
 cat context.md | ctxbin ctx save
 
 ctxbin ctx save my-project/main --file context.md
+
+# passthrough (store input exactly as-is)
+ctxbin ctx save my-project/main --raw --file context.md
 ```
 
 ---
@@ -454,6 +462,7 @@ If zero or multiple inputs are provided → error.
 * Separator: `\n\n`
 * Not valid with `--dir`
 * Not valid with `--url/--ref/--path`
+* Not valid with `--raw`
 * If the stored value is a skillpack, `--append` → error
 * If the stored value is a skillref, `--append` → error
 
@@ -471,7 +480,10 @@ If the key does not exist, behaves the same as normal `save`.
 
 ### load
 
-* For string values: print raw markdown to `stdout` (no decoration)
+* For string values (default): strip `ctxbin-meta@1` metadata wrapper and print body to `stdout`
+* `load --raw`: print stored value exactly as-is (metadata wrapper included if present)
+* `--raw` is not valid with `--meta` or `--dir`
+* `--raw` is intended for sync/migration exact-payload workflows, not normal agent reads
 * For skillpacks: `--dir` is required, otherwise error
 * For skillrefs: `--dir` is required, otherwise error
 * `--dir` on string values → error
@@ -490,8 +502,12 @@ If the key does not exist, behaves the same as normal `save`.
 
 ### save / delete
 
-* No output
-* Exit code `0`
+* `save` default (string inputs): inject/update metadata (`savedAt`, optional `by`) before storing
+* `save --raw` (string inputs only): store input exactly as-is (no metadata injection/update)
+* `save --raw` is not valid with `--append` or `--by`
+* `save --raw` emits `CTXBIN_WARN` by default (suppress with `CTXBIN_SUPPRESS_RAW_WARN=1`)
+* `delete` has no output
+* `save` and `delete` success exit code: `0`
 
 ---
 
