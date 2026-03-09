@@ -159,3 +159,30 @@ test("help command outputs bundled skill text", async () => {
   );
   assert.equal(stdout.trim(), expected.trim());
 });
+
+test("help command prioritizes network-enabled execution guidance", async () => {
+  const { execFileSync } = require("node:child_process");
+  const stdout = execFileSync(
+    "node",
+    [path.join(__dirname, "..", "dist", "cli.js"), "help"],
+    { encoding: "utf8" }
+  );
+
+  assert.match(stdout, /## Sandbox\/Network Policy \(Important\)/);
+  assert.match(
+    stdout,
+    /All `ctx`, `agent`, and `skill` `save`, `load`, `list`, and `delete` commands require outbound HTTPS/
+  );
+  assert.match(stdout, /> Quick decision:/);
+  assert.match(stdout, /Remote command\? Run it first in an `unrestricted` or `network-enabled` environment\./);
+  assert.match(stdout, /do not retry there\./i);
+  assert.match(stdout, /### `npx` package installation failure/);
+  assert.match(stdout, /### `CTXBIN_ERR NETWORK`/);
+  assert.match(stdout, /If `ctxbin` is already installed locally, prefer `pnpm exec ctxbin \.\.\.`\./);
+  assert.match(stdout, /If it is not installed locally, use `npx ctxbin \.\.\.`\./);
+  assert.match(stdout, /npx ctxbin ctx save --value/);
+  assert.match(stdout, /pnpm exec ctxbin ctx save --file ctx-pending\.md/);
+  assert.match(stdout, /npx ctxbin ctx save --file ctx-pending\.md/);
+  assert.doesNotMatch(stdout, /## Installed-Package Shortcut/);
+  assert.doesNotMatch(stdout, /### If any command returns NETWORK/);
+});

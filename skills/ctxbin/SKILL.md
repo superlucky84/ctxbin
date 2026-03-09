@@ -1,13 +1,53 @@
 # ctxbin Skill
 
+## Sandbox/Network Policy (Important)
+All `ctx`, `agent`, and `skill` `save`, `load`, `list`, and `delete` commands require outbound HTTPS to the remote Upstash store.
+Do not run those commands first in a restricted sandbox, network-disabled runner, or any environment that is likely to block outbound HTTPS.
+`help` is local-only; the remote store is not involved.
+
+> Quick decision:
+> - Remote command? Run it first in an `unrestricted` or `network-enabled` environment.
+> - Timeout, `fetch failed`, or `CTXBIN_ERR NETWORK` in `restricted`? Do not retry there. Switch immediately.
+> - Network unavailable? Save to a local file now and sync later.
+
+Launcher choice:
+1. If `ctxbin` is already installed locally, prefer `pnpm exec ctxbin ...`.
+2. If it is not installed locally, use `npx ctxbin ...`.
+3. If it is installed locally but you want `npx`, use `npx --no-install ctxbin ...`.
+4. For any remote-store command, the first attempt should be in `unrestricted` or `network-enabled`, regardless of launcher.
+
+Failure triage:
+### `npx` package installation failure
+This fails before the CLI starts, usually with npm registry DNS/TLS/timeout errors and no `CTXBIN_ERR` prefix.
+Immediate action: switch to an `unrestricted` or `network-enabled` environment and rerun. If the package is already present locally, use `pnpm exec ctxbin ...` or `npx --no-install ctxbin ...`.
+
+### `CTXBIN_ERR NETWORK`
+This means the CLI started, but the remote store API call failed.
+Immediate action: do not retry in the restricted sandbox. Switch immediately to an `unrestricted` or `network-enabled` environment and rerun the same command once.
+
+### Local-file fallback when network is unavailable
+Keep the handoff in a local file first, then upload it as soon as network access is available.
+
+```bash
+# Save locally while blocked
+printf '%s\n' "summary + next steps" > ctx-pending.md
+
+# Upload later from a network-enabled environment
+# If installed locally
+pnpm exec ctxbin ctx save --file ctx-pending.md
+
+# Otherwise
+npx ctxbin ctx save --file ctx-pending.md
+```
+
 ## Purpose
-Help agents preserve and restore **branch-scoped project context** so the next agent can continue work without re-explanation.
+Help agents preserve and restore branch-scoped project context so the next agent can continue work without re-explanation.
 
 ## Core Usage (ctx)
 `ctx` automatically derives a key from the current Git repo and branch when omitted.
-Prefer `npx ctxbin ...` when running commands in agent workflows.
+Examples below use `npx` for portability. If `ctxbin` is already installed locally, prefer `pnpm exec ctxbin ...` or `npx --no-install ctxbin ...`.
 
-```
+```text
 key = {project}/{branch}
 project = package.json "name" field, or folder name if no package.json
 branch  = git rev-parse --abbrev-ref HEAD
@@ -92,26 +132,6 @@ npx ctxbin ctx load <project>/<branch>
 `CTXBIN_ERR INVALID_INPUT` usually means flags were used incorrectly.
 For `ctx load`, do not pass `--value`, `--file`, or other input flags.
 
-### If any command returns NETWORK
-`CTXBIN_ERR NETWORK: fetch failed` means the HTTP request to the remote store failed.
-All `save`, `load`, `list`, and `delete` commands call Upstash Redis over HTTPS, so they require outbound network access.
-
-**Common cause:** sandboxed or CI environments that restrict network by default.
-
-Remediation:
-1. **Grant network permission** — allow outbound HTTPS in the sandbox/runner config, then retry the same command.
-2. **Use `npx --no-install`** — if ctxbin is already installed, skip the npm registry lookup:
-   ```bash
-   npx --no-install ctxbin ctx load
-   ```
-3. **Fallback to local file** — when the network is unavailable, save context to a local file and upload later:
-   ```bash
-   # Save locally first
-   echo "summary + next steps" > ctx-pending.md
-   # Upload when network is available
-   npx ctxbin ctx save --file ctx-pending.md
-   ```
-
 ### List
 ```bash
 npx ctxbin ctx list
@@ -127,7 +147,7 @@ npx ctxbin ctx delete my-project/main
 ```
 
 ## agent Save/Load
-`agent` requires a key and stores **string values only**.
+`agent` requires a key and stores string values only.
 
 ```bash
 npx ctxbin agent save reviewer --value "# Agent role"
@@ -155,7 +175,7 @@ npx ctxbin skill delete my-skill
 ```
 
 ## Input Options (`--file`, `--value`, `--dir`, `--url`)
-Use **exactly one** input method.
+Use exactly one input method.
 
 - `--value`: store a literal string
   ```bash
@@ -192,7 +212,7 @@ Use **exactly one** input method.
   ```
 
 ## `--append` Examples
-`--append` works with **string inputs only**.
+`--append` works with string inputs only.
 Do not combine `--append` with `--raw`.
 
 ```bash
@@ -224,11 +244,11 @@ Potential problems, warnings, or things to watch out for.
 **Guidelines:**
 - Omit sections that don't apply (e.g., no `# risks` if none)
 - Keep each section concise but informative
-- `# decisions` is most valuable for handoffs—capture the "why"
+- `# decisions` is most valuable for handoffs; capture the why
 
 ## Storage Model (ctx)
 Context is stored in Upstash Redis hash `ctx` under field `{project}/{branch}`.
 
 ## Do Not
-- Don’t store secrets
-- Don’t overwrite with trivial messages
+- Do not store secrets.
+- Do not overwrite useful context with trivial messages.
