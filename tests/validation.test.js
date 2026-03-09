@@ -177,6 +177,9 @@ test("help command prioritizes network-enabled execution guidance", async () => 
   assert.match(stdout, /do not retry there\./i);
   assert.match(stdout, /### `npx` package installation failure/);
   assert.match(stdout, /### `CTXBIN_ERR NETWORK`/);
-  assert.match(stdout, /pnpm exec ctxbin ctx save --value/);
-  assert.doesNotMatch(stdout, /Prefer `npx ctxbin \.\.\.`/);
+  assert.match(stdout, /Use `npx ctxbin \.\.\.` as the default command form/);
+  assert.match(stdout, /npx ctxbin ctx save --value/);
+  assert.match(stdout, /npx --no-install ctxbin ctx load/);
+  assert.match(stdout, /pnpm exec ctxbin ctx load/);
+  assert.doesNotMatch(stdout, /Use `pnpm exec ctxbin \.\.\.` as the default command form/);
 });
