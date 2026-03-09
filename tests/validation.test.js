@@ -159,3 +159,24 @@ test("help command outputs bundled skill text", async () => {
   );
   assert.equal(stdout.trim(), expected.trim());
 });
+
+test("help command prioritizes network-enabled execution guidance", async () => {
+  const { execFileSync } = require("node:child_process");
+  const stdout = execFileSync(
+    "node",
+    [path.join(__dirname, "..", "dist", "cli.js"), "help"],
+    { encoding: "utf8" }
+  );
+
+  assert.match(stdout, /## Sandbox\/Network Policy \(Important\)/);
+  assert.match(
+    stdout,
+    /All `ctx`, `agent`, and `skill` `save`, `load`, `list`, and `delete` commands require outbound HTTPS/
+  );
+  assert.match(stdout, /1\. Run in an `unrestricted` or `network-enabled` environment\./);
+  assert.match(stdout, /do not retry there\./i);
+  assert.match(stdout, /### `npx` package installation failure/);
+  assert.match(stdout, /### `CTXBIN_ERR NETWORK`/);
+  assert.match(stdout, /pnpm exec ctxbin ctx save --value/);
+  assert.doesNotMatch(stdout, /Prefer `npx ctxbin \.\.\.`/);
+});
