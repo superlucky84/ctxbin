@@ -3,25 +3,23 @@
 ## Sandbox/Network Policy (Important)
 All `ctx`, `agent`, and `skill` `save`, `load`, `list`, and `delete` commands require outbound HTTPS to the remote Upstash store.
 Do not run those commands first in a restricted sandbox, network-disabled runner, or any environment that is likely to block outbound HTTPS.
+`help` is local-only; the remote store is not involved.
 
-Execution priority:
-1. Run in an `unrestricted` or `network-enabled` environment.
-2. Use a `restricted` sandbox only for local file work that does not call the remote store. It is not recommended for `ctxbin` store operations.
+> Quick decision:
+> - Remote command? Run it first in an `unrestricted` or `network-enabled` environment.
+> - Timeout, `fetch failed`, or `CTXBIN_ERR NETWORK` in `restricted`? Do not retry there. Switch immediately.
+> - Network unavailable? Save to a local file now and sync later.
 
-Retry rule:
-- If a restricted sandbox produces a timeout, `fetch failed`, `CTXBIN_ERR NETWORK`, or any other network-denied behavior, do not retry there.
-- Switch immediately to an `unrestricted` or `network-enabled` environment and rerun once.
-- `help` is local-only; the remote store is not involved.
+Launcher choice:
+1. If `ctxbin` is already installed locally, prefer `pnpm exec ctxbin ...`.
+2. If it is not installed locally, use `npx ctxbin ...`.
+3. If it is installed locally but you want `npx`, use `npx --no-install ctxbin ...`.
+4. For any remote-store command, the first attempt should be in `unrestricted` or `network-enabled`, regardless of launcher.
 
-## Command Launcher Preference
-Use `npx ctxbin ...` as the default command form because it works anywhere Node.js and `npx` are available.
-If `ctxbin` is already installed locally and you want to skip the npm registry lookup, use `npx --no-install ctxbin ...` or `pnpm exec ctxbin ...`.
-Do not use any remote-store command as the first attempt in a restricted sandbox, even when launching through `npx`.
-
-## Network Failure Triage
+Failure triage:
 ### `npx` package installation failure
 This fails before the CLI starts, usually with npm registry DNS/TLS/timeout errors and no `CTXBIN_ERR` prefix.
-Immediate action: switch to an `unrestricted` or `network-enabled` environment and rerun with `npx ctxbin ...`. If the package is already present locally, use `npx --no-install ctxbin ...` or `pnpm exec ctxbin ...`.
+Immediate action: switch to an `unrestricted` or `network-enabled` environment and rerun. If the package is already present locally, use `pnpm exec ctxbin ...` or `npx --no-install ctxbin ...`.
 
 ### `CTXBIN_ERR NETWORK`
 This means the CLI started, but the remote store API call failed.
@@ -35,6 +33,10 @@ Keep the handoff in a local file first, then upload it as soon as network access
 printf '%s\n' "summary + next steps" > ctx-pending.md
 
 # Upload later from a network-enabled environment
+# If installed locally
+pnpm exec ctxbin ctx save --file ctx-pending.md
+
+# Otherwise
 npx ctxbin ctx save --file ctx-pending.md
 ```
 
@@ -43,7 +45,7 @@ Help agents preserve and restore branch-scoped project context so the next agent
 
 ## Core Usage (ctx)
 `ctx` automatically derives a key from the current Git repo and branch when omitted.
-Use `npx ctxbin ...` for the default examples below. If `ctxbin` is already installed locally, `npx --no-install ctxbin ...` or `pnpm exec ctxbin ...` can reduce launcher overhead.
+Examples below use `npx` for portability. If `ctxbin` is already installed locally, prefer `pnpm exec ctxbin ...` or `npx --no-install ctxbin ...`.
 
 ```text
 key = {project}/{branch}
@@ -129,19 +131,6 @@ npx ctxbin ctx load <project>/<branch>
 ### If load returns INVALID_INPUT
 `CTXBIN_ERR INVALID_INPUT` usually means flags were used incorrectly.
 For `ctx load`, do not pass `--value`, `--file`, or other input flags.
-
-### If any command returns NETWORK
-`CTXBIN_ERR NETWORK: fetch failed` means the HTTP request to the remote store failed.
-All `save`, `load`, `list`, and `delete` commands call Upstash Redis over HTTPS, so they require outbound network access.
-
-Immediate response:
-1. Do not retry in the restricted sandbox.
-2. Move to an `unrestricted` or `network-enabled` environment and rerun.
-3. If network access is still unavailable, save to a local file and upload later:
-   ```bash
-   printf '%s\n' "summary + next steps" > ctx-pending.md
-   npx ctxbin ctx save --file ctx-pending.md
-   ```
 
 ### List
 ```bash
@@ -230,16 +219,6 @@ Do not combine `--append` with `--raw`.
 npx ctxbin ctx save --append --value "more notes"
 npx ctxbin agent save reviewer --append --value "extra role details"
 npx ctxbin skill save my-skill --append --value "extra string"
-```
-
-## Installed-Package Shortcut
-If `ctxbin` is already installed or cached locally, use one of these to skip a package download check.
-This is an optimization, not the default guidance.
-
-```bash
-npx --no-install ctxbin ctx load
-npx --no-install ctxbin agent list
-pnpm exec ctxbin ctx load
 ```
 
 ## What agents must include in ctx

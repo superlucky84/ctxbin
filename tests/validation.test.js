@@ -173,13 +173,16 @@ test("help command prioritizes network-enabled execution guidance", async () => 
     stdout,
     /All `ctx`, `agent`, and `skill` `save`, `load`, `list`, and `delete` commands require outbound HTTPS/
   );
-  assert.match(stdout, /1\. Run in an `unrestricted` or `network-enabled` environment\./);
+  assert.match(stdout, /> Quick decision:/);
+  assert.match(stdout, /Remote command\? Run it first in an `unrestricted` or `network-enabled` environment\./);
   assert.match(stdout, /do not retry there\./i);
   assert.match(stdout, /### `npx` package installation failure/);
   assert.match(stdout, /### `CTXBIN_ERR NETWORK`/);
-  assert.match(stdout, /Use `npx ctxbin \.\.\.` as the default command form/);
+  assert.match(stdout, /If `ctxbin` is already installed locally, prefer `pnpm exec ctxbin \.\.\.`\./);
+  assert.match(stdout, /If it is not installed locally, use `npx ctxbin \.\.\.`\./);
   assert.match(stdout, /npx ctxbin ctx save --value/);
-  assert.match(stdout, /npx --no-install ctxbin ctx load/);
-  assert.match(stdout, /pnpm exec ctxbin ctx load/);
-  assert.doesNotMatch(stdout, /Use `pnpm exec ctxbin \.\.\.` as the default command form/);
+  assert.match(stdout, /pnpm exec ctxbin ctx save --file ctx-pending\.md/);
+  assert.match(stdout, /npx ctxbin ctx save --file ctx-pending\.md/);
+  assert.doesNotMatch(stdout, /## Installed-Package Shortcut/);
+  assert.doesNotMatch(stdout, /### If any command returns NETWORK/);
 });
