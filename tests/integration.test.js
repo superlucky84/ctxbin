@@ -367,6 +367,10 @@ test("raw save/load preserves exact payload and rejects append conflict", async 
 
     result = await runCli(["ctx", "save", key, "--raw", "--value", rawPayload], { env: quietEnv });
     assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /^CTXBIN_OK:/);
+
+    result = await runCli(["ctx", "save", key, "--raw", "--value", rawPayload], { env: { ...quietEnv, CTXBIN_QUIET: "1" } });
+    assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, "");
 
     result = await runCli(["ctx", "load", key, "--raw"], { env: quietEnv });
@@ -612,8 +616,9 @@ test("ctx key inference falls back to folder name without package.json", async (
     // Save context (should use folder name)
     let result = await runCli(["ctx", "save", "--value", "test content"], { cwd: repoDir, env });
     assert.equal(result.status, 0, result.stderr);
-    // No warning expected
-    assert.equal(result.stderr, "");
+    // Only CTXBIN_OK expected (no warning)
+    assert.match(result.stderr, /^CTXBIN_OK: ctx saved \(my-folder\//);
+
 
     // List should show my-folder/master (or main)
     result = await runCli(["ctx", "list"], { env });

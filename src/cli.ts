@@ -272,6 +272,7 @@ async function handleSave(
     }
     warnRawUsage("save");
     await store.set(hash, key, input.value);
+    emitOk(resource, "saved", key);
     return;
   }
 
@@ -286,6 +287,7 @@ async function handleSave(
     const existingBody = existing ? stripMetadata(existing) : "";
     const merged = existing ? `${existingBody}\n\n${input.value}` : input.value;
     await store.set(hash, key, injectMetadata(merged, buildMetadata(opts.by)));
+    emitOk(resource, "saved", key);
     return;
   }
 
@@ -295,10 +297,12 @@ async function handleSave(
 
   if (input.kind === "string") {
     await store.set(hash, key, injectMetadata(input.value, buildMetadata(opts.by)));
+    emitOk(resource, "saved", key);
     return;
   }
 
   await store.set(hash, key, input.value);
+  emitOk(resource, "saved", key, input.kind);
 }
 
 async function handleDelete(
@@ -313,6 +317,7 @@ async function handleDelete(
     return fail("INVALID_INPUT", "--dir is not valid for delete");
   }
   await store.delete(hash, key);
+  emitOk(resource, "deleted", key);
 }
 
 async function handleList(
@@ -377,15 +382,20 @@ function buildMetadata(by?: string): { savedAt: string; by?: string } {
   return meta;
 }
 
+function emitOk(resource: string, command: "saved" | "deleted", key: string, inputKind?: string): void {
+  if (isEnvTruthy(process.env.CTXBIN_QUIET)) return;
+  const suffix = inputKind && inputKind !== "string" ? `, --${inputKind === "skillpack" ? "dir" : inputKind === "skillref" ? "url" : inputKind}` : "";
+  process.stderr.write(`CTXBIN_OK: ${resource} ${command} (${key}${suffix})\n`);
+}
+
 function warnRawUsage(command: "load" | "save"): void {
-  if (isRawWarningSuppressed()) return;
+  if (isEnvTruthy(process.env.CTXBIN_SUPPRESS_RAW_WARN)) return;
   process.stderr.write(
     `CTXBIN_WARN: --raw ${command} is intended for sync/migration exact-payload workflows. Use default ${command} for normal agent context operations.\n`
   );
 }
 
-function isRawWarningSuppressed(): boolean {
-  const value = process.env.CTXBIN_SUPPRESS_RAW_WARN;
+function isEnvTruthy(value: string | undefined): boolean {
   if (!value) return false;
   const normalized = value.trim().toLowerCase();
   return normalized === "1" || normalized === "true" || normalized === "yes";
