@@ -686,8 +686,13 @@ test("selective prune keeps unselected tracking, other-source installs, and unma
   }
   store.data.skill = {};
   store.data.agent.reviewer = "Unselected change";
-  const selected = { ...opts, skills: ["drop", "foreign", "local", "already-gone"], prune: true };
+  const selected = { ...opts, skills: ["drop"], prune: true };
   const before = await snapshot(opts.home);
+  for (const name of ["foreign", "local", "already-gone"]) {
+    await assert.rejects(syncResources(store, { ...selected, skills: ["drop", name] }),
+      err => err.code === "NOT_FOUND" && /same-source installation tracking/.test(err.message));
+    assert.deepEqual(await snapshot(opts.home), before);
+  }
   const preview = await syncResources(store, { ...selected, dryRun: true });
   assert.equal(preview.length, 2);
   assert.ok(preview.every(item => item.action === "delete" && item.name === "drop"));
@@ -702,11 +707,29 @@ test("selective prune keeps unselected tracking, other-source installs, and unma
   }
   assert.equal(skillFields(await fs.readFile(path.join(opts.home, ".claude", "agents", "reviewer.md"), "utf8")).body, "Agent");
   const after = await snapshot(opts.home);
-  assert.deepEqual(await syncResources(store, selected), []);
+  await assert.rejects(syncResources(store, selected), err => err.code === "NOT_FOUND");
   assert.deepEqual(await snapshot(opts.home), after);
   const fullPrune = await syncResources(store, { ...opts, prune: true });
   assert.equal(fullPrune.filter(item => item.name === "retained" && item.action === "delete").length, 2);
   for (const root of roots) assert.ok(await exists(path.join(root, "foreign", "SKILL.md")));
+});
+
+test("prune accepts tracking from one selected target even when its local item is already missing", async t => {
+  const opts = await fixture(t);
+  const store = memoryStore({ workflow: "Rules" });
+  await syncResources(store, { ...opts, target: "claude", skills: ["workflow"] });
+  await fs.rm(path.join(opts.home, ".claude", "skills", "workflow"), { recursive: true });
+  store.data.skill = {};
+  const before = await snapshot(opts.home);
+  await assert.rejects(syncResources(store, { ...opts, target: "codex", skills: ["workflow"], prune: true }),
+    err => err.code === "NOT_FOUND");
+  assert.deepEqual(await snapshot(opts.home), before);
+  const selection = { ...opts, skills: ["workflow"], prune: true };
+  assert.deepEqual(await syncResources(store, { ...selection, dryRun: true }), []);
+  assert.deepEqual(await snapshot(opts.home), before);
+  assert.deepEqual(await syncResources(store, selection), []);
+  const manifest = JSON.parse(await fs.readFile(path.join(opts.home, ".claude", "skills", manifestName), "utf8"));
+  assert.deepEqual(manifest.items, {});
 });
 
 test("force authorizes only selected unmanaged collisions", async t => {
@@ -828,6 +851,13 @@ test("CLI repeated selectors install only requested project entries and preserve
   assert.match(missing.stderr, /CTXBIN_ERR NOT_FOUND/);
   assert.equal(missing.stdout, "");
   assert.deepEqual(await snapshot(opts.home), before);
+  for (const dryRun of [[], ["--dry-run"]]) {
+    const typo = await runCli([...base, "--skill", "alhpa", "--prune", ...dryRun], env);
+    assert.equal(typo.status, 1);
+    assert.match(typo.stderr, /CTXBIN_ERR NOT_FOUND/);
+    assert.equal(typo.stdout, "");
+    assert.deepEqual(await snapshot(opts.home), before);
+  }
   delete data.skill.alpha;
   const start = calls.length;
   const pruned = await runCli([...base, "--skill", "alpha", "--prune"], env);

@@ -58,7 +58,7 @@ const page = (ko: boolean) => (
     <h2>{ko ? '항목 선택과 프로젝트 설치' : 'Selection and project installation'}</h2>
     <p>{ko ? '선택 옵션이 없으면 전체를 설치합니다. 하나라도 지정하면 지정한 이름만 처리하고 선택하지 않은 리소스는 제외합니다. 중복 이름은 한 번만 처리하며 쉼표 목록이나 와일드카드는 지원하지 않습니다. 제외한 원격 내용은 검증·GitHub 다운로드를 하지 않고 제외한 리소스 해시와 설치 경로도 읽지 않습니다.' : 'Without selectors, install everything. Any selector limits processing to named entries and excludes resources without selectors. Deduplicate repeated names; comma lists and wildcards are unsupported. Unselected content is not validated/downloaded from GitHub, and excluded hashes/roots are not inspected.'}</p>
     <CodeBlock language="bash" code={'npx ctxbin sync --target claude --skill workflow --skill reference --agent reviewer \\\n  --skills-dir .claude/skills --agents-dir .claude/agents --dry-run'} />
-    <p>{ko ? '없는 선택 이름은 NOT_FOUND로 실패하고 설치하지 않습니다. --prune을 주면 원격에서 사라진 이름을 정리 후보로 허용하며, 같은 저장소의 선택한 설치 이력만 삭제합니다. 미관리·다른 저장소·이미 정리한 항목은 유지하거나 아무 작업 없이 성공합니다. 선택하지 않은 이력도 유지합니다.' : 'Missing selected names fail with NOT_FOUND before installation. With --prune, absent names are cleanup candidates: remove only selected same-source tracking. Unmanaged, other-source, and already removed candidates are no-ops. Unselected tracking remains.'}</p>
+    <p>{ko ? '없는 선택 이름은 NOT_FOUND로 실패하고 설치하지 않습니다. --prune을 주면 선택한 대상 중 하나에 같은 저장소의 설치 이력이 있는 이름만 정리 후보로 허용합니다. 오타나 이미 이력을 정리한 이름은 NOT_FOUND이며, 미관리·다른 저장소 항목과 선택하지 않은 이력은 유지합니다.' : 'Missing selected names fail with NOT_FOUND before installation. With --prune, an absent name needs same-source tracking in a selected target. Typos and already pruned names return NOT_FOUND; unmanaged/other-source entries and unselected tracking remain untouched.'}</p>
 
     <h2>{ko ? '설치 위치' : 'Installation paths'}</h2>
     <table>

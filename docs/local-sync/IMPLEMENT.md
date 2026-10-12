@@ -285,3 +285,34 @@ node dist/cli.js sync --target all
   Selection defaults remain full sync; selected prune preserves all unselected items.
 - No real store, native user installation, npm publication, release tag, or site
   deployment was changed. Live native-client/Windows/browser checks remain manual.
+
+## Review follow-up — 2026-10-13
+
+- Reviewed parent: `107c1d7c0378d9083e72703ce67d5d488c45c3d5`, PR #4.
+- [x] Requirements/design: allow absent prune selectors only with same-source tracking.
+- [x] Implementation: collect matching manifest evidence and reject unknown selectors.
+- [x] Test Hardening: typo/foreign/unmanaged/repeated-cleanup and mixed-target cases.
+- [x] Integration Test: complete suite, types, site, package smoke, and PR documentation.
+- Scope also repairs skillref download cleanup: use a managed stream pipeline so an
+  early validation error waits for file close before deleting its temporary directory.
+- Done: reviewed boundaries, deterministic skillref cleanup regression, help/site alignment,
+  and integration checks. The follow-up commit is recorded in this branch's history.
+- Next: review/merge PR #4 and publish `1.5.0`; native-client/Windows/browser checks remain manual.
+- Blockers: none. No live store/client installation changes are authorized by this review.
+
+### Review-fix validation
+
+- `pnpm test`: 98 cases, 96 passed, 2 existing environment skips, 0 failures.
+  Sync has 42 tests. Unknown prune selectors fail before any installation changes;
+  a tracked, already missing item remains a valid cleanup candidate across targets.
+- The delayed-file-open regression first exposed that pipeline rejection can precede
+  file close. Explicitly waiting for close now preserves IO/SIZE_LIMIT and removes
+  temporary directories without the delayed-open race or asynchronous errors.
+  The transport uses [Node's promise pipeline](https://nodejs.org/api/stream.html)
+  for managed errors and backpressure, plus the explicit close wait.
+- `pnpm build`, help/launcher validation (14 passed), `pnpm exec tsc --noEmit`, and
+  `pnpm --dir docs build --emptyOutDir`: passed. The existing Browserslist notice remains.
+- Final npm tarball has 11 files. Actual isolated npx version/help and installed-library
+  checks passed, including prune typo detection and backup protection/BOM handling.
+- Initial sandbox test failures were localhost listen EPERM; the authorized rerun
+  used disposable HTTP mocks. No real store/native user roots or release were changed.

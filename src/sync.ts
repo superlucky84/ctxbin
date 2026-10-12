@@ -92,13 +92,14 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
   const skills = skillSnapshot.filter(({ field }) => !selection.skill || selection.skill.has(field));
   const agents = agentSnapshot.filter(({ field }) => !selection.agent || selection.agent.has(field));
   const failures: Array<{ label: string; error: unknown }> = [];
+  const missing: Array<{ resource: "skill" | "agent"; name: string }> = [];
+  const prunable = { skill: new Set<string>(), agent: new Set<string>() };
   for (const [resource, entries] of [["skill", skills], ["agent", agents]] as const) {
     const requested = selection[resource];
-    if (requested && !opts.prune) {
+    if (requested) {
       const available = new Set(entries.map(({ field }) => field));
       for (const name of requested) {
-        if (!available.has(name)) failures.push({ label: `${resource}:${JSON.stringify(name)}`,
-          error: new CtxbinError("NOT_FOUND", `no remote ${resource} named ${JSON.stringify(name)}`) });
+        if (!available.has(name)) missing.push({ resource, name });
       }
     }
     const names = new Set<string>();
@@ -174,6 +175,7 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
           for (const name of Object.keys(previous.items).sort()) {
             if (selectedNames && !selectedNames.has(name)) continue;
             if (previous.items[name] !== opts.sourceId || remoteNames.has(name)) continue;
+            prunable[root.resource].add(name);
             try {
               const dest = itemPath(root, name);
               const exists = await assertDestination(root, dest);
@@ -186,6 +188,12 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
           }
         }
       } catch (error) { failures.push({ label: `${root.target}:${root.resource}`, error }); }
+    }
+    for (const { resource, name } of missing) {
+      if (opts.prune && prunable[resource].has(name)) continue;
+      failures.push({ label: `${resource}:${JSON.stringify(name)}`, error: new CtxbinError("NOT_FOUND",
+        `no remote ${resource} named ${JSON.stringify(name)}` +
+        (opts.prune ? "; no same-source installation tracking in the selected targets" : "")) });
     }
     failures.sort((a, b) => a.label.localeCompare(b.label));
     if (failures.length === 1) throw failures[0].error;

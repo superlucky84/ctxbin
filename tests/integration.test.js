@@ -763,6 +763,43 @@ test("skillref download behaviors", async (t) => {
       await fs.rm(tmp, { recursive: true, force: true });
     }
   });
+
+  await t.test("early archive rejection waits for delayed file opening and closing before cleanup", async () => {
+    const nativeFs = require("node:fs");
+    const originalOpen = nativeFs.open;
+    const originalFetch = global.fetch;
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-skillref-race-"));
+    const opened = [];
+    let pending = 0;
+    nativeFs.open = (file, ...args) => {
+      if (path.basename(String(file)) !== "skillref.tar.gz") return originalOpen(file, ...args);
+      const callback = args.pop();
+      pending++;
+      setTimeout(() => originalOpen(file, ...args, (...result) => {
+        pending--;
+        opened.push(String(file));
+        callback(...result);
+      }), 20);
+    };
+    try {
+      const oversized = Buffer.alloc(20 * 1024 * 1024 + 1);
+      oversized[0] = 0x1f;
+      oversized[1] = 0x8b;
+      const value = createSkillrefValue("https://github.com/acme/repo", "skills/example", "a".repeat(40));
+      for (const [body, code] of [[Buffer.from("invalid gzip"), "IO"], [oversized, "SIZE_LIMIT"]]) {
+        global.fetch = async () => new Response(body, { status: 200 });
+        await assert.rejects(loadSkillrefToDir(value, tmp), err => err instanceof CtxbinError && err.code === code);
+        assert.equal(pending, 0, "cleanup must wait for the delayed open callback");
+      }
+      assert.equal(opened.length, 2);
+      for (const file of opened) await assert.rejects(fs.stat(path.dirname(file)), err => err.code === "ENOENT");
+      assert.deepEqual(await fs.readdir(tmp), []);
+    } finally {
+      nativeFs.open = originalOpen;
+      global.fetch = originalFetch;
+      await fs.rm(tmp, { recursive: true, force: true });
+    }
+  });
 });
 
 test("upstash integration (manual)", {

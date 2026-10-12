@@ -62,3 +62,36 @@ Environment: macOS, Node `v22.23.3`, pnpm `10.13.1`, npm `10.9.9`.
 - Skillref recovery retains stored pointers, not a GitHub content snapshot. Restore
   rollback is best effort, not an atomic transaction under interruption or outage.
 - No npm publication, merge, release tag, or site deployment was performed.
+
+## Review follow-up — 2026-10-13
+
+- Reviewed parent: `107c1d7c0378d9083e72703ce67d5d488c45c3d5`, PR #4.
+- [x] Requirements/design: force guards, error-code preservation, bounded rollback,
+  BOM acceptance, stable ordering, and hard-link compatibility policy resolved.
+- [x] Implementation: update backup validation/publication and restore failure handling.
+- [x] Test Hardening: data-loss guards, unsupported links, network rollback, BOM/sorting.
+- [x] Integration Test: suite, types/site, final package smoke and PR documentation.
+- Retain atomic hard-link/rename publication; unsupported links get an actionable
+  error and an explicit force/rename path instead of a partial-copy fallback.
+- Done: review fixes, help/site alignment, fault regressions, and integration validation.
+  The follow-up commit is recorded in `feat/selective-sync-and-backup` history.
+- Next: review/merge PR #4 and follow `docs/RELEASING.md`; real drives, Windows,
+  and interruption/live-store workflows remain manual. Blockers: none.
+
+### Review-fix validation
+
+- Full suite: 98 cases, 96 passed, 2 existing environment skips, 0 failures.
+  Backup coverage now has 19 tests: source/empty-resource force guards, rechecking a
+  destination changed during staging, unsupported links and force/rename, BOM and
+  locale-independent ordering, and NETWORK rollback in the library and actual CLI.
+- A 50-key ambiguous-write/outage fixture verifies one failed rollback request,
+  preserved NETWORK classification, and reporting all attempted unresolved keys.
+  CLI mock-store failure verifies exactly one CTXBIN_ERR prefix.
+- Existing-file refusal is INVALID_INPUT. Empty/other-source snapshots can use new
+  filenames; force can still repair invalid files. Existing backup format/checksums
+  remain compatible because parsing does not reorder the checksum payload.
+- Type checking, 14 help/launcher tests, bilingual site build, and diff review passed.
+  Source help is 426 lines/18,298 bytes; only the changed command contracts were added.
+- `npm pack`: expected 11 files. An isolated npx installation of that final tarball
+  passed version/help and installed-library BOM/backup protection/prune checks.
+- No remote data, native installation, npm publication, merge, or deployment was changed.

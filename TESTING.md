@@ -142,13 +142,18 @@ node dist/cli.js restore --file ./tmp/backups/ctxbin.json --dry-run
 
 Use a disposable remote store. Select repeated exact keys, confirm excluded resources
 are unused, and selectively prune only named same-source entries. Unselected tracking
-must survive. Unknown selected names fail except when prune permits absent cleanup.
+must survive. Unknown selected names fail; absent prune selectors require same-source
+tracking in a selected target. Repeated cleanup after removing that tracking fails NOT_FOUND.
 
 Back up raw values, empty only the test skill/agent hashes, then restore. Confirm exact
 metadata/frontmatter/pack/ref preservation and unrelated remote names surviving.
 Conflicting values require force; corrupt/checksum-invalid files fail before writes.
 `tests/backup.test.js` covers file/remote faults, ambiguous writes, concurrency guards,
 and incomplete rollback. See [manual recovery checks](docs/backup-restore/MANUAL_TEST_CHECKLIST.md).
+Review regressions cover empty/source-change force protection, hard-link errors and
+staged rename, BOM/stable ordering, one NETWORK error prefix, and stopping rollback
+requests during an outage. Skillref tests delay file opening to verify that early
+size/gzip rejection waits for file close before temporary-directory cleanup.
 
 ## Notes
 - Skillpack has a 7MB tar.gz size limit.

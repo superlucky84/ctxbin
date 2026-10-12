@@ -230,8 +230,9 @@ npx ctxbin sync --target claude --skill workflow --skill reference --agent revie
 ```
 
 Missing selected names return NOT_FOUND before changes, except with --prune:
-absent names are allowed for cleanup of this store's tracked installs. Selective
-prune touches only named items; untracked/other-store/already removed items are no-ops.
+an absent name needs this store's installation tracking in a selected target.
+Selective prune touches only named items; unknown/already pruned names fail, and
+unmanaged/other-store installations remain untouched.
 
 ### Shared rule format
 
@@ -315,10 +316,14 @@ npx ctxbin restore --file ./backups/ctxbin.json
 
 - Backup accepts --file and optional --force. Existing files require force to replace;
   new files have private permissions and are published only after complete capture.
+  Force cannot replace a valid other-store backup or empty a previously populated
+  resource; choose a new filename. Unsupported hard links report an error; explicit
+  force uses staged rename after checking the destination.
 - The JSON file includes format/version, creation time, a source URL digest, raw
   resource entries, and a checksum. Values retain original metadata/frontmatter.
   Skillpacks include stored bundles/assets; skillrefs include pointers only, without
   downloading GitHub files. Native installation name/format checks do not apply.
+  A leading UTF-8 BOM is accepted; new entry ordering is independent of locale.
 - Restore accepts --file, --dry-run, and --force. Schema/checksum validation precedes
   remote access. It creates missing names, skips identical values, and preserves
   remote names outside the backup. Different existing values require --force; preview
@@ -326,6 +331,8 @@ npx ctxbin restore --file ./backups/ctxbin.json
   into a different configured store. Restore never injects fresh savedAt/by metadata.
 - Restore rechecks changed keys and attempts rollback on ordinary apply failures.
   Incomplete rollback is reported explicitly; the backup remains available for retry.
+  The original error code is retained. Rollback stops after its first NETWORK failure
+  and reports all unresolved keys, avoiding a separate timeout for each remaining key.
   Process interruption, network outage, and concurrent writes are not transaction-atomic.
   Avoid editing the store during capture/recovery; cross-hash reads are not one snapshot.
 - These commands use no target, selectors, prune, or native installation directories.

@@ -6,7 +6,7 @@ const os = require("node:os");
 const http = require("node:http");
 const { spawn } = require("node:child_process");
 const { backupResources, parseResourceBackup, readResourceBackup, restoreResources,
-  syncSourceId, createSkillpackFromDir, createSkillrefValue } = require("../dist/index.js");
+  syncSourceId, createSkillpackFromDir, createSkillrefValue, CtxbinError } = require("../dist/index.js");
 
 const sourceId = syncSourceId("https://backup-store.invalid");
 function memoryStore(skill = [], agent = []) {
@@ -82,7 +82,8 @@ test("existing backups require force and failed captures preserve previous bytes
   const original = await fs.readFile(opts.file);
   store.calls.length = 0;
   store.data.skill.set("workflow", "Changed");
-  await assert.rejects(backupResources(store, { file: opts.file, sourceId }), /already exists/);
+  await assert.rejects(backupResources(store, { file: opts.file, sourceId }),
+    err => err.code === "INVALID_INPUT" && /already exists/.test(err.message));
   assert.deepEqual(store.calls, []);
   assert.deepEqual(await fs.readFile(opts.file), original);
   const list = store.list;
@@ -92,6 +93,85 @@ test("existing backups require force and failed captures preserve previous bytes
   store.list = list;
   await backupResources(store, { file: opts.file, sourceId, force: true });
   assert.equal((await readResourceBackup(opts.file)).resources.skill[0].value, "Changed");
+});
+
+test("force preserves valid backups when source changes or either resource unexpectedly empties", async t => {
+  const store = memoryStore([["workflow", "Original"]], [["reviewer", "Rules"]]);
+  const opts = await capture(t, store);
+  const original = await fs.readFile(opts.file);
+  await assert.rejects(backupResources(store, { file: opts.file,
+    sourceId: syncSourceId("https://another-store.invalid"), force: true }),
+    err => err.code === "INVALID_INPUT" && /another store/.test(err.message));
+  assert.deepEqual(await fs.readFile(opts.file), original);
+  for (const resource of ["skill", "agent"]) {
+    const saved = store.data[resource];
+    store.data[resource] = new Map();
+    await assert.rejects(backupResources(store, { file: opts.file, sourceId, force: true }),
+      err => err.code === "INVALID_INPUT" && err.message.includes(`nonempty ${resource}`));
+    assert.deepEqual(await fs.readFile(opts.file), original);
+    store.data[resource] = saved;
+  }
+  const emptyFile = path.join(opts.dir, "empty.json");
+  await backupResources(memoryStore(), { file: emptyFile, sourceId });
+  assert.equal((await readResourceBackup(emptyFile)).resources.skill.length, 0);
+  const corrupt = path.join(opts.dir, "corrupt.json");
+  await fs.writeFile(corrupt, "invalid old file");
+  await backupResources(store, { file: corrupt, sourceId, force: true });
+  assert.equal((await readResourceBackup(corrupt)).resources.skill[0].value, "Original");
+});
+
+test("force replacement rechecks a backup changed while staging", async t => {
+  const opts = await capture(t, memoryStore([["workflow", "Original"]]));
+  const foreign = { ...opts.backup, sourceId: syncSourceId("https://another-store.invalid") };
+  const bytes = JSON.stringify(foreign);
+  const open = fs.open;
+  fs.open = async (...args) => {
+    const handle = await open(...args);
+    if (String(args[0]).includes(".ctxbin-backup-")) {
+      const writeFile = handle.writeFile.bind(handle);
+      handle.writeFile = async (...writeArgs) => {
+        await writeFile(...writeArgs);
+        await fs.writeFile(opts.file, bytes);
+      };
+    }
+    return handle;
+  };
+  try { await assert.rejects(backupResources(opts.store, { file: opts.file, sourceId, force: true }), /another store/); }
+  finally { fs.open = open; }
+  assert.equal(await fs.readFile(opts.file, "utf8"), bytes);
+  assert.deepEqual(await fs.readdir(path.dirname(opts.file)), ["resources.json"]);
+});
+
+test("unsupported hard links have actionable errors and explicit force uses staged rename", async t => {
+  const opts = await fixture(t, memoryStore([["workflow", "Rules"]]));
+  const link = fs.link;
+  let attempts = 0;
+  fs.link = async () => { attempts++; throw Object.assign(new Error("unsupported"), { code: "ENOTSUP" }); };
+  try {
+    await assert.rejects(backupResources(opts.store, { file: opts.file, sourceId }),
+      err => err.code === "IO" && /--force.*rename/.test(err.message));
+    await assert.rejects(fs.stat(opts.file), err => err.code === "ENOENT");
+    await backupResources(opts.store, { file: opts.file, sourceId, force: true });
+    assert.equal((await readResourceBackup(opts.file)).resources.skill[0].value, "Rules");
+    assert.equal(attempts, 1);
+  } finally { fs.link = link; }
+});
+
+test("backup accepts a BOM and capture/restore ordering is independent of locale", async t => {
+  const keys = ["z", "ä", "A", "a", "Å", "Z"];
+  const opts = await fixture(t, memoryStore(keys.map(key => [key, `Value for ${key}`])));
+  const localeCompare = String.prototype.localeCompare;
+  String.prototype.localeCompare = () => assert.fail("snapshot order must not depend on locale");
+  try {
+    await backupResources(opts.store, { file: opts.file, sourceId });
+    const raw = await fs.readFile(opts.file, "utf8");
+    await fs.writeFile(opts.file, "\uFEFF" + raw);
+    const backup = await readResourceBackup(opts.file);
+    assert.deepEqual(backup.resources.skill.map(entry => entry.field), [...keys].sort());
+    assert.deepEqual(parseResourceBackup(raw), backup);
+    const actions = await restoreResources(memoryStore(), backup);
+    assert.deepEqual(actions.map(item => item.name), [...keys].sort());
+  } finally { String.prototype.localeCompare = localeCompare; }
 });
 
 test("backup refuses symlinks and directories and preserves old files on publication failure", async t => {
@@ -209,6 +289,35 @@ test("restore guards concurrent changes and reports incomplete rollback without 
   assert.equal(target2.data.skill.get("alpha"), "Concurrent writer");
 });
 
+test("restore preserves NETWORK errors and stops rollback at the first network failure", async t => {
+  const keys = Array.from({ length: 50 }, (_, index) => `key-${String(index).padStart(2, "0")}`);
+  const { backup } = await capture(t, memoryStore(keys.map(key => [key, key])));
+  const target = memoryStore();
+  const set = target.set, get = target.get;
+  let outage = false, rollbackRequests = 0;
+  target.set = async (...args) => {
+    await set(...args);
+    if (args[1] === keys.at(-1)) {
+      outage = true;
+      throw new CtxbinError("NETWORK", "apply response lost");
+    }
+  };
+  target.get = async (...args) => {
+    if (outage) { rollbackRequests++; throw new CtxbinError("NETWORK", "rollback timed out"); }
+    return get(...args);
+  };
+  await assert.rejects(restoreResources(target, backup), err => {
+    assert.equal(err.code, "NETWORK");
+    assert.match(err.message, /^apply response lost; restore rollback incomplete/);
+    assert.match(err.message, /rollback stopped after NETWORK/);
+    assert.doesNotMatch(err.message, /CTXBIN_ERR/);
+    for (const key of keys) assert.ok(err.message.includes(JSON.stringify(key)), key);
+    return true;
+  });
+  assert.equal(rollbackRequests, 1, "an outage must not incur one timeout per attempted key");
+  assert.equal(target.data.skill.size, 50);
+});
+
 function runCli(args, env) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [path.join(__dirname, "..", "dist", "cli.js"), ...args], { env });
@@ -255,6 +364,36 @@ test("CLI backup rejects malformed store snapshots instead of replacing an exist
     assert.match(result.stderr, /CTXBIN_ERR NETWORK/);
     assert.deepEqual(await fs.readFile(opts.file), original);
   }
+});
+
+test("CLI restore reports one NETWORK prefix and stops requests when rollback cannot reach the store", async t => {
+  const opts = await capture(t, memoryStore([["alpha", "One"], ["beta", "Two"]]));
+  let outage = false, rollbackRequests = 0;
+  const server = http.createServer((req, res) => {
+    const chunks = [];
+    req.on("data", chunk => chunks.push(chunk));
+    req.on("end", () => {
+      const [command, , field] = JSON.parse(Buffer.concat(chunks));
+      if (outage || (command === "HSET" && field === "beta")) {
+        if (outage) rollbackRequests++;
+        outage = true;
+        res.statusCode = 503;
+        res.end("store unavailable");
+        return;
+      }
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ result: command === "HGETALL" ? [] : command === "HGET" ? null : 1 }));
+    });
+  });
+  await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const env = { ...process.env, CTXBIN_STORE_URL: `http://127.0.0.1:${server.address().port}`, CTXBIN_STORE_TOKEN: "test-token" };
+  const result = await runCli(["restore", "--file", opts.file], env);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /^CTXBIN_ERR NETWORK:/);
+  assert.equal((result.stderr.match(/CTXBIN_ERR/g) || []).length, 1);
+  assert.match(result.stderr, /rollback incomplete.*skill:"beta".*skill:"alpha"/);
+  assert.equal(rollbackRequests, 1);
 });
 
 test("CLI backup and restore recover original remote data after loss without native installation", async t => {

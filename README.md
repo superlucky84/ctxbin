@@ -194,9 +194,9 @@ npx ctxbin sync --target claude --skill workflow --skill reference --agent revie
   --skills-dir .claude/skills --agents-dir .claude/agents --dry-run
 ```
 
-Missing selected names return `NOT_FOUND` before changes unless `--prune` is set.
-Selective prune considers only explicitly selected same-source tracking. Missing
-untracked, other-store, and already removed entries are no-ops. Unselected tracking
+Missing selected names return `NOT_FOUND` before changes. With `--prune`, an absent
+name needs same-source installation tracking in at least one selected target.
+Unknown/already pruned names fail; unmanaged/other-store installations remain untouched. Unselected tracking
 survives for future full-store pruning.
 
 Matching skill directories are replaced completely, including removal of stale
@@ -294,6 +294,10 @@ The backup has a versioned schema, timestamp, source URL digest, and payload
 checksum. Original metadata/frontmatter and legacy values are kept exactly.
 Existing backup files require `backup --force` to replace; a complete file is
 published with private permissions after capture succeeds.
+Even force cannot replace a valid other-store backup or empty a previously populated
+skill/agent resource; retain those snapshots under a new filename. On drives without
+hard-link support, the error explains how to use explicit force/staged rename or
+choose another directory. Leading UTF-8 BOMs are accepted; ordering is locale-independent.
 
 Restore validates the file before remote access, then creates missing keys and
 skips identical values. Conflicting existing values require `restore --force`;
@@ -302,7 +306,10 @@ remain. Recovery targets the currently configured store, including a new store.
 No fresh savedAt/by metadata is injected. No target, selection, or prune flags apply.
 
 Restore rechecks changed keys and attempts rollback on ordinary failures. Incomplete
-rollback is reported; the backup remains available. Capture/recovery is not atomic
+rollback is reported; the backup remains available.
+The original apply error code is retained. After the first NETWORK rollback failure,
+remaining attempted keys are reported without waiting for a timeout for each key.
+Capture/recovery is not atomic
 against concurrent edits, process interruption, or network outages. Avoid editing
 the store during recovery and inspect its state before retrying after an error.
 

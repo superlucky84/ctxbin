@@ -40,6 +40,8 @@ Require the format/version, valid timestamp/digests, both resource arrays, strin
 fields/values, unique fields within each resource, and matching payload checksum.
 Checksum serialization uses skill/agent order and field/value pairs in that order;
 entry array order remains part of the checksum.
+Accept one leading UTF-8 BOM before JSON parsing. New snapshots and restore plans
+sort field strings by JavaScript code-unit comparison, independent of locale.
 Empty arrays/values and arbitrary Redis field names are valid. Preserve values
 exactly, without injecting fresh metadata or interpreting installation frontmatter.
 Skillpacks remain self-contained encoded bundles; skillrefs retain only stored pointers.
@@ -48,6 +50,12 @@ Read both hashes once and sort entries. Validate the resulting snapshot before
 writing. Write and flush a mode-0600 temporary file beside the destination, then
 publish by exclusive hard link (new file) or rename (force). Clean staging without
 masking the primary result. Existing backup bytes survive failed capture/publication.
+When replacing a valid backup, reject a different sourceId or any nonempty resource
+becoming empty, even with force. Recheck this guard immediately before publication.
+The user can retain the new snapshot under another filename. Existing invalid files
+can still be repaired with force. Without force, an existing file is INVALID_INPUT.
+On a filesystem that rejects hard links, report how to use explicit force/staged
+rename or select another directory. Do not publish by a partially visible copy.
 
 ## Restore flow
 
@@ -60,6 +68,9 @@ masking the primary result. Existing backup bytes survive failed capture/publica
 5. On failure, visit attempted writes in reverse. If the current value equals the
    old value, skip. If it equals the restored value, restore/delete the old state.
    Any other value or inaccessible key is unresolved; report incomplete rollback.
+   On the first NETWORK rollback error, stop sending requests and mark the remaining
+   attempted writes unresolved. Preserve the original apply code and message without
+   nesting CTXBIN_ERR markers; append the rollback status and affected names.
 
 The local backup always survives restore. No remote names outside the file are
 deleted. Data can recover into a different configured store; sourceId is provenance,

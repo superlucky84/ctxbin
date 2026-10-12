@@ -36,9 +36,10 @@ The library exposes equivalent `SyncOptions.skills`/`agents` arrays. Explicit em
 arrays are invalid; absence means the caller did not supply selectors.
 
 Unknown selected names produce `NOT_FOUND` and no installation changes, except
-with `--prune`: names absent remotely are allowed as cleanup candidates. Prune
-only explicitly selected same-source tracked names. Unmanaged, other-source, and
-already pruned names are no-ops. Preserve unselected tracking, including stale
+with `--prune`: names absent remotely are allowed only when a selected target
+tracks them for this source. Record that evidence while reading manifests and
+reject every remaining missing selector before apply. Unmanaged and other-source
+entries remain untouched; already pruned or unknown names return NOT_FOUND. Preserve unselected tracking, including stale
 entries, so a later full-store prune can still remove them.
 
 Project paths work through the existing single-target overrides. A skill-only

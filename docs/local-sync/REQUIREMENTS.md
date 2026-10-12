@@ -75,9 +75,10 @@ The same branch adds separate [remote backup/recovery](../backup-restore/REQUIRE
   In included resources, filter before validating content or downloading skillrefs;
   malformed unselected entries do not block selection. Retain all unselected tracking.
 - R20: A selected remote name that is absent fails with `NOT_FOUND` before applying
-  any change, except with `--prune`: absent selected names are cleanup candidates.
-  Prune only same-source tracked candidates; unmanaged, other-source, or already
-  removed candidates are harmless no-ops.
+  any change. With `--prune`, an absent name is allowed only when at least one
+  selected target still tracks it for this source. Unmanaged/other-source names
+  remain untouched; unknown names and repeated cleanup after tracking removal fail
+  with `NOT_FOUND`, rather than silently accepting a typo.
 - R21: Selectors work with both targets, preview, force, and existing single-target
   path overrides. Project directories are ordinary overrides, not a new scope flag.
 - R22: Help/README/bilingual pages clearly distinguish shared remote agent Markdown
@@ -115,8 +116,8 @@ Installing into real user directories is a manual release check, not an automate
 - [x] DC6: Shared agents use minimal provider-neutral frontmatter; validate unsupported fields.
 - [x] DC7: Keep feature plans in `docs/local-sync/` and preserve the existing site.
 - [x] DC8: Repeat exact-key selectors; specifying one resource excludes the other.
-- [x] DC9: Missing selected names fail unless prune explicitly allows absent cleanup.
-  Cleanup remains idempotent and scoped to selected same-source tracking.
+- [x] DC9: Missing selected names fail unless prune finds same-source installation
+  tracking in a selected target. No-op unknown selectors are not successful cleanup.
 - [x] DC10: Skip excluded resource roots/hashes and preserve unselected manifest items.
 
 ## Validation map
