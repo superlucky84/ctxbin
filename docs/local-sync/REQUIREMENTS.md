@@ -59,6 +59,10 @@ locally installed `doc-driven-designer-v1` workflow. Branch:
 - R16: Determine ownership from a manifest's own keys, never inherited object
   properties. Normalization must produce valid YAML for both block and flow mappings,
   including documents with explicit end markers; validate after inserting fields.
+- R17: The released npm package must launch through its installed `ctxbin` bin
+  link and `npx`, without an explicit Node invocation. Pack/publish rebuilds the
+  bundle; TypeScript checking must not overwrite it. Release fixes use a new patch
+  version when the broken version is already published.
 
 ## Boundaries and operational limits
 
@@ -95,6 +99,8 @@ DC3/R3 → unmanaged/source-scoped prune tests; DC4/R8 → path resolution/overr
 DC5–6/R5–7 → YAML/TOML conversion and bundle/ref tests;
 R4/R9–11 → snapshot, invalid input, locking, rollback, and mock-store checks.
 R13 → built help/fallback matches source, option/example review, bilingual site build.
+R17 → POSIX bin-link regression, no-emit preservation, corrupt-artifact prepack
+repair, and isolated tarball execution through npx before publication.
 
 See [design](DESIGN.md), [implementation](IMPLEMENT.md), and
 [manual checks](MANUAL_TEST_CHECKLIST.md).

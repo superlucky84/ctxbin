@@ -129,6 +129,26 @@ test("--version prints package version", async () => {
   assert.equal(stdout.trim(), pkg.version);
 });
 
+test("CLI launcher runs version and help through a bin link", {
+  skip: process.platform === "win32" && "Windows uses npm-generated command shims",
+}, async () => {
+  const { execFileSync } = require("node:child_process");
+  const root = path.join(__dirname, "..");
+  const pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-launcher-"));
+  try {
+    const bin = path.join(tmp, "ctxbin");
+    await fs.symlink(path.resolve(root, pkg.bin.ctxbin), bin);
+    const version = execFileSync(bin, ["--version"], { encoding: "utf8" });
+    assert.equal(version.trim(), pkg.version);
+    const help = execFileSync(bin, ["help"], { encoding: "utf8" });
+    const expected = await fs.readFile(path.join(root, "dist/skills/ctxbin/SKILL.md"), "utf8");
+    assert.equal(help, expected);
+  } finally {
+    await fs.rm(tmp, { recursive: true, force: true });
+  }
+});
+
 test("skill load ctxbin falls back to bundled skill text", async () => {
   const skillPath = path.join(__dirname, "..", "dist", "skills", "ctxbin", "SKILL.md");
   const expected = await fs.readFile(skillPath, "utf8");

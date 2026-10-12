@@ -1,8 +1,10 @@
 # Releasing ctxbin
 
-The local skill/agent sync command is an additive feature release: `1.3.2` →
-`1.4.0`. The version is already set in the feature PR; do not run `npm version`
-again after merging. The private documentation app keeps its independent version.
+The current patch release is `1.4.1`. The published `1.4.0` introduced local
+skill/agent sync, but its CLI was packaged from plain TypeScript output without
+a Node shebang. Version `1.4.1` fixes the launcher and package preparation.
+The version is already set in the fix PR; do not run `npm version` again after
+merging. The private documentation app keeps its independent version.
 
 The npm package and GitHub Pages site are published separately. Merging into
 `main` does not publish either one automatically. Run the commands below from the
@@ -23,8 +25,10 @@ node dist/cli.js --version
 ```
 
 The working tree should be clean, tests should pass, and the CLI should print
-`1.4.0`. `pnpm test` builds the CLI and generated help before running tests.
-`dist/` is ignored by Git, so an up-to-date local build is required for publishing.
+`1.4.1`. `pnpm test` builds the CLI and generated help before running tests.
+Root `tsc` checks types without emitting files. The CLI source contains its Node
+shebang, and `prepack` rebuilds the CLI/help before both `npm pack` and
+`npm publish`. `dist/` is ignored by Git.
 
 Build the documentation and clear any previous generated files:
 
@@ -56,23 +60,37 @@ Preview the package without uploading it:
 npm publish --dry-run --access public --tag latest --registry=https://registry.npmjs.org/
 ```
 
-Check that the preview identifies `ctxbin@1.4.0` and includes `dist/cli.js`,
+Check that the preview identifies `ctxbin@1.4.1` and includes `dist/cli.js`,
 `dist/index.js`, `dist/skills/ctxbin/SKILL.md`, `dist/agent-addon.md`, the source
 skill/add-on, README, LICENSE, and package.json. The generated skill metadata
-must also say `version: 1.4.0`.
+must also say `version: 1.4.1`.
+
+Verify the installed launcher before publishing, using the exact local tarball.
+`node dist/cli.js` alone cannot detect a missing shebang:
+
+```sh
+CTXBIN_RELEASE_CHECK_DIR=$(mktemp -d)
+npm pack --pack-destination "$CTXBIN_RELEASE_CHECK_DIR"
+npx --yes --registry=https://registry.npmjs.org/ --package="$CTXBIN_RELEASE_CHECK_DIR/ctxbin-1.4.1.tgz" ctxbin --version
+npx --yes --registry=https://registry.npmjs.org/ --package="$CTXBIN_RELEASE_CHECK_DIR/ctxbin-1.4.1.tgz" ctxbin help
+```
+
+The version should print `1.4.1`, and help should print without shell errors.
+This installs only a temporary package for verification. Do not use
+`--ignore-scripts` with pack/publish: it skips the required rebuild.
 
 ## 3. Publish and verify npm
 
 ```sh
 npm publish --access public --tag latest --registry=https://registry.npmjs.org/
-npm view ctxbin@1.4.0 version --registry=https://registry.npmjs.org/
+npm view ctxbin@1.4.1 version --registry=https://registry.npmjs.org/
 npm view ctxbin dist-tags --json --registry=https://registry.npmjs.org/
-npx --yes --registry=https://registry.npmjs.org/ ctxbin@1.4.0 --version
-npx --yes --registry=https://registry.npmjs.org/ ctxbin@1.4.0 help
+npx --yes --registry=https://registry.npmjs.org/ ctxbin@1.4.1 --version
+npx --yes --registry=https://registry.npmjs.org/ ctxbin@1.4.1 help
 ```
 
 Follow any authentication prompts from npm. Both version checks should report
-`1.4.0`, and `latest` should point to `1.4.0`. A published name/version cannot be
+`1.4.1`, and `latest` should point to `1.4.1`. A published name/version cannot be
 reused; if a problem is found after publishing, fix it in a new patch release.
 
 ## 4. Record the release in GitHub
@@ -80,9 +98,9 @@ reused; if a problem is found after publishing, fix it in a new patch release.
 After npm publication succeeds, tag the same `main` commit that was built:
 
 ```sh
-git tag -a v1.4.0 -m "Release ctxbin v1.4.0"
-git push origin v1.4.0
-gh release create v1.4.0 --verify-tag --title "ctxbin v1.4.0" --generate-notes
+git tag -a v1.4.1 -m "Release ctxbin v1.4.1"
+git push origin v1.4.1
+gh release create v1.4.1 --verify-tag --title "ctxbin v1.4.1" --generate-notes
 ```
 
 This records the release; creating a GitHub release does not publish to npm.
@@ -94,7 +112,7 @@ branch. Vite uses `/ctxbin/` as its base path. From the repository root, publish
 the `docs/dist` generated in step 1:
 
 ```sh
-pnpm dlx gh-pages@6.3.0 --dist docs/dist --branch gh-pages --nojekyll --message "docs: publish ctxbin v1.4.0"
+pnpm dlx gh-pages@6.3.0 --dist docs/dist --branch gh-pages --nojekyll --message "docs: publish ctxbin v1.4.1"
 gh api repos/superlucky84/ctxbin/pages --jq '{status, html_url, source}'
 ```
 
