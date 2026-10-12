@@ -116,6 +116,21 @@ my-project/feature --value`}
         code={`$ npx ctxbin ctx delete`}
       />
 
+      <h2>4. 원격 스킬·에이전트 설치</h2>
+      <p>1단계의 자격 증명으로 저장한 스킬·에이전트 전체를 내려받습니다. 미리보기는 원격 자료를 내려받고 검증하며 설치 폴더를 변경하지 않습니다:</p>
+      <CodeBlock language="bash" code={`# 기존 명령으로 정의 저장
+npx ctxbin skill save my-skill --dir ./skills/my-skill
+npx ctxbin agent save reviewer --file reviewer.md
+
+# 두 도구에 미리보기 후 설치
+npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all
+
+# 한 도구에 설치하고 이력에 있는 오래된 항목 정리
+npx ctxbin sync --target codex --prune`} />
+      <p>스킬 번들에는 루트 SKILL.md가 필요합니다. 공통 에이전트 Markdown은 name·description 메타데이터를 지원하며 기존 일반 Markdown도 사용할 수 있습니다. 같은 이름 스킬은 폴더 전체를 교체하고 로컬에만 있는 항목은 유지합니다. 에이전트 예제·설치 위치·경로 지정·복구 설명은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
+      <p>로컬 변경 업로드에는 기존 skill save --dir 또는 agent save --file을 사용합니다. Sync는 원격 저장소를 읽기만 하며 Git이나 키가 필요하지 않습니다.</p>
+
       <h2>키 추론</h2>
       <p>
         <code>ctx</code> 명령어에서 키를 제공하지 않으면, ctxbin이 git 저장소에서
@@ -125,6 +140,7 @@ my-project/feature --value`}
         프로젝트 이름이 어떻게 결정되는지, 명시적 키를 언제 사용해야 하는지는
         <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">키 추론</span> 페이지를 참고하세요.
       </p>
+      <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
     </div>
   );
 });

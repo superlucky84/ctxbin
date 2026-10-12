@@ -111,6 +111,9 @@ $ npx ctxbin ctx delete my-project/main`}
         <li>키를 추론할 수 없으면 빠른 실패</li>
       </ul>
 
+      <h2>컨텍스트와 설치 동기화</h2>
+      <p><code>ctxbin sync</code>는 원격 스킬·에이전트를 로컬 Claude Code와 Codex에 설치합니다. 컨텍스트에 접근하거나 브랜치 키를 추론하지 않으며 --raw도 필요하지 않습니다. 로컬·원격 컨텍스트 동기화에는 별도 도구 ctxloc를 사용합니다. 로컬 설치는 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">스킬·에이전트 sync 명령어</span>에서 확인하세요.</p>
+
       <h2>Redis 매핑</h2>
       <CodeBlock
         language="text"

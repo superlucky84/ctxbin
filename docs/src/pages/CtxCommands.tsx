@@ -113,6 +113,9 @@ $ npx ctxbin ctx delete my-project/main`}
         <li>Fails fast if key cannot be inferred</li>
       </ul>
 
+      <h2>Context and Installation Sync</h2>
+      <p><code>ctxbin sync</code> installs remote skills and agents into local Claude Code/Codex. It does not access context or use branch key inference, and it does not require --raw. For local/remote context replication, use the companion ctxloc. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">skill/agent sync commands</span> for local installation.</p>
+
       <h2>Redis Mapping</h2>
       <CodeBlock
         language="text"

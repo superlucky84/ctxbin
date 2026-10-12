@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const Skillpack = mount(() => {
   return () => (
@@ -33,6 +34,11 @@ export const Skillpack = mount(() => {
         <code>--dir</code> is required for skillpack load. Without it, an error is returned.
       </p>
 
+      <h2>Install with Sync</h2>
+      <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+      <p>Sync extracts packs in staging, requires root SKILL.md, validates metadata, and installs the whole skill at the client's skills path. Scripts, references, and normalized executable permissions are kept. Same-name skill directories are replaced entirely, including removal of stale files. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for targets and overrides.</p>
+
       <h2>Rules</h2>
       <ul>
         <li>File entries are sorted lexicographically for determinism</li>
@@ -53,7 +59,7 @@ export const Skillpack = mount(() => {
         suggesting removal of large/binary files.
       </p>
 
-      <h2>Extraction Rules</h2>
+      <h2>Extraction Rules (load --dir)</h2>
       <ul>
         <li>Target directory is created if missing</li>
         <li>Existing files at the same paths are overwritten</li>
@@ -69,6 +75,7 @@ export const Skillpack = mount(() => {
         <li>setuid/setgid/sticky bits are stripped</li>
         <li>Windows: chmod failures are ignored</li>
       </ul>
+      <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
     </div>
   );
 });

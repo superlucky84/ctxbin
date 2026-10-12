@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const ErrorCodesKo = mount(() => {
   return () => (
@@ -83,6 +84,14 @@ CTXBIN_ERR NOT_FOUND: no value for ctx:my-project/main
 CTXBIN_ERR SIZE_LIMIT: skillpack tar.gz exceeds 7MB limit
 CTXBIN_ERR TYPE_MISMATCH: --dir cannot be used with string values`}
       />
+
+      <h2>Sync 오류와 복구</h2>
+      <CodeBlock language="text" code={`CTXBIN_ERR INVALID_INPUT: sync requires --target claude, codex, or all
+CTXBIN_ERR INVALID_INPUT: directory overrides require a single --target
+CTXBIN_ERR INVALID_INPUT: skill my-skill: bundle must contain root SKILL.md
+CTXBIN_ERR INVALID_PATH: sync destination directories must not overlap`} />
+      <p>잘못된 메타데이터·설치 이력과 지원하지 않는 에이전트 필드는 INVALID_INPUT을 반환합니다. 위험한 이름·심볼릭 링크·예상과 다른 대상 유형은 INVALID_PATH입니다. 원격 저장소·GitHub 실패는 --dry-run에서도 NETWORK를 반환합니다.</p>
+      <p>IO는 권한, 사용 중인 .ctxbin-sync.lock, 변경된 설치 이력, 적용·복구 실패를 나타낼 수 있습니다. 일반 적용 실패는 파일과 이력을 복원합니다. 복구가 완료되지 않으면 오류에 보존된 백업 경로를 표시하므로 journal.json과 백업을 확인한 뒤 재시도하세요. 프로세스 중단은 복구 보장 범위 밖입니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 복구 안내</span>를 참고하세요.</p>
 
       <h2>에러 파싱</h2>
       <CodeBlock

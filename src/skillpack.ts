@@ -34,7 +34,8 @@ export async function createSkillpackFromDir(dirPath: string): Promise<string> {
       entries
     );
 
-    const gzip = zlib.createGzip({ mtime: 0 });
+    // Node's gzip encoder writes a zero timestamp; mtime is not a ZlibOptions field.
+    const gzip = zlib.createGzip();
     await pipeline(tarStream, gzip, createWriteStream(tarPath));
 
     const stat = await fs.stat(tarPath);

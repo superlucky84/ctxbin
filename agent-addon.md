@@ -11,4 +11,7 @@ Before using ctxbin, review the built-in usage guide:
 npx ctxbin help
 ```
 
+Prefer locally installed skills and agent definitions. Run `ctxbin sync` only when
+the user explicitly requests local installation or synchronization; choose the target explicitly.
+
 <!-- END CTXBIN AGENT ADDON -->

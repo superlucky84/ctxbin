@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const SkillpackKo = mount(() => {
   return () => (
@@ -33,6 +34,11 @@ export const SkillpackKo = mount(() => {
         skillpack 로드에는 <code>--dir</code>이 필수입니다. 없으면 에러가 반환됩니다.
       </p>
 
+      <h2>Sync로 설치</h2>
+      <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+      <p>Sync는 임시 공간에 번들을 추출하고 루트 SKILL.md와 메타데이터를 검증한 뒤 도구의 스킬 경로에 전체를 설치합니다. 스크립트·참조 파일과 정규화된 실행 권한을 유지합니다. 같은 이름 스킬 폴더 전체를 교체하므로 내부의 오래된 파일도 제거합니다. 대상과 경로 지정은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
+
       <h2>규칙</h2>
       <ul>
         <li>파일 항목은 결정론을 위해 사전순으로 정렬됨</li>
@@ -53,7 +59,7 @@ export const SkillpackKo = mount(() => {
         권장하는 명확한 에러와 함께 저장 실패.
       </p>
 
-      <h2>추출 규칙</h2>
+      <h2>추출 규칙 (load --dir)</h2>
       <ul>
         <li>대상 디렉터리가 없으면 생성</li>
         <li>같은 경로의 기존 파일은 덮어쓰기</li>
@@ -69,6 +75,7 @@ export const SkillpackKo = mount(() => {
         <li>setuid/setgid/sticky 비트는 제거됨</li>
         <li>Windows: chmod 실패는 무시됨</li>
       </ul>
+      <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
     </div>
   );
 });

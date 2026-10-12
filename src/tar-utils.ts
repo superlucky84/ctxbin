@@ -14,7 +14,7 @@ export async function listTarEntries(file: string): Promise<TarEntryInfo[]> {
     onentry(entry) {
       entries.push({
         path: entry.path,
-        type: entry.type,
+        type: entry.type ?? "Unknown",
         size: entry.size ?? 0,
         mode: entry.mode ?? 0,
       });

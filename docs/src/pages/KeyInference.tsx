@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const KeyInference = mount(() => {
   return () => (
@@ -10,6 +11,8 @@ export const KeyInference = mount(() => {
         When using <code>ctx</code> commands without an explicit key, ctxbin automatically
         infers the key from your git repository. This page explains exactly how the inference works.
       </p>
+
+      <p>Key inference applies to ctx only. Agent/skill save, load, and delete use explicit keys; sync takes no key and installs all remote definitions without requiring Git. Select its client with --target. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span>.</p>
 
       <h2>Key Format</h2>
       <CodeBlock

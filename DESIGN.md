@@ -1,6 +1,12 @@
 
 # ctxbin — Design Specification (Final)
 
+Skill/agent installation sync is specified in the canonical feature documents:
+[requirements](docs/local-sync/REQUIREMENTS.md),
+[design](docs/local-sync/DESIGN.md),
+[implementation](docs/local-sync/IMPLEMENT.md), and
+[manual checks](docs/local-sync/MANUAL_TEST_CHECKLIST.md).
+
 ## What This Is
 
 `ctxbin` is a **minimal, deterministic Node.js CLI tool** executed via `npx`, designed for **AI coding agents** to store, load, append, and delete **markdown-based context, agent roles, and skills (single-file, directory bundles, or GitHub references)** using a **simple key–value store backed by Upstash Redis**.
@@ -169,6 +175,12 @@ ctxbin <resource> <command> [key] [flags]
 * `resource`: `ctx | agent | skill`
 * `command`: `load | save | delete | list`
 * `key`: optional **only** for `ctx`
+
+Additional top-level command: `ctxbin sync --target claude|codex|all`, with
+`--dry-run`, `--prune`, `--force`, and single-target `--skills-dir` / `--agents-dir` overrides.
+It reads remote skill/agent hashes and installs native local files; it takes no key,
+does not use Git inference, and does not access `ctx`. Its complete contract is
+[docs/local-sync/DESIGN.md](docs/local-sync/DESIGN.md).
 
 Global flags:
 

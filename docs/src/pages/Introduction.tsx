@@ -75,6 +75,12 @@ $ npx ctxbin skill save my-skill --dir ./skills/my-skill
 $ npx ctxbin skill save my-skill --url https://github.com/owner/repo --path skills/my-skill`}
       />
 
+      <h2>Install Remote Skills and Agents</h2>
+      <p><code>sync</code> reads the agent and skill resources and installs them into local Claude Code/Codex. Choose --target claude, codex, or all; no key or Git repository is needed.</p>
+      <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+      <p>Matching items are replaced completely; local-only items remain. Optional --prune removes this store's tracked installs absent remotely. Upload changes with existing save commands. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for the full contract. Context replication is provided by the companion ctxloc.</p>
+
       <h2>Non-Interactive Guarantee</h2>
       <p>All commands except <code>init</code> must:</p>
       <ul>
@@ -82,6 +88,7 @@ $ npx ctxbin skill save my-skill --url https://github.com/owner/repo --path skil
         <li>Never block</li>
         <li>Fail fast with clear errors</li>
       </ul>
+      <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
     </div>
   );
 });

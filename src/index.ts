@@ -8,3 +8,6 @@ export { resolveSaveInput } from "./input";
 export { injectMetadata, stripMetadata, extractMetadata, formatMetadataBlock } from "./metadata";
 export { CtxbinError, formatError } from "./errors";
 export { safeChmod } from "./chmod";
+export { syncResources, syncSourceId } from "./sync";
+export type { SyncOptions, SyncAction } from "./sync";
+export { normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName } from "./install-format";

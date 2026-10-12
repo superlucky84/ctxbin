@@ -1,6 +1,7 @@
 # <img src="https://superlucky84.github.io/ctxbin/ctxbin.png" alt="ctxbin" width="24" height="24" style="vertical-align: -4px; margin-right: 8px;" /> ctxbin
 
-Minimal, deterministic CLI to save and load **context**, **agents**, and **skills** in Upstash Redis hashes.
+Minimal, deterministic CLI to save and load **context**, **agents**, and **skills** in Upstash Redis hashes,
+and install remote skills and agents into local **Claude Code** and **Codex**.
 It is designed for fast handoff between AI agents working on the same repo/branch,
 with branch-based [context keys inferred](https://superlucky84.github.io/ctxbin/#/guide/key-inference) inside git repositories.
 
@@ -36,6 +37,10 @@ The add-on tells agents how to format context (summary, next steps, decisions) a
 `npx ctxbin ctx save/load` correctly.
 
 You can also ask agents to save/load skills with simple commands like `--url` or `--dir`. See [Quick Start](https://superlucky84.github.io/ctxbin/#/guide/quick-start) for examples.
+To install all remote skills and agents into local Claude Code/Codex, preview with
+`npx ctxbin sync --target all --dry-run`, then run `npx ctxbin sync --target all`.
+See the [sync command guide](https://superlucky84.github.io/ctxbin/#/commands/sync)
+([한국어](https://superlucky84.github.io/ctxbin/#/ko/commands/sync)).
 
 ## Features
 - Branch-scoped `ctx` keys (auto-inferred from git repo + branch)
@@ -43,11 +48,13 @@ You can also ask agents to save/load skills with simple commands like `--url` or
 - `skillpack`: tar.gz + Base64 directory bundles (deterministic)
 - `skillref`: GitHub directory reference (default branch or pinned commit)
 - `list` command with type mapping (`--value`, `--dir`, `--url`)
+- Remote-to-local skill/agent installation for Claude Code and Codex (`sync`)
 
 ## Companion Project: ctxloc
 - `ctxbin` is the remote-storage-oriented CLI.
 - [`ctxloc`](https://github.com/superlucky84/ctxloc) is a local-first companion focused on `ctx` + explicit sync.
-- Sync entrypoint stays in `ctxloc` (`ctxloc sync`), while `ctxbin` remains independent.
+- Context replication lives in `ctxloc` (`ctxloc sync`). `ctxbin sync` installs
+  remote skills and agents into Claude Code/Codex and does not access `ctx`.
 
 ## Install
 Recommended (no install):
@@ -147,6 +154,104 @@ npx ctxbin skill save fp-pack \
 
 > `skill load` for skillpack/skillref requires `--dir`.
 
+### Install remote skills and agents locally
+
+`sync` downloads all stored skills and agents. Choose a target explicitly:
+It uses the existing store credentials, including for preview; no Git repository
+or key argument is required.
+
+```bash
+npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all
+npx ctxbin sync --target claude
+npx ctxbin sync --target codex --prune
+```
+
+| Option | Purpose |
+| --- | --- |
+| `--target claude\|codex\|all` | Required installation target |
+| `--dry-run` | Download, validate, and preview without destination changes |
+| `--prune` | Delete this store's tracked installs that are now absent remotely |
+| `--force` | Allow replacement of matching local items not tracked by ctxbin |
+| `--skills-dir <path>` | Override skill root for one target |
+| `--agents-dir <path>` | Override agent root for one target |
+
+Sync flags belong to sync only; save/load input flags are rejected. Path overrides
+require a single target. `--raw` is not needed for installation.
+
+Matching skill directories are replaced completely, including removal of stale
+files inside them. Identical managed items are reported `unchanged` without rewriting.
+Unmanaged collisions appear as `replace-unmanaged` in preview and require `--force`
+to apply; inspect that preview before authorizing whole-item replacement. Local-only
+skills/agents remain. `--prune` deletes only items
+previously installed by ctxbin from the same remote store and now absent remotely.
+Without `--prune`, removed remote items remain installed and tracked for later pruning.
+`--dry-run` downloads and validates content and prints actions without changing
+installation directories or tracking state. Sync only reads the remote store.
+
+| Target | Skills | Agents |
+| --- | --- | --- |
+| Claude Code | `~/.claude/skills/<name>/SKILL.md` | `~/.claude/agents/<name>.md` |
+| Codex | `~/.agents/skills/<name>/SKILL.md` | `~/.codex/agents/<name>.toml` |
+
+Override destinations for a single target, for example an existing Codex layout:
+
+```bash
+npx ctxbin sync --target codex --skills-dir "~/.codex/skills"
+npx ctxbin sync --target claude --skills-dir ./local-skills --agents-dir ./local-agents
+```
+
+Skills may be Markdown strings, skillpacks, or skillrefs. Bundles must include a
+root `SKILL.md`; supporting files and normalized executable permissions are kept.
+Portable remote keys use 1–64 lowercase letters/digits with single `-` or `_`
+separators. Unsafe/reserved names fail. A supplied frontmatter `name` must match the key.
+
+Shared agent Markdown accepts only `name` and `description` frontmatter, followed
+by the rules. Sync generates native Claude Markdown or Codex TOML from it:
+
+```markdown
+---
+name: reviewer
+description: Review code changes for correctness and missing tests.
+---
+
+Inspect changed code and report actionable findings.
+```
+
+Save with `ctxbin agent save reviewer --file reviewer.md`. Legacy Markdown without
+frontmatter works too: sync fills the name from the key, preserves a valid existing
+local agent description when the remote description is missing, then falls back to
+`Agent rules for <name>.` (agent) or `Reusable instructions for <name>.` (skill)
+as the default description. Other skill frontmatter fields are preserved.
+Existing skill frontmatter is kept without reserialization; a plain single-line
+description containing unquoted colon-space is quoted locally when that alone fixes
+the YAML. Other malformed documents fail. All item preflight errors are collected.
+Provider-specific agent model/tool settings are not translated; unsupported
+shared agent frontmatter fails with an error.
+
+Sync stages and validates every item before replacement, locks each destination,
+and rolls back entries/manifests on ordinary apply failures. Tracking is stored in
+`.ctxbin-sync.json` within each destination; it contains source URL digests, never
+credentials. Whole-command crash atomicity is not guaranteed: after an interrupted
+run, inspect leftover `.ctxbin-sync.lock` and `.ctxbin-sync-txn-*` backups before retrying.
+Root/agent symlinks and overlapping overrides are refused. Skill-entry symlinks are
+replaced or pruned as links, leaving their target directories untouched. Quoted
+leading tilde paths expand to the user home. Bundles require exact `SKILL.md` casing.
+Cleanup faults emit `CTXBIN_WARN` without masking an apply error or changing a
+successful apply into a failure. Skillrefs still download on every run to check freshness.
+Recovery transaction directories contain `journal.json` mapping backups to their
+destinations. Installing a same-name item from another store transfers tracking
+ownership to that store. Empty stores succeed and can prune this store's tracked
+entries when `--prune` is supplied.
+Output is tab-separated action, target, resource, name, and absolute path;
+preview adds a leading `dry-run` field.
+Existing `skill load --dir` keeps extra destination files; sync replaces matching
+skill directories completely. The bundled fallback skill is not automatically added
+to the remote sync list.
+
+See [feature design](docs/local-sync/DESIGN.md) and
+[release checks](docs/local-sync/MANUAL_TEST_CHECKLIST.md).
+
 ## Built-in guidance
 Print the bundled ctxbin usage guide:
 ```bash
@@ -159,6 +264,9 @@ pnpm install
 pnpm build
 pnpm test
 ```
+
+For npm and documentation-site releases after merging, see the
+[release guide](docs/RELEASING.md).
 
 ## License
 MIT

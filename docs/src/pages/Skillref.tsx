@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const Skillref = mount(() => {
   return () => (
@@ -63,6 +64,12 @@ ctxbin-skillref@1
       />
       <p><code>--dir</code> is required for skillref load.</p>
 
+      <h2>Install with Sync</h2>
+      <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+      <p>Sync resolves/downloads each reference and requires a root SKILL.md at its selected repository path. Pinned refs keep their commit; default-tracking refs resolve the default branch each time, including preview. Store access and GitHub downloads must be available.</p>
+      <p>Load --dir copies matching files and leaves extra local files. Sync replaces the complete matching installed skill, keeping downloaded assets and removing stale files inside it. Unrelated local skills remain. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for native paths and pruning.</p>
+
       <h2>URL Requirements</h2>
       <ul>
         <li>Must be HTTPS GitHub repo root: <code>https://github.com/owner/repo</code></li>
@@ -100,8 +107,9 @@ ctxbin-skillref@1
         <li>Symlinks are rejected</li>
         <li>Only 1 redirect allowed (within GitHub domains)</li>
         <li>gzip magic bytes validated</li>
-        <li>Atomic extraction (temp dir, then move)</li>
+        <li>Isolated extraction and validation before copying into the destination</li>
       </ul>
+      <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
     </div>
   );
 });
