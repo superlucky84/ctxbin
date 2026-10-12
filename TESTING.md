@@ -70,6 +70,12 @@ node dist/cli.js skill load fp-pack --dir ./tmp/skill
 pnpm test
 ```
 
+The launcher regression executes `ctxbin` through a bin symlink on POSIX, including
+version and help. Release validation also installs the packed tarball in a disposable
+directory and runs it through `npx`; see [the release guide](docs/RELEASING.md).
+Root `tsc` performs type checks without emitting files. `npm pack` and `npm publish`
+rebuild the CLI through `prepack` before creating the package.
+
 ## Local sync checks
 
 After building this branch, use `node dist/cli.js` to test the unreleased command.

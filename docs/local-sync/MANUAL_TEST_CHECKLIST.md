@@ -3,6 +3,11 @@
 Use a dedicated test store and disposable destination directories first.
 Automated tests do not install anything into the user's actual skill/agent folders.
 
+- [ ] After publication, run `npx --yes ctxbin@1.4.1 --version` and
+  `npx --yes ctxbin@1.4.1 help` from a directory outside the checkout.
+  Pass: version is `1.4.1` and help prints normally through the npm launcher.
+  The `1.4.0` release had a shebang-less TypeScript output; invoking the file with
+  `node` alone does not verify the installed launcher.
 - [x] Run built `ctxbin help` and the bundled fallback; inspect discovery metadata,
   sync options/examples, credentials, paths, pruning, and recovery explanations.
   Pass: both expose the current generated guide and match the command implementation.

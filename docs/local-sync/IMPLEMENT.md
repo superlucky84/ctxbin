@@ -78,12 +78,12 @@
 - Done: requirements/design, sync engine, CLI, source-scoped prune, native rendering,
   rollback/recovery journal, complete help/site/add-on/testing documentation coverage,
   and automated validation.
-- Next: merge the feature PR and follow [the release guide](../RELEASING.md) for
-  npm/site publication. Native-client discovery, browser checks, and Windows checks
-  remain in the manual checklist. No real user folders were installed.
+- Next: merge the `fix/npm-cli-release` patch and publish `1.4.1` using
+  [the release guide](../RELEASING.md). Native-client discovery, browser checks, and
+  Windows checks remain in the manual checklist. No real user folders were installed.
 - Blockers: none.
 - Base commit SHA: `c6d6fc9d15c7d42a03b6162ea656f2fd650fddce`.
-  Latest reviewed parent commit: `ee8432f74c3de4575a75bc531c0d8a0e416a4656`.
+  Latest reviewed parent commit: `b922cc3` (merged feature PR #2).
   The feature commit is recorded in the `feat/local-agent-skill-sync` branch history.
 
 ## Validation record — 2026-10-12
@@ -195,3 +195,39 @@ node dist/cli.js sync --target all
 - GitHub Pages configuration verified: `gh-pages` branch, `/` root, no custom domain.
 - No npm publication, GitHub release/tag, Pages deployment, native-folder sync, or
   remote-store mutation was performed during release preparation.
+
+## Phase 10: Published launcher repair — 2026-10-12
+
+- [x] Inspect the registry tarball: `1.4.0` contains 29 files, including plain
+  TypeScript output with no CLI shebang, versus 11 files in the validated bundle.
+- [x] Reproduce bundle overwrite with bare `tsc`; explicit `--noEmit` and the
+  docs build preserve the proper bundle. The exact user command causing overwrite
+  is unknown; the published bytes establish the artifact mismatch.
+- [x] Add the shebang to CLI source, remove the duplicate tsup banner, default
+  TypeScript to no emit, and rebuild on npm `prepack`.
+- [x] Add launcher-link regression coverage and update release docs to `1.4.1`.
+- [x] Test Hardening: ensure `tsc` cannot overwrite the bundle and pack repairs
+  deliberately corrupted artifacts without leaking extra files.
+- [x] Integration Test: run the suite, then install/launch the exact tarball through
+  `npx` outside the checkout and preview npm publication.
+- Baseline: full CLI suite, type check, packed-file inspection, direct launcher,
+  isolated npx version/help, site build, and diff review.
+- Exit: launcher and packaged help work through npm's executable path; release
+  commands reference the new patch version. Actual npm publication is a maintainer step.
+
+### Launcher-repair validation
+
+- `pnpm test`: 68 cases, 66 passed, 2 existing environment skips, 0 failures.
+  The new regression launches version/help through a symlink without explicit Node.
+- Bare `pnpm exec tsc`: passed, CLI/library bytes unchanged; direct CLI launch
+  reports `1.4.1`. The docs build also leaves the bundle intact.
+- Deliberately replaced generated CLI/help with invalid content and added a stale
+  generated file. `npm pack` ran prepack, rebuilt correct executable/help, removed
+  the stale file, and produced the expected 11-file package.
+- Launched that tarball through `npx --package=... ctxbin --version` in a new npm
+  cache outside the checkout: `1.4.1`. The same launcher printed help byte-for-byte
+  equal to the generated skill. No explicit Node launcher was used for these checks.
+- `npm publish --dry-run`: passed, prepack ran again, package is `ctxbin@1.4.1`.
+  `pnpm --dir docs build --emptyOutDir` and `git diff --check`: passed.
+- Public registry still reports `latest: 1.4.0`; `1.4.1` is unpublished. No remote
+  publication, native-client sync, store mutation, or npm cache deletion was performed.

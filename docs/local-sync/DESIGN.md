@@ -142,9 +142,21 @@ and links to `/commands/sync` using the language-aware navigation helper:
 
 Historical `agent-addon-orig.md` is not an active documentation entrypoint.
 
+## Release artifact contract
+
+The CLI source owns `#!/usr/bin/env node`; tsup preserves it only on the CLI
+entry. Root TypeScript configuration has `noEmit: true`, so ordinary `tsc`
+checks cannot overwrite the bundled `dist` files. The npm `prepack` hook runs
+`npm run build` for both pack and publish, regenerating the bundle and skill
+metadata immediately before packaging. Published consumers do not run this hook.
+Regression checks execute the CLI through a bin symlink on POSIX and execute
+an installed tarball with `npx` from a disposable directory.
+
 ## Official references checked 2026-10-12
 
 - [Claude skills](https://code.claude.com/docs/en/skills)
 - [Claude agents](https://code.claude.com/docs/en/sub-agents)
 - [Codex skills](https://learn.chatgpt.com/docs/build-skills)
 - [Codex agents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
+- [npm packaging lifecycle](https://docs.npmjs.com/cli/v11/using-npm/scripts/)
+- [TypeScript noEmit](https://www.typescriptlang.org/tsconfig/noEmit.html)

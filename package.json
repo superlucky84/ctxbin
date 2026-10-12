@@ -1,6 +1,6 @@
 {
   "name": "ctxbin",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Minimal deterministic CLI to store/load context, agents, and skills via Redis hashes and install remote skills/agents into Claude Code and Codex",
   "author": "superlucky84",
   "license": "MIT",
@@ -33,6 +33,7 @@
   ],
   "scripts": {
     "build": "tsup && node scripts/copy-skills.js",
+    "prepack": "npm run build",
     "test": "pnpm build && node --test \"tests/**/*.test.js\"",
     "clean": "pnpm clean:dist && pnpm clean:module",
     "clean:dist": "rm -rf dist docs/dist",
