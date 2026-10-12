@@ -65,17 +65,25 @@
 - Retained decisions: force for all unmanaged collisions, narrow description repair,
   manual crash recovery. Startup lazy-loading is an optional performance improvement.
 
+## Phase 9: Release preparation
+
+- [x] Bump the public CLI package to `1.4.0` for the additive sync command.
+- [x] Document post-merge npm publication, GitHub tags/releases, and Pages deployment.
+- [x] Verify generated metadata, the npm package preview, and an isolated tarball install.
+- Baseline: CLI/help validation, TypeScript/site builds, package inspection, and diff review.
+- Exit: release version and instructions are committed; publication remains a maintainer step.
+
 ## Handoff
 
 - Done: requirements/design, sync engine, CLI, source-scoped prune, native rendering,
   rollback/recovery journal, complete help/site/add-on/testing documentation coverage,
   and automated validation.
-- Next: review the feature PR, then complete native-client discovery, browser checks,
-  and Windows checks in the manual checklist before a later release. No real user
-  folders were installed.
+- Next: merge the feature PR and follow [the release guide](../RELEASING.md) for
+  npm/site publication. Native-client discovery, browser checks, and Windows checks
+  remain in the manual checklist. No real user folders were installed.
 - Blockers: none.
 - Base commit SHA: `c6d6fc9d15c7d42a03b6162ea656f2fd650fddce`.
-  Latest reviewed parent commit: `c223c00658302cf429f8e62b8b96db895d43f45b`.
+  Latest reviewed parent commit: `ee8432f74c3de4575a75bc531c0d8a0e416a4656`.
   The feature commit is recorded in the `feat/local-agent-skill-sync` branch history.
 
 ## Validation record — 2026-10-12
@@ -166,3 +174,24 @@ node dist/cli.js sync --target all
 - Kept force for identical unmanaged collisions: silent adoption would grant future
   prune authority. Kept documented narrow description repair/manual crash recovery;
   lazy-loading is deferred as optional startup tuning.
+
+## Release-preparation validation — 2026-10-12
+
+- Public registry inspection: `latest` was `1.3.2`; `1.4.0` was not published.
+- Bumped root `package.json` to `1.4.0`. The lockfile contains no root version and
+  dependencies did not change; the private documentation app version stays `0.1.0`.
+- `pnpm build`, `node --test tests/validation.test.js` (13 passed), and
+  `pnpm exec tsc --noEmit`: passed. Generated help metadata reports `1.4.0`.
+- `pnpm --dir docs build --emptyOutDir`: passed; the site output contains the
+  updated bilingual sync guide. The existing Browserslist freshness notice remains.
+- `npm pack` and `npm publish --dry-run`: passed; 11 expected files included,
+  including CLI/library bundles, generated/source skills, add-ons, and package metadata.
+- Installed the tarball and registry runtime dependencies into a disposable `/tmp`
+  directory with lifecycle scripts disabled. Package/CLI version, help contents,
+  dependency resolution, library import, and add-on equality passed.
+- Node `v22.12.0`, pnpm `10.13.1`, and npm `10.9.9` used for validation. Selected
+  existing executables directly because the default Volta npm shim was broken;
+  the release guide includes a working shell-session PATH selection.
+- GitHub Pages configuration verified: `gh-pages` branch, `/` root, no custom domain.
+- No npm publication, GitHub release/tag, Pages deployment, native-folder sync, or
+  remote-store mutation was performed during release preparation.

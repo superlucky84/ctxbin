@@ -265,5 +265,8 @@ pnpm build
 pnpm test
 ```
 
+For npm and documentation-site releases after merging, see the
+[release guide](docs/RELEASING.md).
+
 ## License
 MIT
