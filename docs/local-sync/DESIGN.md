@@ -62,7 +62,9 @@ Skills preserve original frontmatter/body. Read required scalar fields from the 
 AST without converting or reserializing unrelated values such as `{{version}}`.
 Narrowly quote an unquoted single-line plain description containing colon-space if
 the repair produces valid YAML; other malformed documents fail. Missing required
-fields are inserted without rewriting existing fields. Legacy agents prefer valid
+fields are inserted at the parsed mapping boundary without rewriting existing fields:
+inside a flow mapping's braces or before a block mapping's document-end marker.
+Reparse modified frontmatter before installation. Legacy agents prefer valid
 local descriptions parsed from Claude YAML or Codex TOML before generic defaults.
 Explicit remote descriptions win. Bundles require exact root SKILL.md;
 supporting files and executable permissions are preserved from normalized extraction.
@@ -94,6 +96,9 @@ resources/targets. Symlinked provider directories/roots and agent entries are re
 Skill-entry links are renamed or removed as links, never written through. Unmanaged
 collisions require force. Identical managed files/trees (bytes and permissions) are
 reported unchanged without rewriting. Skillrefs still download to check freshness.
+Ownership uses `Object.hasOwn`, including valid names such as `constructor`.
+Identical unmanaged items still require force: adopting them silently would grant
+future prune authority over a local item that ctxbin did not install.
 Normal system ancestors may resolve through symlinks (for example macOS `/var`);
 root aliases are compared by their resolved filesystem paths.
 Cleanup warnings use `CTXBIN_WARN` and preserve the primary result/error. Incomplete

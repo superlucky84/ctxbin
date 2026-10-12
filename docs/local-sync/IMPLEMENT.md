@@ -57,6 +57,14 @@
 - Baseline: full suite, TypeScript/site builds, snapshot and native-parser checks.
 - Deferred: automatic stale-lock recovery, skillref caching, persistent successful backups.
 
+## Phase 8: Re-review boundary fixes
+
+- [x] Use own-key ownership checks; verify constructor collisions keep local data.
+- [x] Insert missing fields into valid flow/block mappings and revalidate output.
+- Baseline: regression tests, complete CLI suite, TypeScript check, and diff review.
+- Retained decisions: force for all unmanaged collisions, narrow description repair,
+  manual crash recovery. Startup lazy-loading is an optional performance improvement.
+
 ## Handoff
 
 - Done: requirements/design, sync engine, CLI, source-scoped prune, native rendering,
@@ -67,7 +75,7 @@
   folders were installed.
 - Blockers: none.
 - Base commit SHA: `c6d6fc9d15c7d42a03b6162ea656f2fd650fddce`.
-  Reviewed feature commit: `873379450827c3a7457c24f0cd0bbdc057fc2d56`.
+  Latest reviewed parent commit: `c223c00658302cf429f8e62b8b96db895d43f45b`.
   The feature commit is recorded in the `feat/local-agent-skill-sync` branch history.
 
 ## Validation record — 2026-10-12
@@ -142,3 +150,19 @@ node dist/cli.js sync --target all
 - Deliberately retain manual stale-lock recovery, fresh skillref downloads, and
   documented lack of persistent successful-run backups. Force is required for unmanaged
   replacements and preview labels those entries. Windows/native-client checks remain manual.
+
+## Re-review validation — 2026-10-12
+
+- Fixed `constructor` ownership bypass using `Object.hasOwn`; the regression covers
+  unmanaged skill/agent preservation, explicit force installation, and subsequent
+  managed unchanged detection.
+- Fixed missing-field insertion into flow mappings and before explicit YAML document
+  end markers. Trailing commas, comments, templates, and existing complete flow maps
+  retain authored text. Modified frontmatter is reparsed before installation.
+- `pnpm test`: 67 cases, 65 passed, 2 existing skips, 0 failures. Sync has 32 tests.
+- `pnpm exec tsc --noEmit` and `git diff --check`: passed.
+- This pass changes no CLI options, site components, native user installations, or
+  remote stored data. The previous site build/live preview results remain recorded above.
+- Kept force for identical unmanaged collisions: silent adoption would grant future
+  prune authority. Kept documented narrow description repair/manual crash recovery;
+  lazy-loading is deferred as optional startup tuning.

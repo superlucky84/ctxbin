@@ -72,8 +72,26 @@ function parseMarkdown(value: string, name: string, resource: "skill" | "agent",
   }
   assertBody(body, name);
   const newline = opening[0].endsWith("\r\n") ? "\r\n" : "\n";
-  if (suppliedName === undefined) yamlText += `name: ${JSON.stringify(name)}${newline}`;
-  if (suppliedDescription === undefined) yamlText += `description: ${JSON.stringify(description)}${newline}`;
+  const additions: string[] = [];
+  if (suppliedName === undefined) additions.push(`name: ${JSON.stringify(name)}`);
+  if (suppliedDescription === undefined) additions.push(`description: ${JSON.stringify(description)}`);
+  if (additions.length) {
+    const mapping = document.contents;
+    if (!mapping.range) fail("INVALID_INPUT", `${resource} ${name}: cannot locate frontmatter mapping`);
+    // Preserve trailing comments; explicit document-end markers must remain after new fields.
+    const tailStart = mapping.range[1];
+    const endMarker = /^\.\.\.[ \t]*(?:#[^\r\n]*)?(?:\r?\n|$)/m.exec(yamlText.slice(tailStart));
+    const insertAt = mapping.flow ? mapping.range[0] + 1 : endMarker ? tailStart + endMarker.index : yamlText.length;
+    const insert = mapping.flow
+      ? additions.join(", ") + (mapping.items.length ? ", " : "")
+      : additions.join(newline) + newline;
+    yamlText = yamlText.slice(0, insertAt) + insert + yamlText.slice(insertAt);
+    const normalized = parseDocument(yamlText, options);
+    if (normalized.errors.length || normalized.warnings.length || !isMap(normalized.contents) ||
+      normalized.get("name") !== name || normalized.get("description") !== description) {
+      fail("INVALID_INPUT", `${resource} ${name}: unable to add valid frontmatter fields`);
+    }
+  }
   return { body, metadata: { name, description }, descriptionSupplied: suppliedDescription !== undefined,
     normalized: opening[0] + yamlText + closing[0] + body };
 }

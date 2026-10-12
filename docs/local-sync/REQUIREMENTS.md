@@ -56,6 +56,9 @@ locally installed `doc-driven-designer-v1` workflow. Branch:
   emit structured warnings, preserving the original apply result/error.
 - R15: Require exact `SKILL.md` casing on every platform. Skillref freshness still
   requires downloads, including preview; no cache is introduced.
+- R16: Determine ownership from a manifest's own keys, never inherited object
+  properties. Normalization must produce valid YAML for both block and flow mappings,
+  including documents with explicit end markers; validate after inserting fields.
 
 ## Boundaries and operational limits
 

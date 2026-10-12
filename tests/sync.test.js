@@ -411,6 +411,32 @@ test("plain colon-space descriptions are repaired locally without rewriting unre
   assert.throws(() => normalizeSkillMarkdown("---\nname: review\ndescription: okay\nother: [bad\n---\nBody", "review"));
 });
 
+test("missing metadata is inserted into flow mappings and before document-end markers as valid YAML", () => {
+  const cases = [
+    "{description: d}\n",
+    "# keep\r\n{description: d, } # tail\r\n",
+    "{version: {{version}}}\n",
+    "{}\n",
+    "description: d\n...\n",
+    "description: d\n# keep tail\n... # end\n# after end\n",
+    "name: review\n...\n",
+  ];
+  for (const header of cases) {
+    const content = `---\n${header}---\nBody\n`;
+    const result = normalizeSkillMarkdown(content, "review");
+    const parsed = YAML.parseDocument(/^---\n([\s\S]*?)^---\n/m.exec(result)[1]);
+    assert.deepEqual(parsed.errors, [], header);
+    assert.deepEqual(parsed.warnings, [], header);
+    assert.equal(parsed.get("name"), "review");
+    assert.equal(parsed.get("description"), header.includes("description: d") ? "d" : "Reusable instructions for review.");
+    assert.ok(result.endsWith("---\nBody\n"));
+    if (header.includes("{{version}}")) assert.ok(result.includes("version: {{version}}"));
+    if (header.includes("# tail")) assert.ok(result.includes("} # tail\r\n"));
+  }
+  const complete = "---\n{name: review, description: d, version: {{version}}}\n---\nBody\n";
+  assert.equal(normalizeSkillMarkdown(complete, "review"), complete);
+});
+
 test("legacy remote agents retain each native local description and explicit remote descriptions win", async t => {
   const opts = await fixture(t);
   for (const target of ["claude", "codex"]) {
@@ -446,6 +472,27 @@ test("unmanaged skill workspaces survive unless force is explicit and preview di
   await syncResources(store, { ...opts, force: true });
   assert.equal(await exists(path.join(dest, "notes.md")), false);
   assert.ok(await exists(path.join(dest, "SKILL.md")));
+});
+
+test("constructor is unmanaged until explicitly installed and cannot bypass force via Object.prototype", async t => {
+  const opts = { ...await fixture(t), target: "claude" };
+  const skill = path.join(opts.home, ".claude", "skills", "constructor");
+  const agentRoot = path.join(opts.home, ".claude", "agents");
+  await fs.mkdir(skill, { recursive: true });
+  await fs.mkdir(agentRoot, { recursive: true });
+  await fs.writeFile(path.join(skill, "notes.md"), "Local notes must survive");
+  await fs.writeFile(path.join(agentRoot, "constructor.md"), "Local agent");
+  const store = memoryStore({ constructor: "Remote skill" }, { constructor: "Remote agent" });
+  const before = await snapshot(opts.home);
+  const preview = await syncResources(store, { ...opts, dryRun: true });
+  assert.equal(preview.length, 2);
+  assert.ok(preview.every(action => action.action === "replace-unmanaged"));
+  await assert.rejects(syncResources(store, opts), /--force/);
+  assert.deepEqual(await snapshot(opts.home), before);
+  await syncResources(store, { ...opts, force: true });
+  const state = JSON.parse(await fs.readFile(path.join(opts.home, ".claude", "skills", manifestName), "utf8"));
+  assert.ok(Object.hasOwn(state.items, "constructor"));
+  assert.ok((await syncResources(store, opts)).every(action => action.action === "unchanged"));
 });
 
 test("all-target force replaces an unmanaged skill link itself while leaving its external workspace intact", async t => {

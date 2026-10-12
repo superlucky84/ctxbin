@@ -127,7 +127,7 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
                 ? localAgentDescription(await fs.readFile(dest, "utf8"), field, root.target) : undefined;
               await fs.writeFile(staged, renderAgentMarkdown(value, field, root.target, localDescription), { mode: 0o644 });
             }
-            const managed = Boolean(previous.items[field]);
+            const managed = Object.hasOwn(previous.items, field);
             const unchanged = exists && managed && !link && await sameContents(staged, dest);
             if (exists && !managed && !opts.force && !opts.dryRun) {
               fail("INVALID_INPUT", `unmanaged destination ${dest}; preview and use --force to replace it`);
