@@ -39,7 +39,7 @@ description: 코드 변경의 정확성과 누락된 테스트를 검토합니�
       <CodeBlock language="bash" code={`npx ctxbin agent save reviewer --file reviewer.md
 npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all`} />
-      <p>Claude에는 ~/.claude/agents/&lt;name&gt;.md, Codex에는 ~/.codex/agents/&lt;name&gt;.toml을 생성합니다. 기존 일반 Markdown에는 키로 이름을 채우고 “Agent rules for &lt;name&gt;.”을 기본 설명으로 넣습니다. 모델·도구 등 지원하지 않는 메타데이터는 오류를 반환합니다. 변경 업로드에는 기존 agent save --file을 사용하며 sync는 원격을 읽기만 합니다. 덮어쓰기·설치 이력 기반 삭제·경로 지정은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
+      <p>Claude에는 ~/.claude/agents/&lt;name&gt;.md, Codex에는 ~/.codex/agents/&lt;name&gt;.toml을 생성합니다. 기존 일반 Markdown에는 키로 이름을 채우고 유효한 로컬 설명을 유지한 뒤 “Agent rules for &lt;name&gt;.”을 기본값으로 사용합니다. 모델·도구 등 지원하지 않는 메타데이터는 오류를 반환합니다. 변경 업로드에는 기존 agent save --file을 사용하며 sync는 원격을 읽기만 합니다. 덮어쓰기·설치 이력 기반 삭제·경로 지정은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
 
       <h2>Append</h2>
       <CodeBlock
@@ -72,6 +72,7 @@ backend-reviewer  --value`}
 Field           : {agent-name}
 Value           : 마크다운 문자열`}
       />
+      <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
     </div>
   );
 });

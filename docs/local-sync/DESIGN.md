@@ -9,13 +9,16 @@ ctxbin sync --target codex --prune
 ctxbin sync --target codex --skills-dir ~/.codex/skills
 ```
 
-`--target` is required. Only `--target`, `--dry-run`, `--prune`, `--skills-dir`,
+`--target` is required. Only `--target`, `--dry-run`, `--prune`, `--force`, `--skills-dir`,
 and `--agents-dir` are accepted by sync. Directory overrides require a single target.
 Sync flags on old commands are rejected before accessing configuration or Redis.
 Validation and I/O errors use existing `CTXBIN_ERR` codes and exit 1.
-Success prints tab-separated `create|replace|delete`, target, resource, name,
+Success prints tab-separated `create|replace|replace-unmanaged|unchanged|delete`, target, resource, name,
 and absolute path to stdout; preview prefixes each action with `dry-run`.
 Empty stores succeed with zero actions (and may prune tracked items when requested).
+Preview labels unmanaged collisions; apply requires force for those items. Quoted
+leading `~` paths expand to the selected home. All item preflight errors are reported
+together; errors prevent all application, including otherwise valid items.
 
 | Target | Skills | Agents |
 | --- | --- | --- |
@@ -55,12 +58,17 @@ Reject Windows device names, Claude `synced` and `anthropic-skills` namespaces.
 These conservative portable names also prevent traversal and case collisions.
 If frontmatter supplies `name`, it must equal the Redis key. Keys are install identities.
 
-Skills preserve supplied frontmatter fields and the body. Missing name/description
-are filled with deterministic documented defaults. Bundles require a root SKILL.md;
+Skills preserve original frontmatter/body. Read required scalar fields from the YAML
+AST without converting or reserializing unrelated values such as `{{version}}`.
+Narrowly quote an unquoted single-line plain description containing colon-space if
+the repair produces valid YAML; other malformed documents fail. Missing required
+fields are inserted without rewriting existing fields. Legacy agents prefer valid
+local descriptions parsed from Claude YAML or Codex TOML before generic defaults.
+Explicit remote descriptions win. Bundles require exact root SKILL.md;
 supporting files and executable permissions are preserved from normalized extraction.
 Agent frontmatter may contain only `name` and `description`; body is preserved.
 Codex TOML uses quoted `name`, `description`, and `developer_instructions` strings;
-escaping must preserve quotes, backslashes, newlines, and Unicode. Model/tool/runtime
+escaping must preserve quotes, backslashes, newlines, Unicode, and DEL. Model/tool/runtime
 configuration inherits from the provider; no cross-provider mapping is inferred.
 
 ## Tracking and prune
@@ -82,9 +90,14 @@ that last installs the same name. Entries absent remotely remain tracked without
 owner matches the current source; other-source and unmanaged entries are retained.
 Missing tracked destinations are removed from state by prune without a delete action.
 Malformed/symlinked manifests fail closed. Roots may not overlap or be shared across
-resources/targets. A symlinked provider directory/root or named destination is refused.
+resources/targets. Symlinked provider directories/roots and agent entries are refused.
+Skill-entry links are renamed or removed as links, never written through. Unmanaged
+collisions require force. Identical managed files/trees (bytes and permissions) are
+reported unchanged without rewriting. Skillrefs still download to check freshness.
 Normal system ancestors may resolve through symlinks (for example macOS `/var`);
 root aliases are compared by their resolved filesystem paths.
+Cleanup warnings use `CTXBIN_WARN` and preserve the primary result/error. Incomplete
+rollback retains locks/backups; stale locks are not auto-removed.
 
 ## Decisions and test gates
 

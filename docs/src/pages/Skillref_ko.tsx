@@ -109,6 +109,7 @@ npx ctxbin sync --target all`} />
         <li>gzip 매직 바이트 검증</li>
         <li>격리된 임시 공간에서 추출·검증 후 대상 디렉터리에 복사</li>
       </ul>
+      <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
     </div>
   );
 });

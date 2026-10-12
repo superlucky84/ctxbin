@@ -17,25 +17,32 @@ locally installed `doc-driven-designer-v1` workflow. Branch:
   `agent`; the target is required. It never accesses or changes `ctx`.
 - R2: Same-name local skills are replaced as complete directories; obsolete
   files inside an installed skill disappear. Agents are replaced as complete files.
+  Unmanaged collisions require `--force`; preview labels them `replace-unmanaged`.
+  Identical managed entries are `unchanged` and are not rewritten.
 - R3: Local-only entries survive. `--prune` removes only entries previously
   installed by ctxbin from the same remote source and now absent remotely.
-- R4: `--dry-run` fetches and validates remote content, prints create/replace/delete
+- R4: `--dry-run` fetches and validates remote content, prints create/replace/
+  replace-unmanaged/unchanged/delete
   actions, and changes no installation directories, manifests, or locks.
   Temporary download/extraction files are allowed and cleaned up.
 - R5: Skills support string, skillpack, and skillref values. Existing extraction
   and permission normalization are reused; a bundle must contain root `SKILL.md`.
 - R6: Agents use shared Markdown remotely and are installed as Claude Markdown
   with YAML frontmatter or Codex TOML. Rules remain intact; Redis metadata is stripped.
-- R7: Legacy Markdown without frontmatter receives deterministic name/description
-  defaults, without AI inference. Existing skill frontmatter and supporting files
-  survive; malformed frontmatter fails before installation.
+- R7: Legacy Markdown without frontmatter receives key-based name and description
+  fallback metadata, without AI inference. Existing skill frontmatter and supporting files
+  survive without reserialization. A plain single-line description containing an
+  unquoted `: ` may be quoted locally; other malformed frontmatter fails. Missing
+  agent descriptions preserve valid local descriptions before using defaults.
+  All item preflight failures are collected before apply.
 - R8: Default paths follow current official documentation. Single-target
   `--skills-dir` and `--agents-dir` overrides support existing local layouts.
 - R9: Download and validation finish before installing. Ordinary apply failures
   restore replaced/deleted entries and manifests. Concurrent writes to the same
   destination are rejected by exclusive locks.
-- R10: Reject unsafe names, reserved installation names, destination symlinks,
+- R10: Reject unsafe names, reserved installation names, root/agent symlinks,
   overlapping destination roots, and invalid tracking manifests before replacement.
+  Skill-entry symlinks may be replaced/pruned as links; their targets are untouched.
 - R11: Remote values and credentials are never modified; manifests contain only
   a digest of the configured store URL as source identity.
 - R12: Automated tests cover conversion, all value types, stale-file removal,
@@ -45,6 +52,10 @@ locally installed `doc-driven-designer-v1` workflow. Branch:
   quick start, agent/skill commands, pack/ref loaders, credentials, storage/errors,
   key inference, and agent add-on explain their respective sync boundaries.
   The user explicitly requested this complete documentation pass after implementation.
+- R14: Expand leading `~` in quoted overrides. Escape TOML DEL. Cleanup failures
+  emit structured warnings, preserving the original apply result/error.
+- R15: Require exact `SKILL.md` casing on every platform. Skillref freshness still
+  requires downloads, including preview; no cache is introduced.
 
 ## Boundaries and operational limits
 
@@ -53,7 +64,9 @@ project-scope selector, or provider-specific model/tool-setting translation.
 Agent frontmatter for this first version supports `name` and `description` only;
 unsupported fields fail explicitly rather than disappearing during conversion.
 Legacy descriptions use `Reusable instructions for <name>.` for skills and
-`Agent rules for <name>.` for agents. Authors can supply meaningful descriptions.
+`Agent rules for <name>.` for agents without usable local descriptions. Authors can
+supply meaningful descriptions. Force authorizes unmanaged whole-item replacement;
+persistent backups of successful replacements are not added.
 
 Atomicity is per rename, with rollback across destinations on ordinary failures.
 Process termination/power loss and manual concurrent edits are outside that guarantee;
@@ -63,11 +76,12 @@ Installing into real user directories is a manual release check, not an automate
 ## Decisions
 
 - [x] DC1: Require explicit target; a bare `sync` must not alter both providers.
-- [x] DC2: Overwrite whole matching items; never wipe the parent skills/agents tree.
+- [x] DC2: Replace changed managed items whole; require force for unmanaged collisions.
+  Never wipe parent trees or follow skill links during replacement.
 - [x] DC3: Track ownership per destination and source; prune only the current source.
 - [x] DC4: Codex default skills path is `~/.agents/skills`; allow an explicit override
   such as `~/.codex/skills` for a user's existing installation.
-- [x] DC5: Preserve legacy Markdown with documented generic metadata defaults.
+- [x] DC5: Preserve legacy Markdown and valid local agent descriptions before defaults.
 - [x] DC6: Shared agents use minimal provider-neutral frontmatter; validate unsupported fields.
 - [x] DC7: Keep feature plans in `docs/local-sync/` and preserve the existing site.
 

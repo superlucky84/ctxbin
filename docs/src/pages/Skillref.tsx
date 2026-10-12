@@ -109,6 +109,7 @@ npx ctxbin sync --target all`} />
         <li>gzip magic bytes validated</li>
         <li>Isolated extraction and validation before copying into the destination</li>
       </ul>
+      <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
     </div>
   );
 });

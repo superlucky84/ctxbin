@@ -95,6 +95,12 @@ save that bundle under key `ctxbin` for sync. The `fp-pack` load examples above
 exercise raw directory extraction, which does not enforce the sync identity contract.
 
 Confirm stale files inside replaced skills disappear, local-only items survive,
+unmanaged matches require force and preview identifies them, skill links are replaced
+without writing through to their targets, and identical managed runs leave files alone.
+Verify template-valued YAML remains unchanged, unquoted colon-space descriptions
+are repaired locally, native legacy descriptions survive, and preflight lists all failures.
+Check quoted tilde overrides, DEL round trips, exact SKILL.md casing, and cleanup warnings.
+Confirm that
 and native Claude Markdown/Codex TOML preserve shared rules. After deleting an item
 from the dedicated remote store, normal sync should retain its local install;
 prune should remove only this store's previously tracked entry. Keep manifests

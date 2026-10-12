@@ -61,7 +61,7 @@ async function snapshot(root) {
 }
 
 function skillFields(content) {
-  const match = /^---\n([\s\S]*?)\n---\n/.exec(content);
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(content);
   assert.ok(match, "valid YAML frontmatter");
   return { fields: YAML.parse(match[1]), body: content.slice(match[0].length) };
 }
@@ -270,7 +270,7 @@ test("custom roots work and overlapping or unsafe destinations are rejected", as
   await assert.rejects(syncResources(memoryStore({ "../escape": "rules" }), opts), /installation name/);
 });
 
-test("symlinked roots, provider parents, entries, and manifests fail closed", async t => {
+test("symlinked roots/parents/manifests fail closed while skill links are replaced without following", async t => {
   const opts = { ...await fixture(t), target: "claude" };
   const outside = path.join(opts.home, "outside");
   await fs.mkdir(outside);
@@ -285,8 +285,9 @@ test("symlinked roots, provider parents, entries, and manifests fail closed", as
   const root = path.join(opts.home, ".claude", "skills");
   await fs.rm(path.join(root, "review"), { recursive: true });
   await fs.symlink(outside, path.join(root, "review"), "dir");
-  await assert.rejects(syncResources(store, opts), /symlink/);
-  await fs.unlink(path.join(root, "review"));
+  await syncResources(store, opts);
+  assert.equal((await fs.lstat(path.join(root, "review"))).isSymbolicLink(), false);
+  await fs.rm(path.join(root, "review"), { recursive: true });
   await fs.unlink(path.join(root, manifestName));
   await fs.symlink(path.join(outside, "state"), path.join(root, manifestName));
   await assert.rejects(syncResources(store, opts), /manifest/);
@@ -315,6 +316,7 @@ test("lock conflicts leave installations intact and release only acquired locks"
   await fs.writeFile(foreign, "other process");
   const before = await snapshot(opts.home);
   store.data.skill.review = "Changed";
+  store.data.agent.reviewer = "Changed";
   await assert.rejects(syncResources(store, opts), /sync lock/);
   assert.deepEqual(await snapshot(opts.home), before);
 });
@@ -389,6 +391,150 @@ function runCli(args, env) {
   });
 }
 
+test("realistic frontmatter retains templates, comments, and line endings without Node warnings", () => {
+  const emitWarning = process.emitWarning;
+  process.emitWarning = () => assert.fail("frontmatter must not emit Node warnings");
+  try {
+    const full = "---\r\nname: review\r\ndescription: Review rules\r\n# Keep placeholder verbatim\r\nversion: {{version}}\r\n---\r\nBody\r\n";
+    assert.equal(normalizeSkillMarkdown(full, "review"), full);
+    const missing = "---\nversion: {{version}}\n# Authored comment\n---\nBody\n";
+    const updated = normalizeSkillMarkdown(missing, "review");
+    assert.ok(updated.startsWith("---\nversion: {{version}}\n# Authored comment\n"));
+    assert.ok(updated.includes('name: "review"\ndescription: "Reusable instructions for review."'));
+  } finally { process.emitWarning = emitWarning; }
+});
+
+test("plain colon-space descriptions are repaired locally without rewriting unrelated metadata", () => {
+  const source = "---\nname: review\ndescription: 현재 엔진: commons-jexl3 3.1\nversion: {{version}}\n---\nBody\n";
+  const repaired = normalizeSkillMarkdown(source, "review");
+  assert.equal(repaired, source.replace("description: 현재 엔진: commons-jexl3 3.1", 'description: "현재 엔진: commons-jexl3 3.1"'));
+  assert.throws(() => normalizeSkillMarkdown("---\nname: review\ndescription: okay\nother: [bad\n---\nBody", "review"));
+});
+
+test("legacy remote agents retain each native local description and explicit remote descriptions win", async t => {
+  const opts = await fixture(t);
+  for (const target of ["claude", "codex"]) {
+    const root = path.join(opts.home, `.${target}`, "agents");
+    await fs.mkdir(root, { recursive: true });
+    const content = target === "claude"
+      ? "---\nname: reviewer\ndescription: Documentation-first design partner. Use when planning.\ntools: Read\n---\nOld rules"
+      : "name = 'reviewer'\ndescription = 'Documentation-first designer for implementation planning.'\ndeveloper_instructions = 'Old rules'\n";
+    await fs.writeFile(path.join(root, `reviewer.${target === "claude" ? "md" : "toml"}`), content);
+  }
+  const store = memoryStore({}, { reviewer: "Shared new rules" });
+  await syncResources(store, { ...opts, force: true });
+  const claudeFile = path.join(opts.home, ".claude", "agents", "reviewer.md");
+  const codexFile = path.join(opts.home, ".codex", "agents", "reviewer.toml");
+  assert.equal(skillFields(await fs.readFile(claudeFile, "utf8")).fields.description, "Documentation-first design partner. Use when planning.");
+  assert.equal(TOML.parse(await fs.readFile(codexFile, "utf8")).description, "Documentation-first designer for implementation planning.");
+  store.data.agent.reviewer = "---\nname: reviewer\ndescription: Explicit remote choice\n---\nShared rules";
+  await syncResources(store, opts);
+  assert.equal(TOML.parse(await fs.readFile(codexFile, "utf8")).description, "Explicit remote choice");
+});
+
+test("unmanaged skill workspaces survive unless force is explicit and preview distinguishes ownership", async t => {
+  const opts = { ...await fixture(t), target: "claude" };
+  const dest = path.join(opts.home, ".claude", "skills", "review");
+  await fs.mkdir(path.join(dest, ".git"), { recursive: true });
+  await fs.writeFile(path.join(dest, "notes.md"), "local work");
+  const store = memoryStore({ review: "Remote rules" });
+  const before = await snapshot(opts.home);
+  const preview = await syncResources(store, { ...opts, dryRun: true });
+  assert.equal(preview[0].action, "replace-unmanaged");
+  await assert.rejects(syncResources(store, opts), /--force/);
+  assert.deepEqual(await snapshot(opts.home), before);
+  await syncResources(store, { ...opts, force: true });
+  assert.equal(await exists(path.join(dest, "notes.md")), false);
+  assert.ok(await exists(path.join(dest, "SKILL.md")));
+});
+
+test("all-target force replaces an unmanaged skill link itself while leaving its external workspace intact", async t => {
+  const opts = await fixture(t);
+  const external = path.join(opts.home, ".codex", "skills", "review");
+  const root = path.join(opts.home, ".agents", "skills");
+  await fs.mkdir(external, { recursive: true });
+  await fs.writeFile(path.join(external, "SKILL.md"), "Local version");
+  await fs.writeFile(path.join(external, "notes.md"), "Keep this");
+  await fs.mkdir(root, { recursive: true });
+  await fs.symlink(external, path.join(root, "review"), "dir");
+  const store = memoryStore({ review: "Remote version" });
+  assert.ok((await syncResources(store, { ...opts, dryRun: true })).some(item => item.target === "codex" && item.action === "replace-unmanaged"));
+  await syncResources(store, { ...opts, force: true });
+  assert.equal((await fs.lstat(path.join(root, "review"))).isSymbolicLink(), false);
+  assert.equal(await fs.readFile(path.join(external, "SKILL.md"), "utf8"), "Local version");
+  assert.equal(await fs.readFile(path.join(external, "notes.md"), "utf8"), "Keep this");
+});
+
+test("preflight aggregates realistic invalid items across resources and installs none", async t => {
+  const opts = await fixture(t);
+  const store = memoryStore({ first: "---\nname: mismatch\n---\nBody", second: "---\ndescription: []\n---\nBody" },
+    { third: "---\ntools: Bash\n---\nBody" });
+  for (const dryRun of [true, false]) {
+    await assert.rejects(syncResources(store, { ...opts, dryRun }), error => {
+      for (const name of ["first", "second", "third"]) assert.ok(error.message.includes(name));
+      return true;
+    });
+    assert.deepEqual(await fs.readdir(opts.home), []);
+  }
+});
+
+test("identical managed sync avoids replacement and preserves file timestamps", async t => {
+  const opts = await fixture(t);
+  const store = memoryStore({ review: "Rules" }, { reviewer: "Rules" });
+  await syncResources(store, opts);
+  const file = path.join(opts.home, ".agents", "skills", "review", "SKILL.md");
+  const original = await fs.stat(file);
+  const before = await snapshot(opts.home);
+  const actions = await syncResources(store, opts);
+  assert.ok(actions.every(item => item.action === "unchanged"));
+  assert.equal((await fs.stat(file)).mtimeMs, original.mtimeMs);
+  assert.deepEqual(await snapshot(opts.home), before);
+});
+
+test("quoted tilde overrides expand to the selected home and TOML escapes DEL", async t => {
+  const opts = { ...await fixture(t), target: "codex", skillsDir: "~/.codex/skills", agentsDir: "~/custom-agents" };
+  await syncResources(memoryStore({ review: "Rules" }, { reviewer: "Rules\u007fwith DEL" }), opts);
+  assert.ok(await exists(path.join(opts.home, ".codex", "skills", "review", "SKILL.md")));
+  const text = await fs.readFile(path.join(opts.home, "custom-agents", "reviewer.toml"), "utf8");
+  assert.equal(text.includes("\u007f"), false);
+  assert.equal(TOML.parse(text).developer_instructions, "Rules\u007fwith DEL");
+});
+
+test("bundle requires exact SKILL.md casing consistently on every platform", async t => {
+  const opts = await fixture(t);
+  const input = path.join(opts.home, "case-input");
+  await fs.mkdir(input);
+  await fs.writeFile(path.join(input, "skill.md"), "Rules");
+  await assert.rejects(syncResources(memoryStore({ review: await createSkillpackFromDir(input) }), opts), /exact root SKILL.md/);
+  assert.equal(await exists(path.join(opts.home, ".agents")), false);
+});
+
+test("cleanup faults warn without masking successful apply or an original apply error", async t => {
+  const opts = { ...await fixture(t), target: "claude" };
+  const store = memoryStore({ review: "Original" });
+  const warnings = [];
+  const rm = fs.rm;
+  fs.rm = async (file, ...args) => {
+    if (String(file).includes(".ctxbin-sync-txn-")) throw new Error("injected cleanup fault");
+    return rm(file, ...args);
+  };
+  try { await syncResources(store, { ...opts, onWarning: message => warnings.push(message) }); }
+  finally { fs.rm = rm; }
+  assert.ok(warnings.some(message => message.includes("cleanup")));
+  const file = path.join(opts.home, ".claude", "skills", "review", "SKILL.md");
+  assert.equal(skillFields(await fs.readFile(file, "utf8")).body, "Original");
+  const rename = fs.rename;
+  store.data.skill.review = "Changed";
+  fs.rename = async () => { throw new Error("original apply fault"); };
+  fs.rm = async (file, ...args) => {
+    if (String(file).includes(".ctxbin-sync-txn-")) throw new Error("cleanup masks original");
+    return rm(file, ...args);
+  };
+  try { await assert.rejects(syncResources(store, { ...opts, onWarning: message => warnings.push(message) }), /original apply fault/); }
+  finally { fs.rename = rename; fs.rm = rm; }
+  assert.equal(skillFields(await fs.readFile(file, "utf8")).body, "Original");
+});
+
 test("CLI requires explicit target and rejects foreign/conflicting sync flags before config", async () => {
   const env = { ...process.env, CTXBIN_STORE_URL: "", CTXBIN_STORE_TOKEN: "" };
   for (const args of [
@@ -396,6 +542,7 @@ test("CLI requires explicit target and rejects foreign/conflicting sync flags be
     ["sync", "--target", "claude", "--file", "rules.md"],
     ["sync", "--target", "all", "--skills-dir", "custom"],
     ["skill", "list", "--prune"], ["help", "--dry-run"],
+    ["agent", "list", "--force"],
   ]) {
     const result = await runCli(args, env);
     assert.equal(result.status, 1, JSON.stringify(args));

@@ -1,4 +1,5 @@
-import { isMap, parseDocument } from "yaml";
+import { isMap, isScalar, parseDocument } from "yaml";
+import { parse as parseToml } from "smol-toml";
 import { fail } from "./errors";
 import { stripMetadata } from "./metadata";
 
@@ -15,16 +16,18 @@ export function validateInstallName(name: string): void {
   }
 }
 
-function parseMarkdown(value: string, name: string, resource: "skill" | "agent") {
+function parseMarkdown(value: string, name: string, resource: "skill" | "agent", localDescription?: string) {
   validateInstallName(name);
   const content = stripMetadata(value).replace(/^\uFEFF/, "");
   const opening = /^---[ \t]*\r?\n/.exec(content);
   const fallback = resource === "skill"
     ? `Reusable instructions for ${name}.`
-    : `Agent rules for ${name}.`;
+    : localDescription ?? `Agent rules for ${name}.`;
   if (!opening) {
     assertBody(content, name);
-    return { body: content, metadata: { name, description: fallback }, document: null };
+    assertBody(fallback, name);
+    return { body: content, metadata: { name, description: fallback }, descriptionSupplied: false,
+      normalized: `---\nname: ${JSON.stringify(name)}\ndescription: ${JSON.stringify(fallback)}\n---\n${content}` };
   }
 
   const closing = /^---[ \t]*(?:\r?\n|$)/m.exec(content.slice(opening[0].length));
@@ -32,34 +35,47 @@ function parseMarkdown(value: string, name: string, resource: "skill" | "agent")
   const start = opening[0].length;
   const yamlEnd = start + closing.index;
   const body = content.slice(yamlEnd + closing[0].length);
-  const document = parseDocument(content.slice(start, yamlEnd), { strict: true, uniqueKeys: true });
+  let yamlText = content.slice(start, yamlEnd);
+  const options = { strict: true, uniqueKeys: true };
+  let document = parseDocument(yamlText, options);
+  // Repair only an unquoted, single-line plain description. Unrelated YAML remains untouched.
+  const descriptions = [...yamlText.matchAll(/^(description:[ \t]+)([^\r\n]*)(\r?)$/gm)];
+  if (document.errors.length && descriptions.length === 1) {
+    const match = descriptions[0];
+    const plain = match[2].trim();
+    if (/:[ \t]/.test(plain) && !"\"'|>!&*{[".includes(plain[0]) &&
+      document.errors.every(error => error.pos[0] >= match.index! && error.pos[0] <= match.index! + match[0].length)) {
+      yamlText = yamlText.slice(0, match.index) + match[1] + JSON.stringify(plain) + match[3] + yamlText.slice(match.index! + match[0].length);
+      document = parseDocument(yamlText, options);
+    }
+  }
   if (document.errors.length || document.warnings.length || !isMap(document.contents)) {
     fail("INVALID_INPUT", `${resource} ${name}: frontmatter must be a valid YAML mapping`);
   }
-  let fields: Record<string, unknown>;
-  try {
-    fields = document.toJS({ maxAliasCount: 50 }) as Record<string, unknown>;
-  } catch {
-    return fail("INVALID_INPUT", `${resource} ${name}: unsupported YAML aliases`);
-  }
-  if (fields.name !== undefined && fields.name !== name) {
+  // Access required scalar fields only; converting arbitrary template values emits Node warnings.
+  const suppliedName = document.get("name");
+  const suppliedDescription = document.get("description");
+  if (suppliedName !== undefined && suppliedName !== name) {
     fail("INVALID_INPUT", `${resource} ${name}: frontmatter name must match the remote key`);
   }
-  const description = fields.description === undefined ? fallback : fields.description;
+  const description = suppliedDescription === undefined ? fallback : suppliedDescription;
   if (typeof description !== "string" || !description.trim()) {
     fail("INVALID_INPUT", `${resource} ${name}: description must be a non-empty string`);
   }
   assertBody(description, name);
   if (resource === "agent") {
-    const unsupported = Object.keys(fields).filter(key => key !== "name" && key !== "description");
+    const unsupported = document.contents.items.map(pair => isScalar(pair.key) ? String(pair.key.value) : "non-scalar key")
+      .filter(key => key !== "name" && key !== "description");
     if (unsupported.length) {
       fail("INVALID_INPUT", `agent ${name}: unsupported shared frontmatter fields: ${unsupported.join(", ")}; use name and description only`);
     }
   }
   assertBody(body, name);
-  if (fields.name === undefined) document.set("name", name);
-  if (fields.description === undefined) document.set("description", description);
-  return { body, metadata: { name, description }, document };
+  const newline = opening[0].endsWith("\r\n") ? "\r\n" : "\n";
+  if (suppliedName === undefined) yamlText += `name: ${JSON.stringify(name)}${newline}`;
+  if (suppliedDescription === undefined) yamlText += `description: ${JSON.stringify(description)}${newline}`;
+  return { body, metadata: { name, description }, descriptionSupplied: suppliedDescription !== undefined,
+    normalized: opening[0] + yamlText + closing[0] + body };
 }
 
 function assertBody(body: string, name: string): void {
@@ -74,18 +90,31 @@ function assertBody(body: string, name: string): void {
 }
 
 export function normalizeSkillMarkdown(value: string, name: string): string {
-  const { body, metadata, document } = parseMarkdown(value, name, "skill");
-  const frontmatter = document
-    ? document.toString({ lineWidth: 0 })
-    : `name: ${JSON.stringify(metadata.name)}\ndescription: ${JSON.stringify(metadata.description)}\n`;
-  return `---\n${frontmatter}---\n${body}`;
+  return parseMarkdown(value, name, "skill").normalized;
 }
 
-export function renderAgentMarkdown(value: string, name: string, target: SyncTarget): string {
-  const { body, metadata } = parseMarkdown(value, name, "agent");
+export function renderAgentMarkdown(value: string, name: string, target: SyncTarget, localDescription?: string): string {
+  const { body, metadata } = parseMarkdown(value, name, "agent", localDescription);
   assertBody(metadata.description, name);
   if (target === "codex") {
-    return `name = ${JSON.stringify(name)}\ndescription = ${JSON.stringify(metadata.description)}\ndeveloper_instructions = ${JSON.stringify(body)}\n`;
+    const quote = (text: string) => JSON.stringify(text).replace(/\u007f/g, "\\u007f");
+    return `name = ${quote(name)}\ndescription = ${quote(metadata.description)}\ndeveloper_instructions = ${quote(body)}\n`;
   }
   return `---\nname: ${JSON.stringify(name)}\ndescription: ${JSON.stringify(metadata.description)}\n---\n${body}`;
+}
+
+export function localAgentDescription(value: string, name: string, target: SyncTarget): string | undefined {
+  try {
+    if (target === "codex") {
+      const fields = parseToml(value);
+      if (fields.name === name && typeof fields.description === "string" && fields.description.trim()) {
+        assertBody(fields.description, name);
+        return fields.description;
+      }
+    } else {
+      const parsed = parseMarkdown(value, name, "skill");
+      if (parsed.descriptionSupplied) return parsed.metadata.description;
+    }
+  } catch { /* A malformed local file cannot provide a usable description. */ }
+  return undefined;
 }

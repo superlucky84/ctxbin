@@ -42,13 +42,13 @@
     "node": ">=18"
   },
   "dependencies": {
+    "smol-toml": "^1.9.1",
     "tar": "^6.2.0",
     "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/tar": "^6.1.13",
-    "smol-toml": "^1.9.1",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0"
   }

@@ -196,12 +196,16 @@ npx ctxbin sync --target codex --skills-dir ~/.codex/skills
 | `--target claude\|codex\|all` | Required; select one client or both |
 | `--dry-run` | Download, validate, and preview without destination changes |
 | `--prune` | Remove tracked installs from this store that are now absent remotely |
+| `--force` | Allow whole-item replacement of unmanaged matching local entries |
 | `--skills-dir <path>` | Override the skills root for a single target |
 | `--agents-dir <path>` | Override the agents root for a single target |
 
 These flags apply only to `sync`. Directory overrides cannot be used with
 `--target all`. Save/load flags such as `--file`, `--dir`, `--raw`, and `--append`
 are not accepted by sync. Sync never uploads or accesses `ctx`.
+Preview labels unmanaged collisions `replace-unmanaged`; apply requires `--force`
+for them. Identical managed entries are `unchanged` without rewrites. Quoted leading
+`~` paths expand to the user home.
 
 ### Shared rule format
 
@@ -220,10 +224,14 @@ Inspect changed code and report actionable findings.
 Shared agents accept only `name` and `description` frontmatter. Provider-specific
 model/tool fields cause an error rather than being silently dropped. Names must match
 remote keys; sync renders Claude Markdown or Codex TOML.
-Legacy Markdown defaults are `Agent rules for <name>.` for agents and
+Missing remote agent descriptions first preserve valid local native descriptions.
+Fallback descriptions are `Agent rules for <name>.` for agents and
 `Reusable instructions for <name>.` for skills; supply a description to improve discovery.
 Skills support strings, packs, and refs, preserving frontmatter and supporting files.
-Bundles need root `SKILL.md`; sync never adds the bundled ctxbin fallback to the remote list.
+Bundles need exact root `SKILL.md`; sync never adds the bundled ctxbin fallback to the remote list.
+Existing skill frontmatter is not reserialized. A plain single-line description
+containing an unquoted colon-space is quoted locally if that repair fixes the YAML;
+other malformed documents fail. All item preflight errors are reported together.
 
 Existing `skill load <key> --dir <path>` copies matching files and leaves extra files
 alone. Sync replaces complete matching skill directories, so removed remote files
@@ -245,10 +253,13 @@ Ordinary apply errors restore replaced/deleted items and manifests. Process term
 and power loss are outside that rollback guarantee. An existing `.ctxbin-sync.lock`
 returns an `IO` error; inspect it before retrying. If rollback cannot finish, the
 error reports retained `.ctxbin-sync-txn-*` backups. Their `journal.json` maps the
-destination and backup paths for manual recovery. Root/parent symlinks, named
-destination symlinks, overlapping roots, and malformed manifests are rejected.
+destination and backup paths for manual recovery. Root/parent and agent symlinks,
+overlapping roots, and malformed manifests are rejected. Skill-entry links are
+replaced or pruned as links; their target folders are untouched. Cleanup faults emit
+`CTXBIN_WARN`, preserving the original apply result/error. Skillrefs still download
+on every run, including preview, to check freshness.
 
-Output fields: action (`create`, `replace`, `delete`), target, resource, name, and
+Output fields: action (`create`, `replace`, `replace-unmanaged`, `unchanged`, `delete`), target, resource, name, and
 absolute path, separated by tabs. Preview adds a leading `dry-run` field:
 
 ```text

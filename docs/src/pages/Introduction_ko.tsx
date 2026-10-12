@@ -87,6 +87,7 @@ npx ctxbin sync --target all`} />
         <li>절대 블로킹하지 않음</li>
         <li>명확한 에러와 함께 빠른 실패</li>
       </ul>
+      <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
     </div>
   );
 });

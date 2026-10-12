@@ -175,6 +175,7 @@ npx ctxbin sync --target all`} />
           ctxbin is a <strong>thin Redis HASH client</strong> - explicit, predictable, and deterministic.
         </p>
       </div>
+      <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
     </div>
   );
 });

@@ -140,6 +140,7 @@ npx ctxbin sync --target codex --prune`} />
         프로젝트 이름이 어떻게 결정되는지, 명시적 키를 언제 사용해야 하는지는
         <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">키 추론</span> 페이지를 참고하세요.
       </p>
+      <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
     </div>
   );
 });

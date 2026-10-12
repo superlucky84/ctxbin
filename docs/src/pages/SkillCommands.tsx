@@ -94,6 +94,7 @@ react-lib  --url`}
         language="bash"
         code={`$ npx ctxbin help`}
       />
+      <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
     </div>
   );
 });

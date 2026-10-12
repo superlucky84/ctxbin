@@ -88,6 +88,7 @@ npx ctxbin sync --target all`} />
         <li>Never block</li>
         <li>Fail fast with clear errors</li>
       </ul>
+      <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
     </div>
   );
 });

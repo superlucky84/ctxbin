@@ -172,6 +172,7 @@ npx ctxbin sync --target codex --prune
 | `--target claude\|codex\|all` | Required installation target |
 | `--dry-run` | Download, validate, and preview without destination changes |
 | `--prune` | Delete this store's tracked installs that are now absent remotely |
+| `--force` | Allow replacement of matching local items not tracked by ctxbin |
 | `--skills-dir <path>` | Override skill root for one target |
 | `--agents-dir <path>` | Override agent root for one target |
 
@@ -179,7 +180,10 @@ Sync flags belong to sync only; save/load input flags are rejected. Path overrid
 require a single target. `--raw` is not needed for installation.
 
 Matching skill directories are replaced completely, including removal of stale
-files inside them. Local-only skills/agents remain. `--prune` deletes only items
+files inside them. Identical managed items are reported `unchanged` without rewriting.
+Unmanaged collisions appear as `replace-unmanaged` in preview and require `--force`
+to apply; inspect that preview before authorizing whole-item replacement. Local-only
+skills/agents remain. `--prune` deletes only items
 previously installed by ctxbin from the same remote store and now absent remotely.
 Without `--prune`, removed remote items remain installed and tracked for later pruning.
 `--dry-run` downloads and validates content and prints actions without changing
@@ -193,7 +197,7 @@ installation directories or tracking state. Sync only reads the remote store.
 Override destinations for a single target, for example an existing Codex layout:
 
 ```bash
-npx ctxbin sync --target codex --skills-dir ~/.codex/skills
+npx ctxbin sync --target codex --skills-dir "~/.codex/skills"
 npx ctxbin sync --target claude --skills-dir ./local-skills --agents-dir ./local-agents
 ```
 
@@ -215,9 +219,13 @@ Inspect changed code and report actionable findings.
 ```
 
 Save with `ctxbin agent save reviewer --file reviewer.md`. Legacy Markdown without
-frontmatter works too: sync fills the name from the key and uses
+frontmatter works too: sync fills the name from the key, preserves a valid existing
+local agent description when the remote description is missing, then falls back to
 `Agent rules for <name>.` (agent) or `Reusable instructions for <name>.` (skill)
 as the default description. Other skill frontmatter fields are preserved.
+Existing skill frontmatter is kept without reserialization; a plain single-line
+description containing unquoted colon-space is quoted locally when that alone fixes
+the YAML. Other malformed documents fail. All item preflight errors are collected.
 Provider-specific agent model/tool settings are not translated; unsupported
 shared agent frontmatter fails with an error.
 
@@ -226,7 +234,11 @@ and rolls back entries/manifests on ordinary apply failures. Tracking is stored 
 `.ctxbin-sync.json` within each destination; it contains source URL digests, never
 credentials. Whole-command crash atomicity is not guaranteed: after an interrupted
 run, inspect leftover `.ctxbin-sync.lock` and `.ctxbin-sync-txn-*` backups before retrying.
-Destination/root symlinks and overlapping overrides are refused.
+Root/agent symlinks and overlapping overrides are refused. Skill-entry symlinks are
+replaced or pruned as links, leaving their target directories untouched. Quoted
+leading tilde paths expand to the user home. Bundles require exact `SKILL.md` casing.
+Cleanup faults emit `CTXBIN_WARN` without masking an apply error or changing a
+successful apply into a failure. Skillrefs still download on every run to check freshness.
 Recovery transaction directories contain `journal.json` mapping backups to their
 destinations. Installing a same-name item from another store transfers tracking
 ownership to that store. Empty stores succeed and can prune this store's tracked

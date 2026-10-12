@@ -38,6 +38,12 @@ Automated tests do not install anything into the user's actual skill/agent folde
 
 ## Execution record
 
+Review regression checks: preserve template-valued frontmatter without warnings;
+quote a plain colon-space description locally; preserve existing native descriptions;
+report all invalid items; distinguish unmanaged replacements and require force;
+replace a skill link without changing its target; confirm repeat sync skips identical
+managed entries; test quoted tilde paths, TOML DEL, and cleanup warnings.
+
 Native-client, browser, and platform checks above remain pending. On 2026-10-12 the
 complete automated suite passed (53 passed, 2 environment-specific skips); CLI/type
 checks and the bilingual site build passed. The documentation follow-up also passed

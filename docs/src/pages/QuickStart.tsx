@@ -140,6 +140,7 @@ npx ctxbin sync --target codex --prune`} />
         See <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">Key Inference</span> for
         details on how project names are determined and when to use explicit keys.
       </p>
+      <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
     </div>
   );
 });

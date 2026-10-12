@@ -177,7 +177,7 @@ ctxbin <resource> <command> [key] [flags]
 * `key`: optional **only** for `ctx`
 
 Additional top-level command: `ctxbin sync --target claude|codex|all`, with
-`--dry-run`, `--prune`, and single-target `--skills-dir` / `--agents-dir` overrides.
+`--dry-run`, `--prune`, `--force`, and single-target `--skills-dir` / `--agents-dir` overrides.
 It reads remote skill/agent hashes and installs native local files; it takes no key,
 does not use Git inference, and does not access `ctx`. Its complete contract is
 [docs/local-sync/DESIGN.md](docs/local-sync/DESIGN.md).

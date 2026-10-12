@@ -3,12 +3,12 @@ import path from "node:path";
 import os from "node:os";
 import { createHash } from "node:crypto";
 import type { Store } from "./store";
-import { fail } from "./errors";
+import { CtxbinError, fail, formatError } from "./errors";
 import { extractSkillpackToDir } from "./skillpack";
 import { loadSkillrefToDir } from "./skillref";
 import { detectSkillValueType } from "./value";
-import { normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName, SyncTarget } from "./install-format";
-import { applySyncPlans, assertDestination, canonicalDirectory, readManifest, SyncRoot } from "./sync-files";
+import { localAgentDescription, normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName, SyncTarget } from "./install-format";
+import { applySyncPlans, assertDestination, canonicalDirectory, isSkillLink, readManifest, sameContents, warnSync, SyncRoot } from "./sync-files";
 
 export interface SyncOptions {
   target: SyncTarget | "all";
@@ -18,10 +18,12 @@ export interface SyncOptions {
   agentsDir?: string;
   dryRun?: boolean;
   prune?: boolean;
+  force?: boolean;
+  onWarning?: (message: string) => void;
 }
 
 export interface SyncAction {
-  action: "create" | "replace" | "delete";
+  action: "create" | "replace" | "replace-unmanaged" | "unchanged" | "delete";
   target: SyncTarget;
   resource: "skill" | "agent";
   name: string;
@@ -50,7 +52,7 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
         ? opts.skillsDir ?? path.join(home, target === "claude" ? ".claude" : ".agents", "skills")
         : opts.agentsDir ?? path.join(home, `.${target}`, "agents");
       roots.push({
-        target, resource, dir: await canonicalDirectory(configured),
+        target, resource, dir: await canonicalDirectory(configured, home),
         manifest: "", items: {}, operations: [],
       });
     }
@@ -66,12 +68,19 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
   }
 
   const [skills, agents] = await Promise.all([store.list("skill"), store.list("agent")]);
+  const failures: Array<{ label: string; error: unknown }> = [];
   for (const entries of [skills, agents]) {
     const names = new Set<string>();
-    for (const { field } of entries) {
-      validateInstallName(field);
-      if (names.has(field)) fail("INVALID_INPUT", `duplicate remote name: ${field}`);
-      names.add(field);
+    for (let index = entries.length - 1; index >= 0; index--) {
+      const { field } = entries[index];
+      try {
+        validateInstallName(field);
+        if (names.has(field)) fail("INVALID_INPUT", `duplicate remote name: ${field}`);
+        names.add(field);
+      } catch (error) {
+        failures.push({ label: `${entries === skills ? "skill" : "agent"}:${JSON.stringify(field)}`, error });
+        entries.splice(index, 1);
+      }
     }
     entries.sort((a, b) => a.field.localeCompare(b.field));
   }
@@ -80,54 +89,84 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
   try {
     const stagedSkills = new Map<string, string>();
     for (const { field, value } of skills) {
-      const dir = path.join(temp, "skills", field);
-      await fs.mkdir(dir, { recursive: true });
-      const kind = detectSkillValueType(value);
-      if (kind === "skillpack") await extractSkillpackToDir(value, dir);
-      if (kind === "skillref") await loadSkillrefToDir(value, dir);
-      const skillPath = path.join(dir, "SKILL.md");
-      const content = kind === "string" ? value : await fs.readFile(skillPath, "utf8").catch(() =>
-        fail("INVALID_INPUT", `skill ${field}: bundle must contain root SKILL.md`));
-      await fs.writeFile(skillPath, normalizeSkillMarkdown(content, field), { mode: 0o644 });
-      stagedSkills.set(field, dir);
+      try {
+        const dir = path.join(temp, "skills", field);
+        await fs.mkdir(dir, { recursive: true });
+        const kind = detectSkillValueType(value);
+        if (kind === "skillpack") await extractSkillpackToDir(value, dir);
+        if (kind === "skillref") await loadSkillrefToDir(value, dir);
+        if (kind !== "string" && !(await fs.readdir(dir)).includes("SKILL.md")) {
+          fail("INVALID_INPUT", `skill ${field}: bundle must contain exact root SKILL.md`);
+        }
+        const skillPath = path.join(dir, "SKILL.md");
+        const content = kind === "string" ? value : await fs.readFile(skillPath, "utf8").catch(() =>
+          fail("INVALID_INPUT", `skill ${field}: bundle must contain root SKILL.md`));
+        await fs.writeFile(skillPath, normalizeSkillMarkdown(content, field), { mode: 0o644 });
+        stagedSkills.set(field, dir);
+      } catch (error) { failures.push({ label: `skill:${field}`, error }); }
     }
     const actions: SyncAction[] = [];
     for (const root of roots) {
-      const previous = await readManifest(root);
-      root.manifest = previous.raw;
-      root.items = { ...previous.items };
-      const entries = root.resource === "skill" ? skills : agents;
-      const remoteNames = new Set(entries.map(entry => entry.field));
-      for (const { field, value } of entries) {
-        const dest = itemPath(root, field);
-        const exists = await assertDestination(root, dest);
-        let staged = stagedSkills.get(field)!;
-        if (root.resource === "agent") {
-          staged = path.join(temp, `${root.target}-agents`, `${field}.${root.target === "claude" ? "md" : "toml"}`);
-          await fs.mkdir(path.dirname(staged), { recursive: true });
-          await fs.writeFile(staged, renderAgentMarkdown(value, field, root.target), { mode: 0o644 });
+      try {
+        const previous = await readManifest(root);
+        root.manifest = previous.raw;
+        root.items = { ...previous.items };
+        const entries = root.resource === "skill" ? skills : agents;
+        const remoteNames = new Set(entries.map(entry => entry.field));
+        for (const { field, value } of entries) {
+          if (root.resource === "skill" && !stagedSkills.has(field)) continue;
+          try {
+            const dest = itemPath(root, field);
+            const exists = await assertDestination(root, dest);
+            const link = exists && await isSkillLink(dest);
+            let staged = stagedSkills.get(field)!;
+            if (root.resource === "agent") {
+              staged = path.join(temp, `${root.target}-agents`, `${field}.${root.target === "claude" ? "md" : "toml"}`);
+              await fs.mkdir(path.dirname(staged), { recursive: true });
+              const localDescription = exists
+                ? localAgentDescription(await fs.readFile(dest, "utf8"), field, root.target) : undefined;
+              await fs.writeFile(staged, renderAgentMarkdown(value, field, root.target, localDescription), { mode: 0o644 });
+            }
+            const managed = Boolean(previous.items[field]);
+            const unchanged = exists && managed && !link && await sameContents(staged, dest);
+            if (exists && !managed && !opts.force && !opts.dryRun) {
+              fail("INVALID_INPUT", `unmanaged destination ${dest}; preview and use --force to replace it`);
+            }
+            if (!unchanged) root.operations.push({ destination: dest, staged, exists, link });
+            root.items[field] = opts.sourceId;
+            actions.push({ action: unchanged ? "unchanged" : exists ? managed ? "replace" : "replace-unmanaged" : "create",
+              target: root.target, resource: root.resource, name: field, path: dest });
+          } catch (error) { failures.push({ label: `${root.target}:${root.resource}:${field}`, error }); }
         }
-        root.operations.push({ destination: dest, staged, exists });
-        root.items[field] = opts.sourceId;
-        actions.push({ action: exists ? "replace" : "create", target: root.target, resource: root.resource, name: field, path: dest });
-      }
-      if (opts.prune) {
-        for (const name of Object.keys(previous.items).sort()) {
-          if (previous.items[name] !== opts.sourceId || remoteNames.has(name)) continue;
-          const dest = itemPath(root, name);
-          const exists = await assertDestination(root, dest);
-          if (exists) {
-            root.operations.push({ destination: dest, exists });
-            actions.push({ action: "delete", target: root.target, resource: root.resource, name, path: dest });
+        if (opts.prune) {
+          for (const name of Object.keys(previous.items).sort()) {
+            if (previous.items[name] !== opts.sourceId || remoteNames.has(name)) continue;
+            try {
+              const dest = itemPath(root, name);
+              const exists = await assertDestination(root, dest);
+              if (exists) {
+                root.operations.push({ destination: dest, exists, link: await isSkillLink(dest) });
+                actions.push({ action: "delete", target: root.target, resource: root.resource, name, path: dest });
+              }
+              delete root.items[name];
+            } catch (error) { failures.push({ label: `${root.target}:${root.resource}:${name}`, error }); }
           }
-          delete root.items[name];
         }
-      }
+      } catch (error) { failures.push({ label: `${root.target}:${root.resource}`, error }); }
     }
-    if (!opts.dryRun) await applySyncPlans(roots);
+    failures.sort((a, b) => a.label.localeCompare(b.label));
+    if (failures.length === 1) throw failures[0].error;
+    if (failures.length) {
+      const codes = failures.map(({ error }) => error instanceof CtxbinError ? error.code : "IO");
+      const code = codes.every(value => value === codes[0]) ? codes[0] : "INVALID_INPUT";
+      throw new CtxbinError(code, `sync preflight failed (${failures.length} issues): ` +
+        failures.map(({ label, error }) => `${label}: ${formatError(error).replace(/[\r\n]+/g, " ")}`).join("; "));
+    }
+    if (!opts.dryRun) await applySyncPlans(roots, opts.onWarning);
     return actions;
   } finally {
-    await fs.rm(temp, { recursive: true, force: true });
+    try { await fs.rm(temp, { recursive: true, force: true }); }
+    catch (error) { warnSync(`sync staging cleanup failed: ${String(error)}`, opts.onWarning); }
   }
 }
 

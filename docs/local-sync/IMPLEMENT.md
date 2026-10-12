@@ -48,6 +48,15 @@
   validation tests, build site, review topic links, `git diff --check`.
 - Exit: help and both site languages expose the complete current command contract.
 
+## Phase 7: Review fixes
+
+- [x] Preserve raw frontmatter, narrowly quote malformed plain descriptions, aggregate errors.
+- [x] Preserve legacy local descriptions; handle skill links, unmanaged force, identical items.
+- [x] Expand tilde paths, escape TOML DEL, require exact manifest filename, preserve cleanup results.
+- [x] Add realistic review fixtures/fault injection and align user documentation/PR.
+- Baseline: full suite, TypeScript/site builds, snapshot and native-parser checks.
+- Deferred: automatic stale-lock recovery, skillref caching, persistent successful backups.
+
 ## Handoff
 
 - Done: requirements/design, sync engine, CLI, source-scoped prune, native rendering,
@@ -58,6 +67,7 @@
   folders were installed.
 - Blockers: none.
 - Base commit SHA: `c6d6fc9d15c7d42a03b6162ea656f2fd650fddce`.
+  Reviewed feature commit: `873379450827c3a7457c24f0cd0bbdc057fc2d56`.
   The feature commit is recorded in the `feat/local-agent-skill-sync` branch history.
 
 ## Validation record — 2026-10-12
@@ -113,3 +123,22 @@ node dist/cli.js sync --target all
 - `pnpm build`: passed; generated help is 352 lines including discovery frontmatter.
 - `node --test tests/validation.test.js`: 13 passed, 0 failed/skipped.
 - Direct comparison confirmed built help matches the bundled file and updated source.
+
+## Review-fix validation — 2026-10-12
+
+- Fixed the five release concerns: realistic description YAML, symlinked skill
+  entries, legacy local descriptions, unmanaged replacements, and raw template preservation.
+- Additional fixes: complete preflight diagnostics, unchanged managed items, quoted
+  tilde overrides, DEL escaping, exact SKILL.md casing, and cleanup-result preservation.
+- `pnpm test`: 65 cases, 63 passed, 2 existing environment skips, 0 failures.
+  `tests/sync.test.js` now contains 30 tests, including 10 review regressions.
+- `pnpm exec tsc --noEmit` and `pnpm --dir docs build`: passed.
+- Live `node dist/cli.js sync --target all --dry-run`: passed against the configured
+  store and native default roots. All 8 skills and 3 agents were validated for both
+  targets (22 preview actions), including the reported colon-space description,
+  template-valued metadata, and the installed skill symlink. No Node warnings appeared.
+- Live validation was preview only: no native installation roots/manifests or remote
+  values were changed. Apply/rollback regressions use disposable homes and fixtures.
+- Deliberately retain manual stale-lock recovery, fresh skillref downloads, and
+  documented lack of persistent successful-run backups. Force is required for unmanaged
+  replacements and preview labels those entries. Windows/native-client checks remain manual.

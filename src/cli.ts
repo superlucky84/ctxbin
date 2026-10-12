@@ -48,6 +48,7 @@ async function main(): Promise<void> {
         target: { type: "string" },
         "dry-run": { type: "boolean" },
         prune: { type: "boolean" },
+        force: { type: "boolean" },
         "skills-dir": { type: "string" },
         "agents-dir": { type: "string" },
       },
@@ -66,7 +67,7 @@ async function main(): Promise<void> {
     return fail("INVALID_INPUT", "missing resource");
   }
 
-  const syncFlags = ["target", "dry-run", "prune", "skills-dir", "agents-dir"];
+  const syncFlags = ["target", "dry-run", "prune", "force", "skills-dir", "agents-dir"];
   if (resource === "sync") {
     if (command || keyArg || extra.length) return fail("INVALID_INPUT", "sync does not accept positional arguments");
     const unexpected = Object.keys(values).filter(flag => !syncFlags.includes(flag));
@@ -83,6 +84,7 @@ async function main(): Promise<void> {
       sourceId: syncSourceId(config.url),
       dryRun: Boolean(values["dry-run"]),
       prune: Boolean(values.prune),
+      force: Boolean(values.force),
       skillsDir: values["skills-dir"] as string | undefined,
       agentsDir: values["agents-dir"] as string | undefined,
     });

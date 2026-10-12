@@ -13,7 +13,7 @@ export interface SyncRoot {
   dir: string;
   manifest: string;
   items: Record<string, string>;
-  operations: Array<{ destination: string; staged?: string; exists: boolean }>;
+  operations: Array<{ destination: string; staged?: string; exists: boolean; link?: boolean }>;
 }
 
 async function lstat(file: string) {
@@ -24,8 +24,10 @@ async function lstat(file: string) {
   }
 }
 
-export async function canonicalDirectory(input: string): Promise<string> {
-  const resolved = path.resolve(input);
+export async function canonicalDirectory(input: string, home?: string): Promise<string> {
+  const expanded = input === "~" || /^~[\\/]/.test(input)
+    ? path.join(home ?? (await import("node:os")).homedir(), input.slice(2)) : input;
+  const resolved = path.resolve(expanded);
   if (path.dirname(resolved) === resolved) fail("INVALID_PATH", "filesystem root cannot be a sync destination");
   for (const dir of [resolved, path.dirname(resolved)]) {
     const stat = await lstat(dir);
@@ -45,10 +47,38 @@ export async function canonicalDirectory(input: string): Promise<string> {
 export async function assertDestination(root: SyncRoot, dest: string): Promise<boolean> {
   const stat = await lstat(dest);
   if (!stat) return false;
-  if (stat.isSymbolicLink() || (root.resource === "skill" ? !stat.isDirectory() : !stat.isFile())) {
+  if (root.resource === "skill" ? !(stat.isDirectory() || stat.isSymbolicLink()) : (stat.isSymbolicLink() || !stat.isFile())) {
     fail("INVALID_PATH", `refusing unexpected destination type or symlink: ${dest}`);
   }
   return true;
+}
+
+export async function isSkillLink(dest: string): Promise<boolean> {
+  return Boolean((await lstat(dest))?.isSymbolicLink());
+}
+
+export async function sameContents(left: string, right: string): Promise<boolean> {
+  const [a, b] = await Promise.all([lstat(left), lstat(right)]);
+  if (!a || !b || a.isSymbolicLink() || b.isSymbolicLink()) return false;
+  if (process.platform !== "win32" && (a.mode & 0o777) !== (b.mode & 0o777)) return false;
+  if (a.isFile() && b.isFile()) {
+    if (a.size !== b.size) return false;
+    const [x, y] = await Promise.all([fs.readFile(left), fs.readFile(right)]);
+    return x.equals(y);
+  }
+  if (!a.isDirectory() || !b.isDirectory()) return false;
+  const [x, y] = await Promise.all([fs.readdir(left), fs.readdir(right)]);
+  x.sort(); y.sort();
+  if (x.length !== y.length || x.some((name, index) => name !== y[index])) return false;
+  for (const name of x) if (!(await sameContents(path.join(left, name), path.join(right, name)))) return false;
+  return true;
+}
+
+export function warnSync(message: string, onWarning?: (message: string) => void): void {
+  try {
+    if (onWarning) onWarning(message);
+    else process.stderr.write(`CTXBIN_WARN: ${message.replace(/[\r\n]+/g, " ")}\n`);
+  } catch { /* Diagnostics must never mask a completed operation or its original error. */ }
 }
 
 export async function readManifest(root: SyncRoot): Promise<{ raw: string; items: Record<string, string> }> {
@@ -78,7 +108,7 @@ function manifestText(root: SyncRoot): string {
   return JSON.stringify({ version: 1, target: root.target, resource: root.resource, items }, null, 2) + "\n";
 }
 
-export async function applySyncPlans(roots: SyncRoot[]): Promise<void> {
+export async function applySyncPlans(roots: SyncRoot[], onWarning?: (message: string) => void): Promise<void> {
   // Empty destinations need no state, lock, or directory creation.
   const active = roots.filter(root => root.operations.length || (root.manifest && root.manifest !== manifestText(root)));
   const locked: string[] = [];
@@ -105,6 +135,9 @@ export async function applySyncPlans(roots: SyncRoot[]): Promise<void> {
       for (const [index, operation] of root.operations.entries()) {
         const exists = await assertDestination(root, operation.destination);
         if (exists !== operation.exists) fail("IO", `destination changed during planning: ${operation.destination}`);
+        if (exists && (await isSkillLink(operation.destination)) !== Boolean(operation.link)) {
+          fail("IO", `destination link changed during planning: ${operation.destination}`);
+        }
         let replacement: string | undefined;
         if (operation.staged) {
           replacement = path.join(transaction, `new-${index}`);
@@ -147,7 +180,7 @@ export async function applySyncPlans(roots: SyncRoot[]): Promise<void> {
       const results = await Promise.allSettled(transactions.map(dir => fs.rm(dir, { recursive: true, force: true })));
       const lockResults = await Promise.allSettled(locked.map(lock => fs.unlink(lock)));
       const failure = [...results, ...lockResults].find(result => result.status === "rejected");
-      if (failure?.status === "rejected") fail("IO", `sync cleanup failed: ${String(failure.reason)}`);
+      if (failure?.status === "rejected") warnSync(`sync cleanup failed; inspect retained temporary data or locks: ${String(failure.reason)}`, onWarning);
     }
   }
 }
