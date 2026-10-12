@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const SkillrefKo = mount(() => {
   return () => (
@@ -63,6 +64,12 @@ ctxbin-skillref@1
       />
       <p>skillref 로드에는 <code>--dir</code>이 필수입니다.</p>
 
+      <h2>Sync로 설치</h2>
+      <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+      <p>Sync는 참조를 해석하고 내려받으며 지정한 저장소 디렉터리의 루트에 SKILL.md가 있어야 합니다. 고정 참조는 같은 커밋을 사용하고, 기본 브랜치 추적 참조는 미리보기를 포함한 실행마다 기본 브랜치를 해석합니다. 원격 저장소 접근과 GitHub 다운로드가 필요합니다.</p>
+      <p>Load --dir은 같은 경로 파일을 복사하며 추가 로컬 파일은 유지합니다. Sync는 같은 이름의 설치된 스킬 전체를 교체해 내려받은 보조 파일을 반영하고 내부의 오래된 파일을 제거합니다. 다른 로컬 스킬은 유지합니다. 설치 위치와 삭제 옵션은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
+
       <h2>URL 요구사항</h2>
       <ul>
         <li>HTTPS GitHub 저장소 루트여야 함: <code>https://github.com/owner/repo</code></li>
@@ -100,7 +107,7 @@ ctxbin-skillref@1
         <li>심볼릭 링크 거부</li>
         <li>1회 리다이렉트만 허용 (GitHub 도메인 내)</li>
         <li>gzip 매직 바이트 검증</li>
-        <li>원자적 추출 (임시 디렉터리 후 이동)</li>
+        <li>격리된 임시 공간에서 추출·검증 후 대상 디렉터리에 복사</li>
       </ul>
     </div>
   );

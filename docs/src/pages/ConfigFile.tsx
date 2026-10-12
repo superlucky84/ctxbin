@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const ConfigFile = mount(() => {
   return () => (
@@ -61,6 +62,11 @@ EOF`}
       <p>
         Environment variables always override the config file.
       </p>
+
+      <h2>Sync Configuration and Tracking</h2>
+      <p>The same config supplies store credentials for sync and --dry-run. No extra keys are required in config.json. Choose paths with single-target CLI overrides:</p>
+      <CodeBlock language="bash" code="npx ctxbin sync --target codex --skills-dir ~/.codex/skills" />
+      <p>Each skills/agents destination has a separate .ctxbin-sync.json tracking manifest. It records source URL digests and item ownership, never credentials or rule bodies. Keep it so --prune can identify this store's previous installs. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for paths and recovery.</p>
 
       <h2>Security Note</h2>
       <p>

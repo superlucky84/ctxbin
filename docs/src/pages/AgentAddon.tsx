@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 const addonBlock = [
   '<!-- BEGIN CTXBIN AGENT ADDON -->',
@@ -10,6 +11,9 @@ const addonBlock = [
   '```bash',
   'npx ctxbin help',
   '```',
+  '',
+  'Prefer locally installed skills and agent definitions. Run `ctxbin sync` only when',
+  'the user explicitly requests local installation or synchronization; choose the target explicitly.',
   '',
   '<!-- END CTXBIN AGENT ADDON -->',
 ].join('\n');
@@ -72,6 +76,8 @@ export const AgentAddon = mount(() => {
         This add-on is intentionally minimal. For the full, canonical ctxbin usage guide, run:
       </p>
       <CodeBlock language="bash" code={`$ npx ctxbin help`} />
+
+      <p>The guide includes context handoff and installation of remote skills/agents into Claude Code/Codex. Keep local definitions during ordinary work; for an explicit sync request, select --target and follow the <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync command guide</span>, including preview and tracked pruning.</p>
 
       <p class="mt-6 text-sm">
         Source: <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank" rel="noopener noreferrer">agent-addon.md on GitHub</a>

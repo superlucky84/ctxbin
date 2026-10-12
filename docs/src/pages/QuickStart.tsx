@@ -116,6 +116,21 @@ my-project/feature --value`}
         code={`$ npx ctxbin ctx delete`}
       />
 
+      <h2>4. Install Remote Skills and Agents</h2>
+      <p>Use the credentials from step 1 to download all stored skills and agents. Preview downloads and validates the remote content without changing installation directories:</p>
+      <CodeBlock language="bash" code={`# Save reusable definitions with existing commands
+npx ctxbin skill save my-skill --dir ./skills/my-skill
+npx ctxbin agent save reviewer --file reviewer.md
+
+# Preview and install both clients
+npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all
+
+# One client, including removal of its tracked stale entries
+npx ctxbin sync --target codex --prune`} />
+      <p>The skill bundle needs root SKILL.md. Shared agent Markdown accepts name and description frontmatter; legacy plain Markdown also works. Matching skill folders are replaced entirely and local-only entries remain. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for the agent example, paths, directory overrides, and recovery details.</p>
+      <p>To upload local changes, use the existing skill save --dir or agent save --file commands. Sync only reads the remote store and does not require Git or a key.</p>
+
       <h2>Key Inference</h2>
       <p>
         For <code>ctx</code> commands, when no key is provided, ctxbin automatically infers

@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const StorageModelKo = mount(() => {
   return () => (
@@ -60,6 +61,10 @@ HGET skill fp-pack
 HDEL skill fp-pack`}
       />
 
+      <h2>로컬 설치 이력</h2>
+      <p>Sync는 HGETALL로 skill·agent 해시 전체를 읽습니다. Ctx에 접근하거나 별도 Redis 해시를 만들거나 원격에 쓰지 않습니다. 내려받은 정의로 도구에 맞는 로컬 형식을 생성합니다.</p>
+      <p>각 설치 폴더의 .ctxbin-sync.json에 항목 소유 저장소와 원격 주소의 해시를 기록합니다. --prune은 같은 저장소의 설치 이력에 있는 항목 중 원격에서 사라진 항목만 로컬에서 삭제합니다. 다른 저장소에서 같은 이름 항목을 설치하면 소유 저장소가 바뀌며, 다른 저장소 항목과 미관리 항목은 유지합니다. 이 파일은 ~/.ctxbin/config.json의 자격 증명과 별개입니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
+
       <h2>내부 저장소 인터페이스</h2>
       <CodeBlock
         language="typescript"
@@ -71,7 +76,7 @@ HDEL skill fp-pack`}
 }`}
       />
 
-      <h2>삭제 규칙</h2>
+      <h2>원격 삭제 규칙</h2>
       <ul>
         <li><strong>삭제는 항상 명시적</strong></li>
         <li>빈 값 저장은 <strong>데이터를 절대 삭제하지 않음</strong></li>
@@ -86,7 +91,7 @@ HDEL skill fp-pack`}
         <li>임베딩 없음</li>
         <li>검색 없음</li>
         <li>버전 관리 없음</li>
-        <li>히스토리 없음</li>
+        <li>원격 콘텐츠 버전 이력 없음</li>
         <li>병합 없음</li>
         <li>권한 없음</li>
         <li>추론 없음</li>

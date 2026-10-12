@@ -19,9 +19,9 @@ async function main() {
     const frontmatter = [
       "---",
       "name: ctxbin",
-      "description: Use when working with ctxbin to save and load ctx, agent, and skill context.",
+      "description: Use ctxbin for context handoff, remote skill and agent management, and explicitly requested local sync into Claude Code or Codex.",
       "metadata:",
-      "  short-description: ctxbin workflow",
+      "  short-description: Context handoff and local skill/agent sync",
       `  version: ${pkg.version}`,
       "---",
       "",

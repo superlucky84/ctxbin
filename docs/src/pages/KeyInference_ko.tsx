@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const KeyInferenceKo = mount(() => {
   return () => (
@@ -10,6 +11,8 @@ export const KeyInferenceKo = mount(() => {
         <code>ctx</code> 명령어를 명시적 키 없이 사용하면, ctxbin이 git 저장소에서 자동으로
         키를 추론합니다. 이 페이지에서는 추론이 정확히 어떻게 작동하는지 설명합니다.
       </p>
+
+      <p>키 추론은 ctx에만 적용합니다. Agent·skill의 save, load, delete에는 명시적 키를 사용하고, sync는 키나 Git 없이 원격 정의 전체를 설치합니다. 대상 도구는 --target으로 선택합니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>를 참고하세요.</p>
 
       <h2>키 형식</h2>
       <CodeBlock

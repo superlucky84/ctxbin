@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const ErrorCodes = mount(() => {
   return () => (
@@ -83,6 +84,14 @@ CTXBIN_ERR NOT_FOUND: no value for ctx:my-project/main
 CTXBIN_ERR SIZE_LIMIT: skillpack tar.gz exceeds 7MB limit
 CTXBIN_ERR TYPE_MISMATCH: --dir cannot be used with string values`}
       />
+
+      <h2>Sync Errors and Recovery</h2>
+      <CodeBlock language="text" code={`CTXBIN_ERR INVALID_INPUT: sync requires --target claude, codex, or all
+CTXBIN_ERR INVALID_INPUT: directory overrides require a single --target
+CTXBIN_ERR INVALID_INPUT: skill my-skill: bundle must contain root SKILL.md
+CTXBIN_ERR INVALID_PATH: sync destination directories must not overlap`} />
+      <p>Malformed metadata/manifests and unsupported shared agent fields return INVALID_INPUT. Unsafe names, symlinks, or unexpected destination types return INVALID_PATH. Store/GitHub failures return NETWORK, including during --dry-run.</p>
+      <p>IO can indicate permissions, a held .ctxbin-sync.lock, changed tracking state, or apply/rollback failures. Ordinary apply failures restore entries and manifests. If rollback is incomplete, the error reports retained transaction backup paths; inspect journal.json and backups before retrying. Process interruption is outside the rollback guarantee. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync recovery</span>.</p>
 
       <h2>Parsing Errors</h2>
       <CodeBlock

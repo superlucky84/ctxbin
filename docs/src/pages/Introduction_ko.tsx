@@ -74,6 +74,12 @@ $ npx ctxbin skill save my-skill --dir ./skills/my-skill
 $ npx ctxbin skill save my-skill --url https://github.com/owner/repo --path skills/my-skill`}
       />
 
+      <h2>원격 스킬·에이전트 설치</h2>
+      <p><code>sync</code>는 agent·skill 리소스를 읽어 로컬 Claude Code와 Codex에 설치합니다. --target claude, codex, all 중 하나를 선택하며 키나 Git 저장소는 필요하지 않습니다.</p>
+      <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+      <p>같은 이름 항목은 전체를 교체하고 로컬에만 있는 항목은 유지합니다. --prune은 같은 저장소에서 설치한 항목 중 원격에서 사라진 항목만 삭제합니다. 업로드에는 기존 save 명령을 사용합니다. 전체 동작은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요. 컨텍스트 동기화는 별도 도구 ctxloc에서 담당합니다.</p>
+
       <h2>비대화형 보장</h2>
       <p><code>init</code>을 제외한 모든 명령어는:</p>
       <ul>

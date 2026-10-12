@@ -98,11 +98,19 @@ $ npx ctxbin ctx load`}
         />
       </div>
 
+      <div class="mb-12">
+        <h2>로컬에 스킬과 에이전트 설치</h2>
+        <p>원격 스킬·에이전트 전체를 Claude Code, Codex 또는 두 도구에 내려받습니다. 같은 이름의 로컬 항목을 교체하기 전에 변경 내용을 확인하세요:</p>
+        <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+        <p>같은 이름 스킬은 폴더 전체를 교체합니다. 로컬에만 있는 항목은 유지하며, --prune은 같은 저장소에서 설치한 항목 중 원격에서 사라진 항목만 삭제합니다. 설치 위치·경로 지정·에이전트 형식은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
+      </div>
+
       <div class="mb-12 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h2>Companion: ctxloc</h2>
         <p>
           <strong>ctxbin</strong>은 원격 저장소 중심 CLI로 유지됩니다.
-          로컬 우선 워크플로와 명시적 sync가 필요하면{' '}
+          로컬 우선 컨텍스트 관리와 명시적 컨텍스트 동기화에는{' '}
           <a
             href="https://github.com/superlucky84/ctxloc"
             target="_blank"
@@ -113,6 +121,7 @@ $ npx ctxbin ctx load`}
           </a>
           {' '}을 사용하고 <code>ctxloc sync</code>를 실행하세요.
         </p>
+        <p><code>ctxbin sync</code>는 원격 스킬·에이전트를 로컬 도구에 설치합니다. 컨텍스트 동기화는 <code>ctxloc</code>에서 담당합니다.</p>
       </div>
 
       <div class="grid md:grid-cols-2 gap-6 mb-12">

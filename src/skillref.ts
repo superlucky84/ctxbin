@@ -80,10 +80,7 @@ export async function loadSkillrefToDir(value: string, targetDir: string): Promi
       preserveOwner: false,
       noMtime: true,
       strip: stripCount,
-      filter: (p, entry) => {
-        const entryPath = entry?.path ?? p;
-        return isUnderPath(entryPath, analysis.prefix, skillref.path);
-      },
+      filter: (p) => isUnderPath(p, analysis.prefix, skillref.path),
     });
 
     await applyNormalizedPermissions(extractDir, analysis.execSet);

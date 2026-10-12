@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const AgentCommands = mount(() => {
   return () => (
@@ -26,6 +27,19 @@ $ npx ctxbin agent save frontend-reviewer --value "# Agent role markdown"
 # From file
 $ npx ctxbin agent save frontend-reviewer --file agent.md`}
       />
+
+      <h2>Install Shared Agent Rules</h2>
+      <p>Save provider-neutral Markdown, then install every remote agent and skill into Claude Code/Codex. Shared agent frontmatter supports name and description only; the name must match the remote key.</p>
+      <CodeBlock language="markdown" code={`---
+name: reviewer
+description: Review code changes for correctness and missing tests.
+---
+
+Inspect changed code and report actionable findings.`} />
+      <CodeBlock language="bash" code={`npx ctxbin agent save reviewer --file reviewer.md
+npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+      <p>Claude gets ~/.claude/agents/&lt;name&gt;.md; Codex gets ~/.codex/agents/&lt;name&gt;.toml. Legacy Markdown receives a name from the key and the description “Agent rules for &lt;name&gt;.” Unsupported model/tool metadata returns an error. Use existing agent save --file to upload changes; sync reads the remote store only. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for replacement, source-scoped pruning, and overrides.</p>
 
       <h2>Append</h2>
       <CodeBlock

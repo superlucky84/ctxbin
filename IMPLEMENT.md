@@ -1,5 +1,8 @@
 # Implementation Notes (ctxbin)
 
+Local skill/agent sync progress and validation are tracked in
+[docs/local-sync/IMPLEMENT.md](docs/local-sync/IMPLEMENT.md).
+
 Purpose: preserve implementation context so another model/agent can resume quickly.
 Record key decisions, progress, and checklists.
 

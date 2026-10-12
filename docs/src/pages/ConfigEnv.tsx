@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const ConfigEnv = mount(() => {
   return () => (
@@ -50,6 +51,11 @@ CTXBIN_STORE_TOKEN=your-token-here`}
       <p>
         If environment variables are set, <code>npx ctxbin init</code> is not required.
       </p>
+
+      <h2>Credentials for Local Sync</h2>
+      <p>Sync uses these same two variables or the existing config file, including --dry-run. Preview fetches remote data, and skillrefs also download from GitHub. No additional sync credential is required.</p>
+      <CodeBlock language="bash" code="npx ctxbin sync --target all --dry-run" />
+      <p>Local destinations are selected with --target and single-target --skills-dir / --agents-dir CLI options, not extra environment variables. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span>.</p>
 
       <h2>Getting Upstash Credentials</h2>
       <ol>

@@ -18,6 +18,7 @@ import { AgentCommands } from '@/pages/AgentCommands';
 import { AgentCommandsKo } from '@/pages/AgentCommands_ko';
 import { SkillCommands } from '@/pages/SkillCommands';
 import { SkillCommandsKo } from '@/pages/SkillCommands_ko';
+import { SyncCommands, SyncCommandsKo } from '@/pages/SyncCommands';
 import { Skillpack } from '@/pages/Skillpack';
 import { SkillpackKo } from '@/pages/Skillpack_ko';
 import { Skillref } from '@/pages/Skillref';
@@ -56,6 +57,8 @@ const routes: Record<string, PageComponent> = {
   '/ko/commands/agent': AgentCommandsKo,
   '/commands/skill': SkillCommands,
   '/ko/commands/skill': SkillCommandsKo,
+  '/commands/sync': SyncCommands,
+  '/ko/commands/sync': SyncCommandsKo,
   '/advanced/skillpack': Skillpack,
   '/ko/advanced/skillpack': SkillpackKo,
   '/advanced/skillref': Skillref,

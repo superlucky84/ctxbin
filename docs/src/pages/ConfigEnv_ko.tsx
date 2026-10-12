@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const ConfigEnvKo = mount(() => {
   return () => (
@@ -50,6 +51,11 @@ CTXBIN_STORE_TOKEN=your-token-here`}
       <p>
         환경 변수가 설정되면 <code>npx ctxbin init</code>이 필요하지 않습니다.
       </p>
+
+      <h2>로컬 동기화의 자격 증명</h2>
+      <p>Sync는 --dry-run을 포함해 같은 두 환경 변수 또는 기존 설정 파일을 사용합니다. 미리보기에서도 원격 자료를 가져오며 skillref는 GitHub에서도 내려받습니다. 별도 동기화 자격 증명은 필요하지 않습니다.</p>
+      <CodeBlock language="bash" code="npx ctxbin sync --target all --dry-run" />
+      <p>로컬 설치 위치는 별도 환경 변수 대신 --target과 단일 대상용 --skills-dir / --agents-dir CLI 옵션으로 정합니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>를 참고하세요.</p>
 
       <h2>Upstash 자격 증명 얻기</h2>
       <ol>

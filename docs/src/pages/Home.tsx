@@ -98,11 +98,19 @@ $ npx ctxbin ctx load`}
         />
       </div>
 
+      <div class="mb-12">
+        <h2>Install Skills and Agents Locally</h2>
+        <p>Download every remote skill and agent into Claude Code, Codex, or both. Preview the changes before replacing matching local items:</p>
+        <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all`} />
+        <p>Matching skill directories are replaced completely. Local-only entries remain; --prune removes only tracked items from the same store that are absent remotely. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for installation paths, overrides, and agent formats.</p>
+      </div>
+
       <div class="mb-12 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h2>Companion: ctxloc</h2>
         <p>
           <strong>ctxbin</strong> remains the remote-storage-oriented CLI.
-          If you want a local-first workflow with explicit sync, use{' '}
+          For local-first context workflows and explicit context replication, use{' '}
           <a
             href="https://github.com/superlucky84/ctxloc"
             target="_blank"
@@ -113,6 +121,7 @@ $ npx ctxbin ctx load`}
           </a>
           {' '}and run <code>ctxloc sync</code>.
         </p>
+        <p><code>ctxbin sync</code> installs remote skills and agents into local clients; context replication remains in <code>ctxloc</code>.</p>
       </div>
 
       <div class="grid md:grid-cols-2 gap-6 mb-12">

@@ -12,6 +12,7 @@ import { loadSkillrefToDir } from "./skillref";
 import { detectSkillValueType } from "./value";
 import { resolveSaveInput } from "./input";
 import { injectMetadata, stripMetadata, extractMetadata, formatMetadataBlock } from "./metadata";
+import { syncResources, syncSourceId, SyncOptions } from "./sync";
 
 type CliOptions = {
   append: boolean;
@@ -44,6 +45,11 @@ async function main(): Promise<void> {
         url: { type: "string" },
         ref: { type: "string" },
         path: { type: "string" },
+        target: { type: "string" },
+        "dry-run": { type: "boolean" },
+        prune: { type: "boolean" },
+        "skills-dir": { type: "string" },
+        "agents-dir": { type: "string" },
       },
       allowPositionals: true,
     }));
@@ -58,6 +64,36 @@ async function main(): Promise<void> {
   }
   if (!resource) {
     return fail("INVALID_INPUT", "missing resource");
+  }
+
+  const syncFlags = ["target", "dry-run", "prune", "skills-dir", "agents-dir"];
+  if (resource === "sync") {
+    if (command || keyArg || extra.length) return fail("INVALID_INPUT", "sync does not accept positional arguments");
+    const unexpected = Object.keys(values).filter(flag => !syncFlags.includes(flag));
+    if (unexpected.length) return fail("INVALID_INPUT", `sync does not accept --${unexpected[0]}`);
+    if (!["claude", "codex", "all"].includes(values.target as string)) {
+      return fail("INVALID_INPUT", "sync requires --target claude, codex, or all");
+    }
+    if (values.target === "all" && (values["skills-dir"] !== undefined || values["agents-dir"] !== undefined)) {
+      return fail("INVALID_INPUT", "directory overrides require a single --target");
+    }
+    const config = await loadConfig();
+    const actions = await syncResources(createStore(config.url, config.token), {
+      target: values.target as SyncOptions["target"],
+      sourceId: syncSourceId(config.url),
+      dryRun: Boolean(values["dry-run"]),
+      prune: Boolean(values.prune),
+      skillsDir: values["skills-dir"] as string | undefined,
+      agentsDir: values["agents-dir"] as string | undefined,
+    });
+    for (const action of actions) {
+      const prefix = values["dry-run"] ? "dry-run\t" : "";
+      process.stdout.write(`${prefix}${action.action}\t${action.target}\t${action.resource}\t${action.name}\t${action.path}\n`);
+    }
+    return;
+  }
+  if (syncFlags.some(flag => values[flag] !== undefined)) {
+    return fail("INVALID_INPUT", "sync flags are only valid for sync");
   }
 
   if (resource === "init") {

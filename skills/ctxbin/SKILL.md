@@ -2,6 +2,7 @@
 
 ## Sandbox/Network Policy (Important)
 All `ctx`, `agent`, and `skill` `save`, `load`, `list`, and `delete` commands require outbound HTTPS to the remote Upstash store.
+`sync` also requires remote-store access; skillrefs additionally download from GitHub.
 Do not run those commands first in a restricted sandbox, network-disabled runner, or any environment that is likely to block outbound HTTPS.
 `help` is local-only; the remote store is not involved.
 
@@ -14,7 +15,6 @@ Launcher choice:
 1. If `ctxbin` is already installed locally, prefer `pnpm exec ctxbin ...`.
 2. If it is not installed locally, use `npx ctxbin ...`.
 3. If it is installed locally but you want `npx`, use `npx --no-install ctxbin ...`.
-4. For any remote-store command, the first attempt should be in `unrestricted` or `network-enabled`, regardless of launcher.
 
 Failure triage:
 ### `npx` package installation failure
@@ -42,10 +42,28 @@ npx ctxbin ctx save --file ctx-pending.md
 
 ## Purpose
 Help agents preserve and restore branch-scoped project context so the next agent can continue work without re-explanation.
+Store reusable skills and agent rules remotely, then install them into local Claude Code
+or Codex when the user requests it.
+
+## Command overview
+
+| Command | Purpose |
+| --- | --- |
+| `ctx save/load/list/delete` | Store and retrieve branch context |
+| `agent save/load/list/delete` | Manage remote agent Markdown |
+| `skill save/load/list/delete` | Manage remote Markdown, directory bundles, and GitHub references |
+| `sync --target claude\|codex\|all` | Install every remote skill and agent into the selected local clients |
+| `help` | Print this bundled guide without remote access |
+| `init` | Configure remote-store credentials interactively |
+
+`sync` uses existing `CTXBIN_STORE_URL` / `CTXBIN_STORE_TOKEN` or
+`~/.ctxbin/config.json`, including for `--dry-run`. It does not require a Git
+repository or key. Context replication between local and remote stores is provided
+by the companion `ctxloc`; `ctxbin sync` installs skills and agents.
 
 ## Core Usage (ctx)
 `ctx` automatically derives a key from the current Git repo and branch when omitted.
-Examples below use `npx` for portability. If `ctxbin` is already installed locally, prefer `pnpm exec ctxbin ...` or `npx --no-install ctxbin ...`.
+Examples below use `npx` for portability.
 
 ```text
 key = {project}/{branch}
@@ -53,9 +71,8 @@ project = package.json "name" field, or folder name if no package.json
 branch  = git rev-parse --abbrev-ref HEAD
 ```
 
-> **Note:** If `package.json` exists, the `name` field is used as the project name.
-> If the name differs from the folder name, a warning is printed.
-> Without `package.json`, the folder name is used. Use an explicit key if needed.
+> If the package name differs from the folder name, a warning is printed.
+> Use an explicit key to override inference.
 
 ### Save (most common)
 ```bash
@@ -86,9 +103,6 @@ Use `--meta` to include metadata in output.
 ```bash
 # Save with actor id
 npx ctxbin ctx save --by codex --value "summary / next steps"
-
-# Default load (body only)
-npx ctxbin ctx load
 
 # Load with metadata block
 npx ctxbin ctx load --meta
@@ -152,13 +166,100 @@ npx ctxbin ctx delete my-project/main
 ```bash
 npx ctxbin agent save reviewer --value "# Agent role"
 npx ctxbin agent load reviewer
-```
-
-### List/Delete
-```bash
 npx ctxbin agent list
 npx ctxbin agent delete reviewer
 ```
+
+## Install remote skills and agents locally
+
+Use sync when the user explicitly requests local installation or synchronization.
+Select the target explicitly; sync reads only the remote `skill` and `agent` hashes.
+Prefer already installed definitions during ordinary work.
+
+```bash
+npx ctxbin sync --target all --dry-run
+npx ctxbin sync --target all
+npx ctxbin sync --target claude
+npx ctxbin sync --target codex --prune
+# Existing local layout (single-target override)
+npx ctxbin sync --target codex --skills-dir ~/.codex/skills
+```
+
+- Claude paths: `~/.claude/skills/<name>/SKILL.md`, `~/.claude/agents/<name>.md`.
+- Codex paths: `~/.agents/skills/<name>/SKILL.md`, `~/.codex/agents/<name>.toml`.
+- Keys: 1–64 lowercase letters/digits with single `-`/`_` separators; unsafe/reserved names fail.
+
+### Sync options
+
+| Option | Meaning |
+| --- | --- |
+| `--target claude\|codex\|all` | Required; select one client or both |
+| `--dry-run` | Download, validate, and preview without destination changes |
+| `--prune` | Remove tracked installs from this store that are now absent remotely |
+| `--skills-dir <path>` | Override the skills root for a single target |
+| `--agents-dir <path>` | Override the agents root for a single target |
+
+These flags apply only to `sync`. Directory overrides cannot be used with
+`--target all`. Save/load flags such as `--file`, `--dir`, `--raw`, and `--append`
+are not accepted by sync. Sync never uploads or accesses `ctx`.
+
+### Shared rule format
+
+Save the following as `reviewer.md`, then use
+`npx ctxbin agent save reviewer --file reviewer.md` before syncing:
+
+```markdown
+---
+name: reviewer
+description: Review code changes for correctness and missing tests.
+---
+
+Inspect changed code and report actionable findings.
+```
+
+Shared agents accept only `name` and `description` frontmatter. Provider-specific
+model/tool fields cause an error rather than being silently dropped. Names must match
+remote keys; sync renders Claude Markdown or Codex TOML.
+Legacy Markdown defaults are `Agent rules for <name>.` for agents and
+`Reusable instructions for <name>.` for skills; supply a description to improve discovery.
+Skills support strings, packs, and refs, preserving frontmatter and supporting files.
+Bundles need root `SKILL.md`; sync never adds the bundled ctxbin fallback to the remote list.
+
+Existing `skill load <key> --dir <path>` copies matching files and leaves extra files
+alone. Sync replaces complete matching skill directories, so removed remote files
+inside those directories also disappear locally; agents are replaced as complete files.
+Upload local changes with existing
+`skill save --dir` / `agent save --file` commands.
+
+### Tracking and recovery
+
+Each destination root keeps `.ctxbin-sync.json` with item ownership and a digest of
+the store URL. No URL/token or rule content is stored in this manifest. Without
+`--prune`, removed remote entries stay installed and tracked for later pruning.
+Prune preserves unmanaged and other-store items. Installing a same-name item from a
+different store transfers ownership to that store. Empty stores succeed with no
+actions, or prune this store's tracked entries when requested.
+
+All downloads, validation, and replacement preparation precede destructive moves.
+Ordinary apply errors restore replaced/deleted items and manifests. Process termination
+and power loss are outside that rollback guarantee. An existing `.ctxbin-sync.lock`
+returns an `IO` error; inspect it before retrying. If rollback cannot finish, the
+error reports retained `.ctxbin-sync-txn-*` backups. Their `journal.json` maps the
+destination and backup paths for manual recovery. Root/parent symlinks, named
+destination symlinks, overlapping roots, and malformed manifests are rejected.
+
+Output fields: action (`create`, `replace`, `delete`), target, resource, name, and
+absolute path, separated by tabs. Preview adds a leading `dry-run` field:
+
+```text
+dry-run	create	claude	skill	my-skill	/Users/example/.claude/skills/my-skill
+dry-run	create	codex	agent	reviewer	/Users/example/.codex/agents/reviewer.toml
+```
+
+Malformed metadata/options return `INVALID_INPUT`; unsafe names/destinations return
+`INVALID_PATH`; store/GitHub failures return `NETWORK`. Errors go to stderr and exit 1;
+action output appears only after successful validation/apply. Preview has the same
+validation and network error behavior.
 
 ## skill Save/Load
 `skill` requires a key.
@@ -166,10 +267,6 @@ npx ctxbin agent delete reviewer
 ```bash
 npx ctxbin skill save my-skill --value "# Skill markdown"
 npx ctxbin skill load my-skill
-```
-
-### List/Delete
-```bash
 npx ctxbin skill list
 npx ctxbin skill delete my-skill
 ```
@@ -178,16 +275,10 @@ npx ctxbin skill delete my-skill
 Use exactly one input method.
 
 - `--value`: store a literal string
-  ```bash
-  npx ctxbin ctx save --value "summary"
-  npx ctxbin agent save reviewer --value "# Agent role"
-  npx ctxbin skill save my-skill --value "# Skill markdown"
-  ```
 
 - `--file`: store file contents
   ```bash
   npx ctxbin ctx save --file context.md
-  npx ctxbin agent save reviewer --file agent.md
   npx ctxbin skill save my-skill --file SKILL.md
   ```
 
@@ -213,7 +304,6 @@ Use exactly one input method.
 
 ## `--append` Examples
 `--append` works with string inputs only.
-Do not combine `--append` with `--raw`.
 
 ```bash
 npx ctxbin ctx save --append --value "more notes"

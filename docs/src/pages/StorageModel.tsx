@@ -1,5 +1,6 @@
 import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
+import { navigateTo } from '@/store';
 
 export const StorageModel = mount(() => {
   return () => (
@@ -60,6 +61,10 @@ HGET skill fp-pack
 HDEL skill fp-pack`}
       />
 
+      <h2>Local Installation State</h2>
+      <p>Sync reads the complete skill and agent hashes with HGETALL. It does not access ctx, create another Redis hash, or write to the remote store. Native local formats are generated from the downloaded definitions.</p>
+      <p>Each destination stores .ctxbin-sync.json with item ownership and a digest of the source URL. --prune deletes only local installs tracked to the same source and absent remotely. Installing a same-name item from another store transfers ownership; other-store and unmanaged items remain. This manifest is separate from ~/.ctxbin/config.json credentials. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span>.</p>
+
       <h2>Internal Store Interface</h2>
       <CodeBlock
         language="typescript"
@@ -71,7 +76,7 @@ HDEL skill fp-pack`}
 }`}
       />
 
-      <h2>Deletion Rules</h2>
+      <h2>Remote Deletion Rules</h2>
       <ul>
         <li><strong>Deletion is always explicit</strong></li>
         <li>Saving an empty value <strong>never deletes data</strong></li>
@@ -86,7 +91,7 @@ HDEL skill fp-pack`}
         <li>No embeddings</li>
         <li>No search</li>
         <li>No versioning</li>
-        <li>No history</li>
+        <li>No remote content history</li>
         <li>No merge</li>
         <li>No permissions</li>
         <li>No inference</li>
