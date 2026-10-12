@@ -582,6 +582,177 @@ test("cleanup faults warn without masking successful apply or an original apply 
   assert.equal(skillFields(await fs.readFile(file, "utf8")).body, "Original");
 });
 
+test("selection deduplicates names, skips invalid unselected content and refs, and previews both targets", async t => {
+  const opts = { ...await fixture(t), skills: ["beta", "alpha", "alpha"], agents: ["reviewer", "reviewer"] };
+  const store = memoryStore({
+    alpha: "Alpha rules", beta: "Beta rules", broken: "---\nname: [bad\n---\nRules",
+    "../unsafe": "Rules",
+    unused: createSkillrefValue("https://github.com/example/unused", "skills/unused"),
+  }, { reviewer: "Review rules", broken: "---\nmodel: unsupported\n---\nRules" });
+  const fetch = global.fetch;
+  global.fetch = async () => { assert.fail("unselected skillref must not download"); };
+  try {
+    const before = await snapshot(opts.home);
+    const preview = await syncResources(store, { ...opts, dryRun: true });
+    assert.equal(preview.length, 6);
+    assert.deepEqual(await snapshot(opts.home), before);
+    const applied = await syncResources(store, opts);
+    assert.deepEqual(applied, preview);
+    assert.ok(applied.every(item => ["alpha", "beta", "reviewer"].includes(item.name)));
+    for (const root of [path.join(opts.home, ".claude", "skills"), path.join(opts.home, ".agents", "skills")]) {
+      assert.deepEqual(Object.keys(JSON.parse(await fs.readFile(path.join(root, manifestName), "utf8")).items), ["alpha", "beta"]);
+      assert.equal(await exists(path.join(root, "broken")), false);
+    }
+    const file = path.join(opts.home, ".claude", "skills", "alpha", "SKILL.md");
+    const mtime = (await fs.stat(file)).mtimeMs;
+    assert.ok((await syncResources(store, opts)).every(item => item.action === "unchanged"));
+    assert.equal((await fs.stat(file)).mtimeMs, mtime);
+  } finally { global.fetch = fetch; }
+});
+
+test("skill-only selection ignores the agent hash and unsafe agent destination", async t => {
+  const opts = { ...await fixture(t), target: "claude", skills: ["alpha"] };
+  opts.skillsDir = path.join(opts.home, "project", ".claude", "skills");
+  opts.agentsDir = path.join(opts.home, "unused-agents");
+  await fs.writeFile(opts.agentsDir, "Not a directory; excluded from selection");
+  const store = memoryStore({ alpha: "Skill rules" }, { broken: "Invalid" });
+  const list = store.list;
+  store.list = hash => { assert.equal(hash, "skill"); return list(hash); };
+  const before = await snapshot(opts.home);
+  await syncResources(store, { ...opts, dryRun: true });
+  assert.deepEqual(await snapshot(opts.home), before);
+  const actions = await syncResources(store, opts);
+  assert.equal(actions.length, 1);
+  assert.ok(await exists(path.join(opts.skillsDir, "alpha", "SKILL.md")));
+  assert.equal(await fs.readFile(opts.agentsDir, "utf8"), "Not a directory; excluded from selection");
+  assert.equal(await exists(path.join(opts.home, ".claude")), false);
+  assert.deepEqual(store.calls, ["skill", "skill"]);
+});
+
+test("agent-only selection skips the skill hash and installs native TOML into a project override", async t => {
+  const opts = { ...await fixture(t), target: "codex", agents: ["reviewer"] };
+  opts.skillsDir = path.join(opts.home, "unused-skills");
+  opts.agentsDir = path.join(opts.home, "project", ".codex", "agents");
+  await fs.writeFile(opts.skillsDir, "Excluded skill destination");
+  const store = memoryStore({ broken: "Invalid" }, {
+    reviewer: "---\nname: reviewer\ndescription: Review after implementation.\n---\nReview rules.",
+    "../unsafe": "Invalid",
+  });
+  const list = store.list;
+  store.list = hash => { assert.equal(hash, "agent"); return list(hash); };
+  const actions = await syncResources(store, opts);
+  assert.equal(actions.length, 1);
+  const agent = TOML.parse(await fs.readFile(path.join(opts.agentsDir, "reviewer.toml"), "utf8"));
+  assert.equal(agent.description, "Review after implementation.");
+  assert.equal(agent.developer_instructions, "Review rules.");
+  assert.deepEqual(store.calls, ["agent"]);
+  assert.equal(await exists(path.join(opts.home, ".agents")), false);
+});
+
+test("invalid selector arrays and names fail before store reads or writes", async t => {
+  const opts = await fixture(t);
+  const store = memoryStore({ alpha: "Rules" });
+  for (const selection of [{ skills: [] }, { agents: [] }, { skills: "alpha" }, { skills: [1] },
+    { skills: ["../escape"] }, { agents: [""] }, { skills: ["*"] }]) {
+    await assert.rejects(syncResources(store, { ...opts, ...selection }),
+      err => err.code === "INVALID_INPUT" || err.code === "INVALID_PATH");
+  }
+  assert.deepEqual(store.calls, []);
+  assert.deepEqual(await snapshot(opts.home), {});
+});
+
+test("missing selected names are aggregated and prevent applying otherwise valid replacements", async t => {
+  const opts = await fixture(t);
+  const store = memoryStore({ alpha: "Original" }, { reviewer: "Original" });
+  await syncResources(store, opts);
+  store.data.skill.alpha = "Changed";
+  const before = await snapshot(opts.home);
+  for (const dryRun of [true, false]) {
+    await assert.rejects(syncResources(store, { ...opts, skills: ["alpha", "missing-skill"], agents: ["missing-agent"], dryRun }),
+      err => err.code === "NOT_FOUND" && /missing-skill/.test(err.message) && /missing-agent/.test(err.message));
+    assert.deepEqual(await snapshot(opts.home), before);
+  }
+});
+
+test("selective prune keeps unselected tracking, other-source installs, and unmanaged entries", async t => {
+  const opts = await fixture(t);
+  const store = memoryStore({ drop: "Remove", retained: "Unselected stale", foreign: "Original" }, { reviewer: "Agent" });
+  await syncResources(store, opts);
+  await syncResources(memoryStore({ foreign: "Other store" }), { ...opts, sourceId: secondSource, skills: ["foreign"] });
+  const roots = [path.join(opts.home, ".claude", "skills"), path.join(opts.home, ".agents", "skills")];
+  for (const root of roots) {
+    await fs.mkdir(path.join(root, "local"));
+    await fs.writeFile(path.join(root, "local", "notes.md"), "Unmanaged work");
+  }
+  store.data.skill = {};
+  store.data.agent.reviewer = "Unselected change";
+  const selected = { ...opts, skills: ["drop", "foreign", "local", "already-gone"], prune: true };
+  const before = await snapshot(opts.home);
+  const preview = await syncResources(store, { ...selected, dryRun: true });
+  assert.equal(preview.length, 2);
+  assert.ok(preview.every(item => item.action === "delete" && item.name === "drop"));
+  assert.deepEqual(await snapshot(opts.home), before);
+  assert.deepEqual(await syncResources(store, selected), preview);
+  for (const root of roots) {
+    assert.equal(await exists(path.join(root, "drop")), false);
+    assert.ok(await exists(path.join(root, "retained", "SKILL.md")));
+    assert.equal(await fs.readFile(path.join(root, "local", "notes.md"), "utf8"), "Unmanaged work");
+    const items = JSON.parse(await fs.readFile(path.join(root, manifestName), "utf8")).items;
+    assert.deepEqual(items, { foreign: secondSource, retained: sourceId });
+  }
+  assert.equal(skillFields(await fs.readFile(path.join(opts.home, ".claude", "agents", "reviewer.md"), "utf8")).body, "Agent");
+  const after = await snapshot(opts.home);
+  assert.deepEqual(await syncResources(store, selected), []);
+  assert.deepEqual(await snapshot(opts.home), after);
+  const fullPrune = await syncResources(store, { ...opts, prune: true });
+  assert.equal(fullPrune.filter(item => item.name === "retained" && item.action === "delete").length, 2);
+  for (const root of roots) assert.ok(await exists(path.join(root, "foreign", "SKILL.md")));
+});
+
+test("force authorizes only selected unmanaged collisions", async t => {
+  const opts = { ...await fixture(t), target: "claude", skills: ["alpha"] };
+  const store = memoryStore({ alpha: "Original", beta: "Remote beta", other: "Remote other" });
+  await syncResources(store, opts);
+  const root = path.join(opts.home, ".claude", "skills");
+  for (const name of ["beta", "other"]) {
+    await fs.mkdir(path.join(root, name));
+    await fs.writeFile(path.join(root, name, "notes.md"), "Local work");
+  }
+  assert.equal((await syncResources(store, opts))[0].action, "unchanged");
+  const before = await snapshot(opts.home);
+  await assert.rejects(syncResources(store, { ...opts, skills: ["beta"] }), /unmanaged destination/);
+  assert.deepEqual(await snapshot(opts.home), before);
+  const preview = await syncResources(store, { ...opts, skills: ["beta"], dryRun: true });
+  assert.equal(preview[0].action, "replace-unmanaged");
+  await syncResources(store, { ...opts, skills: ["beta"], force: true });
+  assert.equal(await exists(path.join(root, "beta", "notes.md")), false);
+  assert.equal(await fs.readFile(path.join(root, "other", "notes.md"), "utf8"), "Local work");
+  const items = JSON.parse(await fs.readFile(path.join(root, manifestName), "utf8")).items;
+  assert.deepEqual(Object.keys(items), ["alpha", "beta"]);
+});
+
+test("selective multi-target apply failure restores selected files and all unselected tracking", async t => {
+  const opts = await fixture(t);
+  const store = memoryStore({ alpha: "Original", retained: "Keep" }, { reviewer: "Original", other: "Keep" });
+  await syncResources(store, opts);
+  const before = await snapshot(opts.home);
+  store.data.skill.alpha = "Changed";
+  store.data.agent.reviewer = "Changed";
+  const rename = fs.rename;
+  let failed = false;
+  fs.rename = async (from, to) => {
+    if (!failed && String(from).includes(".ctxbin-sync-txn-") && String(to).endsWith(path.join(".codex", "agents", "reviewer.toml"))) {
+      failed = true;
+      throw new Error("selective apply fault");
+    }
+    return rename(from, to);
+  };
+  try { await assert.rejects(syncResources(store, { ...opts, skills: ["alpha"], agents: ["reviewer"] }), /selective apply fault/); }
+  finally { fs.rename = rename; }
+  assert.equal(failed, true);
+  assert.deepEqual(await snapshot(opts.home), before);
+});
+
 test("CLI requires explicit target and rejects foreign/conflicting sync flags before config", async () => {
   const env = { ...process.env, CTXBIN_STORE_URL: "", CTXBIN_STORE_TOKEN: "" };
   for (const args of [
@@ -590,12 +761,82 @@ test("CLI requires explicit target and rejects foreign/conflicting sync flags be
     ["sync", "--target", "all", "--skills-dir", "custom"],
     ["skill", "list", "--prune"], ["help", "--dry-run"],
     ["agent", "list", "--force"],
+    ["agent", "save", "reviewer", "--skill", "alpha"], ["help", "--agent", "reviewer"],
+    ["sync", "--target", "claude", "--skill"],
   ]) {
     const result = await runCli(args, env);
     assert.equal(result.status, 1, JSON.stringify(args));
     assert.match(result.stderr, /CTXBIN_ERR INVALID_INPUT/);
     assert.doesNotMatch(result.stderr, /missing CTXBIN_STORE/);
   }
+  for (const flag of ["--skill", "--agent"]) {
+    for (const name of ["", "../escape", "*", "alpha,beta"]) {
+      const result = await runCli(["sync", "--target", "claude", flag, name], env);
+      assert.match(result.stderr, /CTXBIN_ERR INVALID_PATH/);
+      assert.doesNotMatch(result.stderr, /missing CTXBIN_STORE/);
+    }
+  }
+});
+
+test("CLI repeated selectors install only requested project entries and preserve authored agent metadata", async t => {
+  const opts = await fixture(t);
+  const calls = [];
+  const authored = "---\nname: reviewer\ndescription: Review after implementation.\n---\nReview rules.\n";
+  const data = { skill: { alpha: "Alpha", beta: "Beta", broken: "---\nname: [broken\n---\nRules" }, agent: {} };
+  const server = http.createServer((req, res) => {
+    const chunks = [];
+    req.on("data", chunk => chunks.push(chunk));
+    req.on("end", () => {
+      const [command, hash, field, value] = JSON.parse(Buffer.concat(chunks));
+      calls.push([command, hash]);
+      let result;
+      if (command === "HGETALL") result = Object.entries(data[hash]).flat();
+      else if (command === "HSET") { data[hash][field] = value; result = 1; }
+      else if (command === "HGET") result = data[hash][field] ?? null;
+      else assert.fail(`unexpected command ${command}`);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ result }));
+    });
+  });
+  await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const env = { ...process.env, CTXBIN_STORE_URL: `http://127.0.0.1:${server.address().port}`, CTXBIN_STORE_TOKEN: "test-token" };
+  const input = path.join(opts.home, "reviewer.md");
+  await fs.writeFile(input, authored);
+  assert.equal((await runCli(["agent", "save", "reviewer", "--file", input], env)).status, 0);
+  const loaded = await runCli(["agent", "load", "reviewer"], env);
+  assert.equal(loaded.stdout, authored);
+  assert.match(data.agent.reviewer, /^ctxbin-meta@1/);
+  const skills = path.join(opts.home, "project", ".agents", "skills");
+  const agents = path.join(opts.home, "project", ".codex", "agents");
+  const base = ["sync", "--target", "codex", "--skills-dir", skills, "--agents-dir", agents];
+  const selection = ["--skill", "alpha", "--skill", "beta", "--skill", "alpha", "--agent", "reviewer"];
+  const preview = await runCli([...base, ...selection, "--dry-run"], env);
+  assert.equal(preview.status, 0, preview.stderr);
+  assert.equal(preview.stdout.trim().split("\n").length, 3);
+  assert.equal(await exists(skills), false);
+  const applied = await runCli([...base, ...selection], env);
+  assert.equal(applied.status, 0, applied.stderr);
+  assert.equal(applied.stdout.trim().split("\n").length, 3);
+  const agent = TOML.parse(await fs.readFile(path.join(agents, "reviewer.toml"), "utf8"));
+  assert.equal(agent.description, "Review after implementation.");
+  assert.equal(agent.developer_instructions, "Review rules.\n");
+  assert.equal(await exists(path.join(skills, "broken")), false);
+  const before = await snapshot(opts.home);
+  const missing = await runCli([...base, "--skill", "missing"], env);
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /CTXBIN_ERR NOT_FOUND/);
+  assert.equal(missing.stdout, "");
+  assert.deepEqual(await snapshot(opts.home), before);
+  delete data.skill.alpha;
+  const start = calls.length;
+  const pruned = await runCli([...base, "--skill", "alpha", "--prune"], env);
+  assert.equal(pruned.status, 0, pruned.stderr);
+  assert.match(pruned.stdout, /^delete\tcodex\tskill\talpha\t/);
+  assert.deepEqual(calls.slice(start), [["HGETALL", "skill"]]);
+  assert.equal(await exists(path.join(skills, "alpha")), false);
+  assert.ok(await exists(path.join(skills, "beta", "SKILL.md")));
+  assert.ok(await exists(path.join(agents, "reviewer.toml")));
 });
 
 test("CLI mock-store sync prints stable actions and never uploads", async t => {

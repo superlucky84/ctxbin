@@ -76,6 +76,7 @@ npx ctxbin sync --target all`} />
         <li>Windows: chmod failures are ignored</li>
       </ul>
       <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
+      <p>Original-value backup preserves the stored encoded bundle and its assets. See <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

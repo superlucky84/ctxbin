@@ -100,7 +100,7 @@ $ npx ctxbin ctx load`}
 
       <div class="mb-12">
         <h2>Install Skills and Agents Locally</h2>
-        <p>Download every remote skill and agent into Claude Code, Codex, or both. Preview the changes before replacing matching local items:</p>
+        <p>Install all remote skills/agents by default, or select keys with repeatable --skill/--agent flags. Preview the changes before replacing matching local items:</p>
         <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all`} />
         <p>Matching skill directories are replaced completely. Local-only entries remain; --prune removes only tracked items from the same store that are absent remotely. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for installation paths, overrides, and agent formats.</p>
@@ -176,6 +176,7 @@ npx ctxbin sync --target all`} />
         </p>
       </div>
       <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
+      <p>Keep original stored skill/agent data in a local recovery file with <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

@@ -73,6 +73,7 @@ EOF`}
         설정 파일에는 민감한 자격 증명이 포함됩니다.
         적절한 파일 권한을 확인하세요 (<code>chmod 600 ~/.ctxbin/config.json</code>).
       </p>
+      <p>백업은 설정된 URL·토큰 대신 원본 주소 해시를 기록합니다. 현재 설정을 대상으로 새 저장소에도 복구할 수 있습니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

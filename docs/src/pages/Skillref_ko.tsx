@@ -110,6 +110,7 @@ npx ctxbin sync --target all`} />
         <li>격리된 임시 공간에서 추출·검증 후 대상 디렉터리에 복사</li>
       </ul>
       <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
+      <p>원본 값 백업은 저장된 참조만 보관하며 외부 GitHub 저장소 파일을 내려받거나 스냅샷으로 만들지 않습니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

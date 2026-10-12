@@ -19,9 +19,9 @@ async function main() {
     const frontmatter = [
       "---",
       "name: ctxbin",
-      "description: Use ctxbin for context handoff, remote skill and agent management, and explicitly requested local sync into Claude Code or Codex.",
+      "description: Use ctxbin for context handoff, remote skill and agent management, backup and recovery, and explicitly requested local sync into Claude Code or Codex.",
       "metadata:",
-      "  short-description: Context handoff and local skill/agent sync",
+      "  short-description: Context handoff, selected local sync, and backup/recovery",
       `  version: ${pkg.version}`,
       "---",
       "",

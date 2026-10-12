@@ -131,6 +131,25 @@ tracked pruning, output, and recovery behavior. Check English and Korean home,
 quick-start, command, config, storage, error, and add-on pages, following links to
 the appropriate language's sync guide.
 
+## Selection and backup/recovery checks
+
+```bash
+node dist/cli.js sync --target claude --skill workflow --agent reviewer \
+  --skills-dir ./tmp/project/.claude/skills --agents-dir ./tmp/project/.claude/agents --dry-run
+node dist/cli.js backup --file ./tmp/backups/ctxbin.json
+node dist/cli.js restore --file ./tmp/backups/ctxbin.json --dry-run
+```
+
+Use a disposable remote store. Select repeated exact keys, confirm excluded resources
+are unused, and selectively prune only named same-source entries. Unselected tracking
+must survive. Unknown selected names fail except when prune permits absent cleanup.
+
+Back up raw values, empty only the test skill/agent hashes, then restore. Confirm exact
+metadata/frontmatter/pack/ref preservation and unrelated remote names surviving.
+Conflicting values require force; corrupt/checksum-invalid files fail before writes.
+`tests/backup.test.js` covers file/remote faults, ambiguous writes, concurrency guards,
+and incomplete rollback. See [manual recovery checks](docs/backup-restore/MANUAL_TEST_CHECKLIST.md).
+
 ## Notes
 - Skillpack has a 7MB tar.gz size limit.
 - Skillref supports public GitHub repositories only.

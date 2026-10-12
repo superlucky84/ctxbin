@@ -88,6 +88,7 @@ npx ctxbin sync --target all`} />
         <li>명확한 에러와 함께 빠른 실패</li>
       </ul>
       <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
+      <p>원격 데이터가 사라졌을 때 원본 값으로 복구하려면 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

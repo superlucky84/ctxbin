@@ -7,10 +7,11 @@ ctxbin sync --target all
 ctxbin sync --target claude --dry-run
 ctxbin sync --target codex --prune
 ctxbin sync --target codex --skills-dir ~/.codex/skills
+ctxbin sync --target claude --skill workflow --skill reference --agent reviewer
 ```
 
-`--target` is required. Only `--target`, `--dry-run`, `--prune`, `--force`, `--skills-dir`,
-and `--agents-dir` are accepted by sync. Directory overrides require a single target.
+`--target` is required. Only `--target`, `--dry-run`, `--prune`, `--force`, `--skill`,
+`--agent`, `--skills-dir`, and `--agents-dir` are accepted by sync. Directory overrides require a single target.
 Sync flags on old commands are rejected before accessing configuration or Redis.
 Validation and I/O errors use existing `CTXBIN_ERR` codes and exit 1.
 Success prints tab-separated `create|replace|replace-unmanaged|unchanged|delete`, target, resource, name,
@@ -25,16 +26,37 @@ together; errors prevent all application, including otherwise valid items.
 | Claude | `~/.claude/skills/<name>/SKILL.md` | `~/.claude/agents/<name>.md` |
 | Codex | `~/.agents/skills/<name>/SKILL.md` | `~/.codex/agents/<name>.toml` |
 
+## Selection contract
+
+Without selectors, retain whole-store behavior. Each `--skill <name>` and
+`--agent <name>` is repeatable and names an exact remote key. Any selector turns
+on selection mode; omitted resources are excluded. Deduplicate names, filter
+before content validation/downloads, and inspect only the selected resource roots.
+The library exposes equivalent `SyncOptions.skills`/`agents` arrays. Explicit empty
+arrays are invalid; absence means the caller did not supply selectors.
+
+Unknown selected names produce `NOT_FOUND` and no installation changes, except
+with `--prune`: names absent remotely are allowed as cleanup candidates. Prune
+only explicitly selected same-source tracked names. Unmanaged, other-source, and
+already pruned names are no-ops. Preserve unselected tracking, including stale
+entries, so a later full-store prune can still remove them.
+
+Project paths work through the existing single-target overrides. A skill-only
+selection neither fetches the agent hash nor inspects the agent destination, and
+vice versa. Overrides for an excluded resource are unused. No wildcard/profile
+syntax or implicit per-project selection is added.
+
 ## Modules and flow
 
 `install-format.ts` parses YAML with the `yaml` package, validates portable names,
 normalizes skill metadata, and converts shared agent Markdown. `sync.ts` owns
 planning, staging, tracking manifests, locks, replacement, and rollback. CLI loads
 the existing store configuration and calls sync directly, without shelling out to
-other ctxbin commands. `Store.list` fetches both hashes once; values are sorted.
+other ctxbin commands. `Store.list` fetches each included hash once; selected values are sorted.
 
-1. Resolve and validate roots/options, fetch the two hash snapshots.
-2. Validate every key. Stage skills once in a disposable temporary directory;
+1. Validate selector names, resolve included roots/options, fetch included hash snapshots.
+2. Filter selected keys and report missing requests unless prune allows cleanup.
+   Validate included keys. Stage skills once in a disposable temporary directory;
    strip ctxbin metadata from strings, extract packs/refs, and normalize root SKILL.md.
 3. Render agents for every selected provider. Reject invalid YAML, mismatched
    supplied names, empty bodies/descriptions, unsupported agent fields, and unsafe names.
@@ -141,6 +163,12 @@ and links to `/commands/sync` using the language-aware navigation helper:
 - Add-on: read help, prefer local definitions, sync only on explicit user request.
 
 Historical `agent-addon-orig.md` is not an active documentation entrypoint.
+
+Authoring guidance recommends YAML name/description in one shared Markdown source
+for both clients, with a role and use case in the description. Codex TOML is generated
+installation output, not shared agent source. Default load strips the savedAt/by
+wrapper while preserving authored frontmatter. Original-value disaster recovery is
+specified separately in [backup/restore design](../backup-restore/DESIGN.md).
 
 ## Release artifact contract
 

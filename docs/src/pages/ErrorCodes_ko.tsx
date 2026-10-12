@@ -102,6 +102,7 @@ $ npx ctxbin ctx load 2>&1 | grep -oP 'CTXBIN_ERR \\K[A-Z_]+'
 # 특정 에러 확인
 $ npx ctxbin ctx load 2>&1 | grep -q "CTXBIN_ERR NOT_FOUND" && echo "not found"`}
       />
+      <p>없는 선택 이름은 prune 정리 후보를 제외하면 NOT_FOUND입니다. 잘못된 백업·체크섬은 INVALID_INPUT, 파일 오류와 미완료 복구 롤백은 IO입니다. 미리보기에도 원격 접근이 필요합니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

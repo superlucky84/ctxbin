@@ -102,6 +102,7 @@ $ npx ctxbin ctx load 2>&1 | grep -oP 'CTXBIN_ERR \\K[A-Z_]+'
 # Check for specific error
 $ npx ctxbin ctx load 2>&1 | grep -q "CTXBIN_ERR NOT_FOUND" && echo "not found"`}
       />
+      <p>Missing selected sync names return NOT_FOUND unless prune allows cleanup. Invalid backup/checksum returns INVALID_INPUT; file faults and incomplete restore rollback return IO. Preview still requires remote access. See <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

@@ -21,8 +21,8 @@ const page = (ko: boolean) => (
   <div class="page-sheet">
     <h1>{ko ? 'sync 명령어' : 'sync Command'}</h1>
     <p>{ko
-      ? '원격 ctxbin에 저장한 스킬과 에이전트 전체를 로컬 Claude Code와 Codex에 설치합니다. --target은 필수입니다.'
-      : 'Install all remote ctxbin skills and agents into local Claude Code and Codex. An explicit --target is required.'}</p>
+      ? '원격 ctxbin의 스킬·에이전트를 로컬 Claude Code와 Codex에 설치합니다. 기본은 전체이며 --skill·--agent로 항목을 고릅니다. --target은 필수입니다.'
+      : 'Install remote ctxbin skills and agents into Claude Code/Codex. Defaults to all entries; select individual keys with --skill/--agent. An explicit --target is required.'}</p>
     <p>{ko ? '미리보기도 기존 저장소 자격 증명과 원격 접근이 필요합니다. Git 저장소나 키는 필요하지 않습니다. 자격 증명은 ' : 'Preview also needs existing store credentials and remote access. No Git repository or key is required. Configure credentials using '}
       <span onClick={() => navigateTo('/config/env')} class="text-indigo-600 hover:underline cursor-pointer">{ko ? '환경 변수' : 'environment variables'}</span>
       {ko ? ' 또는 ~/.ctxbin/config.json을 사용합니다.' : ' or ~/.ctxbin/config.json.'}</p>
@@ -36,11 +36,13 @@ const page = (ko: boolean) => (
         <tr><td><code>--dry-run</code></td><td>{ko ? '내려받고 검증한 뒤 작업만 미리보기' : 'Download, validate, and preview actions'}</td></tr>
         <tr><td><code>--prune</code></td><td>{ko ? '원격에서 사라진 같은 저장소의 설치 이력 항목 삭제' : "Delete this store's tracked installs absent remotely"}</td></tr>
         <tr><td><code>--force</code></td><td>{ko ? 'ctxbin 이력에 없는 같은 이름 로컬 항목 교체 허용' : 'Allow whole-item replacement of unmanaged matching local entries'}</td></tr>
+        <tr><td><code>--skill &lt;name&gt;</code></td><td>{ko ? '정확한 스킬 키 선택. 여러 번 지정 가능' : 'Select an exact skill key; repeat for more'}</td></tr>
+        <tr><td><code>--agent &lt;name&gt;</code></td><td>{ko ? '정확한 에이전트 키 선택. 여러 번 지정 가능' : 'Select an exact agent key; repeat for more'}</td></tr>
         <tr><td><code>--skills-dir &lt;path&gt;</code></td><td>{ko ? '단일 대상 스킬 경로 지정' : 'Override skills root for one target'}</td></tr>
         <tr><td><code>--agents-dir &lt;path&gt;</code></td><td>{ko ? '단일 대상 에이전트 경로 지정' : 'Override agents root for one target'}</td></tr>
       </tbody>
     </table>
-    <p>{ko ? '경로 지정 옵션은 --target all과 함께 사용할 수 없습니다. Sync 옵션은 sync에만 적용하며 --file, --dir, --append, --raw 등 save/load 옵션은 지원하지 않습니다. 설치에 --raw는 필요하지 않습니다.' : 'Path overrides cannot be combined with --target all. Sync flags belong to sync only; save/load flags such as --file, --dir, --append, and --raw are rejected. Installation does not require --raw.'}</p>
+    <p>{ko ? '경로 지정 옵션은 --target all과 함께 사용할 수 없습니다. 대상·선택·경로·prune 옵션은 sync 전용이며 --file, --dir, --append, --raw 등 save/load 옵션은 지원하지 않습니다. 설치에 --raw는 필요하지 않습니다.' : 'Path overrides cannot be combined with --target all. Target/selector/path/prune flags are sync-only; save/load flags such as --file, --dir, --append, and --raw are rejected. Installation does not require --raw.'}</p>
 
     <h2>{ko ? '덮어쓰기와 삭제' : 'Replacement and pruning'}</h2>
     <p>{ko ? '미리보기는 미관리 항목을 replace-unmanaged로 구분합니다. 이 항목을 실제로 교체하려면 --force가 필요합니다. 내용과 권한이 같은 관리 항목은 unchanged로 표시하며 다시 쓰지 않습니다. --force는 전체 교체를 허용하므로 미리보기에서 대상과 로컬 작업물을 확인하세요.' : 'Preview labels unmanaged matches replace-unmanaged; apply requires --force to replace those items. Managed entries with identical content and permissions are unchanged and are not rewritten. Force authorizes complete replacement, so inspect the preview and local workspace first.'}</p>
@@ -52,6 +54,11 @@ const page = (ko: boolean) => (
       <li>{ko ? '원격 저장소에는 쓰지 않으며 ctx는 다루지 않습니다. 업로드에는 기존 save 명령을 사용합니다.' : 'Sync reads the remote store only and does not access ctx. Upload using existing save commands.'}</li>
       <li>{ko ? '다른 저장소에서 같은 이름 항목을 설치하면 이력의 소유 저장소가 바뀝니다. 빈 저장소도 성공하며 --prune을 주면 해당 저장소의 이전 설치를 정리할 수 있습니다.' : 'Installing a same-name item from another store transfers its tracking ownership. Empty stores succeed and can prune their previous installs when requested.'}</li>
     </ul>
+
+    <h2>{ko ? '항목 선택과 프로젝트 설치' : 'Selection and project installation'}</h2>
+    <p>{ko ? '선택 옵션이 없으면 전체를 설치합니다. 하나라도 지정하면 지정한 이름만 처리하고 선택하지 않은 리소스는 제외합니다. 중복 이름은 한 번만 처리하며 쉼표 목록이나 와일드카드는 지원하지 않습니다. 제외한 원격 내용은 검증·GitHub 다운로드를 하지 않고 제외한 리소스 해시와 설치 경로도 읽지 않습니다.' : 'Without selectors, install everything. Any selector limits processing to named entries and excludes resources without selectors. Deduplicate repeated names; comma lists and wildcards are unsupported. Unselected content is not validated/downloaded from GitHub, and excluded hashes/roots are not inspected.'}</p>
+    <CodeBlock language="bash" code={'npx ctxbin sync --target claude --skill workflow --skill reference --agent reviewer \\\n  --skills-dir .claude/skills --agents-dir .claude/agents --dry-run'} />
+    <p>{ko ? '없는 선택 이름은 NOT_FOUND로 실패하고 설치하지 않습니다. --prune을 주면 원격에서 사라진 이름을 정리 후보로 허용하며, 같은 저장소의 선택한 설치 이력만 삭제합니다. 미관리·다른 저장소·이미 정리한 항목은 유지하거나 아무 작업 없이 성공합니다. 선택하지 않은 이력도 유지합니다.' : 'Missing selected names fail with NOT_FOUND before installation. With --prune, absent names are cleanup candidates: remove only selected same-source tracking. Unmanaged, other-source, and already removed candidates are no-ops. Unselected tracking remains.'}</p>
 
     <h2>{ko ? '설치 위치' : 'Installation paths'}</h2>
     <table>
@@ -68,9 +75,10 @@ const page = (ko: boolean) => (
 
     <h2>{ko ? '저장 형식' : 'Stored formats'}</h2>
     <p>{ko ? '스킬 문자열, skillpack, skillref를 지원합니다. 번들에는 루트 SKILL.md가 필요하며 보조 파일과 실행 권한을 유지합니다. 키는 1~64자의 소문자·숫자와 단일 하이픈·밑줄 구분자를 사용합니다. 위험하거나 예약된 이름은 거부하며, 메타데이터 name은 키와 같아야 합니다.' : 'Skills support strings, skillpacks, and skillrefs. Bundles need root SKILL.md; supporting files and normalized executable permissions survive. Keys use 1–64 lowercase letters/digits with single hyphen/underscore separators. Unsafe/reserved names fail; supplied frontmatter names must match keys.'}</p>
-    <p>{ko ? '에이전트는 name과 description만 포함하는 공통 Markdown을 저장합니다. 설치 시 Claude Markdown과 Codex TOML로 변환합니다.' : 'Store shared agent Markdown with name and description only. Sync renders native Claude Markdown and Codex TOML.'}</p>
+    <p>{ko ? '원격 원본은 두 도구가 공유하는 Markdown과 YAML name/description입니다. 역할과 사용할 시점을 description에 적으세요. Sync는 Claude에는 YAML frontmatter가 있는 Markdown을, Codex에는 name·description·developer_instructions(본문)의 TOML을 생성합니다. Codex 룰을 수정해 업로드할 때도 공통 Markdown 원본을 사용합니다.' : 'The remote source is shared Markdown with YAML name/description for both clients. Describe the role and when to use it. Sync generates Claude Markdown with YAML frontmatter, or Codex TOML with name, description, and developer_instructions (the body). Upload the shared Markdown source when editing Codex rules.'}</p>
     <CodeBlock language="markdown" code={agent(ko)} />
     <CodeBlock language="bash" code="npx ctxbin agent save reviewer --file reviewer.md" />
+    <p>{ko ? '기본 agent load는 ctxbin의 savedAt/by 래퍼만 제거하고 작성한 YAML frontmatter는 유지합니다. 원본 데이터를 복구용으로 보관하려면 ' : 'Default agent load removes only the savedAt/by wrapper and keeps authored YAML frontmatter. For original-value recovery, use '}<span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     <p>{ko ? '원격 에이전트 설명이 없으면 유효한 기존 로컬 설명을 유지한 뒤 Agent rules for <name>.을 기본값으로 사용합니다. 원격 설명이 있으면 우선합니다. 스킬 설명 기본값은 Reusable instructions for <name>.입니다. 모델·도구 등 공급자별 에이전트 필드는 오류를 반환합니다.' : 'When a remote agent description is missing, a valid existing local description is preserved before falling back to Agent rules for <name>. Explicit remote descriptions take precedence. Skill descriptions default to Reusable instructions for <name>. Provider-specific agent model/tool fields return an error.'}</p>
     <p>{ko ? '기존 스킬 frontmatter는 다시 직렬화하지 않아 {{version}} 같은 템플릿과 줄바꿈을 유지합니다. 한 줄 일반 description의 따옴표 없는 콜론·공백만 제한적으로 보정하며, 그 외 잘못된 YAML은 오류로 보고합니다. 적용 전 모든 항목의 오류를 모아 표시합니다. 번들은 모든 플랫폼에서 정확한 대문자 SKILL.md 파일명이 필요합니다.' : 'Existing skill frontmatter is preserved without reserialization, retaining templates such as {{version}} and line endings. Only an unquoted colon-space in a single-line plain description is narrowly repaired; other malformed YAML fails. All item preflight errors are collected before apply. Bundles require exact SKILL.md casing on every platform.'}</p>
     <p>{ko ? '기존 skill load --dir은 같은 경로 파일을 복사하고 추가 파일은 유지합니다. Sync는 같은 이름 폴더 전체를 교체합니다. 원격 목록만 설치하므로 내장 ctxbin 대체 스킬은 자동으로 추가하지 않습니다. 이름 synced, anthropic-skills와 Windows 장치 이름 등은 사용할 수 없습니다.' : 'Existing skill load --dir copies matching files and keeps extra files. Sync replaces complete matching directories. It installs the remote list only, without automatically adding the bundled ctxbin fallback. Reserved names include synced, anthropic-skills, and Windows device names.'}</p>

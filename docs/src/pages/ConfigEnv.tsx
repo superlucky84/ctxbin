@@ -64,6 +64,7 @@ CTXBIN_STORE_TOKEN=your-token-here`}
         <li>Go to the database details page</li>
         <li>Copy the REST URL and REST Token</li>
       </ol>
+      <p>These credentials also apply to backup and restore, including restore preview. Current configuration selects the recovery target; a new store is supported. See <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

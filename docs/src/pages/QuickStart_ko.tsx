@@ -117,7 +117,7 @@ my-project/feature --value`}
       />
 
       <h2>4. 원격 스킬·에이전트 설치</h2>
-      <p>1단계의 자격 증명으로 저장한 스킬·에이전트 전체를 내려받습니다. 미리보기는 원격 자료를 내려받고 검증하며 설치 폴더를 변경하지 않습니다:</p>
+      <p>1단계 자격 증명으로 기본은 전체를 설치하며 --skill·--agent로 필요한 이름만 고를 수 있습니다. 미리보기는 원격 자료를 내려받고 검증하며 설치 폴더를 변경하지 않습니다:</p>
       <CodeBlock language="bash" code={`# 기존 명령으로 정의 저장
 npx ctxbin skill save my-skill --dir ./skills/my-skill
 npx ctxbin agent save reviewer --file reviewer.md
@@ -141,6 +141,8 @@ npx ctxbin sync --target codex --prune`} />
         <span onClick={() => navigateTo('/guide/key-inference')} class="text-indigo-600 hover:underline cursor-pointer">키 추론</span> 페이지를 참고하세요.
       </p>
       <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
+      <p>클라이언트 설치와 별개로 원본 저장값을 백업하고 복구를 미리 보려면 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
+      <CodeBlock language="bash" code={'npx ctxbin backup --file ./backups/ctxbin.json\nnpx ctxbin restore --file ./backups/ctxbin.json --dry-run'} />
     </div>
   );
 });

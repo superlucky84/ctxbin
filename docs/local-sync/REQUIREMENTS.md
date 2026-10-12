@@ -9,18 +9,23 @@ The root `DESIGN.md` and `IMPLEMENT.md` link here for this feature's contract.
 
 The user approved a remote-to-local sync and requested a new branch plus the
 locally installed `doc-driven-designer-v1` workflow. Branch:
-`feat/local-agent-skill-sync`. Existing save/load/list/delete behavior stays compatible.
+`feat/local-agent-skill-sync`. Selection follow-up: `feat/selective-sync-and-backup`,
+based on released `ctxbin@1.4.1` commit `182e181`. Existing save/load/list/delete
+behavior stays compatible.
+The same branch adds separate [remote backup/recovery](../backup-restore/REQUIREMENTS.md).
 
 ## Requirements
 
 - R1: `ctxbin sync --target claude|codex|all` installs every remote `skill` and
-  `agent`; the target is required. It never accesses or changes `ctx`.
+  `agent` by default; the target is required. Repeatable `--skill`/`--agent`
+  selectors install only the named entries. It never accesses or changes `ctx`.
 - R2: Same-name local skills are replaced as complete directories; obsolete
   files inside an installed skill disappear. Agents are replaced as complete files.
   Unmanaged collisions require `--force`; preview labels them `replace-unmanaged`.
   Identical managed entries are `unchanged` and are not rewritten.
 - R3: Local-only entries survive. `--prune` removes only entries previously
   installed by ctxbin from the same remote source and now absent remotely.
+  In selection mode, pruning is limited to the explicitly selected resource/names.
 - R4: `--dry-run` fetches and validates remote content, prints create/replace/
   replace-unmanaged/unchanged/delete
   actions, and changes no installation directories, manifests, or locks.
@@ -63,11 +68,29 @@ locally installed `doc-driven-designer-v1` workflow. Branch:
   link and `npx`, without an explicit Node invocation. Pack/publish rebuilds the
   bundle; TypeScript checking must not overwrite it. Release fixes use a new patch
   version when the broken version is already published.
+- R18: Each selector takes one exact remote key; repeat flags for multiple items.
+  Any selector enables selection mode: the resource without selectors is excluded.
+  Duplicate names are deduplicated. Validate names before configuration/network access.
+- R19: Excluded resources have no store reads or destination/manifest inspection.
+  In included resources, filter before validating content or downloading skillrefs;
+  malformed unselected entries do not block selection. Retain all unselected tracking.
+- R20: A selected remote name that is absent fails with `NOT_FOUND` before applying
+  any change, except with `--prune`: absent selected names are cleanup candidates.
+  Prune only same-source tracked candidates; unmanaged, other-source, or already
+  removed candidates are harmless no-ops.
+- R21: Selectors work with both targets, preview, force, and existing single-target
+  path overrides. Project directories are ordinary overrides, not a new scope flag.
+- R22: Help/README/bilingual pages clearly distinguish shared remote agent Markdown
+  with YAML name/description from installed Claude Markdown and Codex TOML. Recommend
+  explicit descriptions describing the role and when to use it; preserve frontmatter
+  separately from ctxbin's savedAt/by wrapper on save/load.
 
 ## Boundaries and operational limits
 
 No local-to-remote sync command, conflict merging, automatic background sync,
-project-scope selector, or provider-specific model/tool-setting translation.
+dedicated project-scope flag, wildcard selectors, selection profiles, or
+provider-specific model/tool-setting translation. Project installation is supported
+through existing destination overrides.
 Agent frontmatter for this first version supports `name` and `description` only;
 unsupported fields fail explicitly rather than disappearing during conversion.
 Legacy descriptions use `Reusable instructions for <name>.` for skills and
@@ -91,6 +114,10 @@ Installing into real user directories is a manual release check, not an automate
 - [x] DC5: Preserve legacy Markdown and valid local agent descriptions before defaults.
 - [x] DC6: Shared agents use minimal provider-neutral frontmatter; validate unsupported fields.
 - [x] DC7: Keep feature plans in `docs/local-sync/` and preserve the existing site.
+- [x] DC8: Repeat exact-key selectors; specifying one resource excludes the other.
+- [x] DC9: Missing selected names fail unless prune explicitly allows absent cleanup.
+  Cleanup remains idempotent and scoped to selected same-source tracking.
+- [x] DC10: Skip excluded resource roots/hashes and preserve unselected manifest items.
 
 ## Validation map
 
@@ -101,6 +128,9 @@ R4/R9–11 → snapshot, invalid input, locking, rollback, and mock-store checks
 R13 → built help/fallback matches source, option/example review, bilingual site build.
 R17 → POSIX bin-link regression, no-emit preservation, corrupt-artifact prepack
 repair, and isolated tarball execution through npx before publication.
+R18–21/DC8–10 → selection/duplicates/missing-name tests, excluded invalid content and
+paths, filtered prune/ownership preservation, rollback, and CLI mock-store checks.
+R22 → generated help/source comparison, metadata round trips, and bilingual site build.
 
 See [design](DESIGN.md), [implementation](IMPLEMENT.md), and
 [manual checks](MANUAL_TEST_CHECKLIST.md).

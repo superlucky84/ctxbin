@@ -12,7 +12,7 @@ export const KeyInference = mount(() => {
         infers the key from your git repository. This page explains exactly how the inference works.
       </p>
 
-      <p>Key inference applies to ctx only. Agent/skill save, load, and delete use explicit keys; sync takes no key and installs all remote definitions without requiring Git. Select its client with --target. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span>.</p>
+      <p>Key inference applies to ctx only. Agent/skill save, load, and delete use explicit keys; sync takes no positional key or Git requirement. Select its client with --target and exact remote names with --skill/--agent. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span>.</p>
 
       <h2>Key Format</h2>
       <CodeBlock
@@ -112,6 +112,7 @@ $ npx ctxbin ctx load my-project/main`}
         <li>The folder name or package.json name doesn't match your intended key</li>
         <li>You want to use a consistent key across different local clones</li>
       </ul>
+      <p>Backup/restore uses an explicit file path and the configured store, without a Git-derived key. See <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

@@ -62,7 +62,7 @@ HDEL skill fp-pack`}
       />
 
       <h2>로컬 설치 이력</h2>
-      <p>Sync는 HGETALL로 skill·agent 해시 전체를 읽습니다. Ctx에 접근하거나 별도 Redis 해시를 만들거나 원격에 쓰지 않습니다. 내려받은 정의로 도구에 맞는 로컬 형식을 생성합니다.</p>
+      <p>Sync는 선택한 리소스 해시를 HGETALL로 읽고 이름으로 필터한 뒤 검증·다운로드합니다. 제외한 리소스 해시는 읽지 않습니다. Ctx에 접근하거나 별도 Redis 해시를 만들거나 원격에 쓰지 않습니다. 내려받은 정의로 도구에 맞는 로컬 형식을 생성합니다.</p>
       <p>각 설치 폴더의 .ctxbin-sync.json에 항목 소유 저장소와 원격 주소의 해시를 기록합니다. --prune은 같은 저장소의 설치 이력에 있는 항목 중 원격에서 사라진 항목만 로컬에서 삭제합니다. 다른 저장소에서 같은 이름 항목을 설치하면 소유 저장소가 바뀌며, 다른 저장소 항목과 미관리 항목은 유지합니다. 이 파일은 ~/.ctxbin/config.json의 자격 증명과 별개입니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
 
       <h2>내부 저장소 인터페이스</h2>
@@ -80,7 +80,7 @@ HDEL skill fp-pack`}
       <ul>
         <li><strong>삭제는 항상 명시적</strong></li>
         <li>빈 값 저장은 <strong>데이터를 절대 삭제하지 않음</strong></li>
-        <li><code>delete</code>만이 저장된 콘텐츠를 제거하는 유일한 방법</li>
+        <li>명시적 delete로 원격 항목을 삭제하며, 복구 실패 시 롤백은 자신이 새로 만든 항목을 제거할 수 있음</li>
         <li>소프트 삭제 없음</li>
         <li>확인 프롬프트 없음 (에이전트 안전)</li>
       </ul>
@@ -96,6 +96,7 @@ HDEL skill fp-pack`}
         <li>권한 없음</li>
         <li>추론 없음</li>
       </ul>
+      <p>백업은 skill·agent 원본 값을 보관하고 복구는 백업 이름만 처리하며 충돌을 보호하고 다른 항목을 유지합니다. Ctx나 클라이언트 설치는 다루지 않습니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

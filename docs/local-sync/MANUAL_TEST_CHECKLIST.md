@@ -3,6 +3,17 @@
 Use a dedicated test store and disposable destination directories first.
 Automated tests do not install anything into the user's actual skill/agent folders.
 
+- [ ] Select two skills and one agent using repeated `--skill`/`--agent` flags,
+  preview, and install into project destination overrides. Pass: only selected names
+  appear in both preview and installed files; no global installation roots change.
+- [ ] Select only one resource while the other has malformed entries/unsafe paths.
+  Pass: the excluded hash/root is unused and does not block selected installation.
+- [ ] Remove selected and unselected tracked remote entries; selectively prune.
+  Pass: only selected same-source tracking is removed, other entries/tracking survive.
+  Repeat cleanup; pass: harmless no-op. Missing names without prune fail before writes.
+- [ ] Save shared Markdown with YAML name/description, sync both providers, and load
+  the remote agent again. Pass: frontmatter survives save/load; Claude receives Markdown,
+  Codex receives TOML with the same description and rules in developer_instructions.
 - [ ] After publication, run `npx --yes ctxbin@1.4.1 --version` and
   `npx --yes ctxbin@1.4.1 help` from a directory outside the checkout.
   Pass: version is `1.4.1` and help prints normally through the npm launcher.

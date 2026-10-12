@@ -12,7 +12,7 @@ export const KeyInferenceKo = mount(() => {
         키를 추론합니다. 이 페이지에서는 추론이 정확히 어떻게 작동하는지 설명합니다.
       </p>
 
-      <p>키 추론은 ctx에만 적용합니다. Agent·skill의 save, load, delete에는 명시적 키를 사용하고, sync는 키나 Git 없이 원격 정의 전체를 설치합니다. 대상 도구는 --target으로 선택합니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>를 참고하세요.</p>
+      <p>키 추론은 ctx에만 적용합니다. Agent·skill의 save, load, delete에는 명시적 키를 사용하고, sync는 위치 인자 키나 Git 없이 설치합니다. 대상은 --target, 원격 이름은 --skill·--agent로 선택합니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>를 참고하세요.</p>
 
       <h2>키 형식</h2>
       <CodeBlock
@@ -111,6 +111,7 @@ $ npx ctxbin ctx load my-project/main`}
         <li>폴더 이름이나 package.json 이름이 의도한 키와 다를 때</li>
         <li>여러 로컬 클론에서 일관된 키를 사용하고 싶을 때</li>
       </ul>
+      <p>백업·복구는 명시적 파일 경로와 현재 저장소 설정을 사용하며 Git 키 추론은 필요하지 않습니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

@@ -61,7 +61,7 @@ $ npx ctxbin skill save my-skill \\
       <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all
 npx ctxbin sync --target codex --skills-dir ~/.codex/skills`} />
-      <p>Sync는 원격 스킬·에이전트 전체를 설치합니다. 스킬 기본 경로는 ~/.claude/skills/&lt;name&gt;/SKILL.md 또는 ~/.agents/skills/&lt;name&gt;/SKILL.md입니다. 문자열·skillpack·skillref를 지원하며 번들에는 루트 SKILL.md가 필요합니다. 메타데이터 name은 원격 키와 같아야 합니다. 없는 name·description은 기본값으로 채우고 다른 스킬 메타데이터와 보조 파일은 유지합니다.</p>
+      <p>Sync는 기본으로 전체를 설치하며 --skill·--agent로 정확한 이름만 고를 수 있습니다. 스킬 기본 경로는 ~/.claude/skills/&lt;name&gt;/SKILL.md 또는 ~/.agents/skills/&lt;name&gt;/SKILL.md입니다. 문자열·skillpack·skillref를 지원하며 번들에는 루트 SKILL.md가 필요합니다. 메타데이터 name은 원격 키와 같아야 합니다. 없는 name·description은 기본값으로 채우고 다른 스킬 메타데이터와 보조 파일은 유지합니다.</p>
       <p>Load --dir의 파일 복사와 달리, sync는 같은 이름 스킬 폴더 전체를 교체해 내부의 오래된 파일을 제거합니다. 로컬에만 있는 항목은 유지하며 --prune은 같은 저장소의 설치 이력에 있는 항목 중 원격에서 사라진 항목만 삭제합니다. 업로드에는 기존 skill save --dir을 사용합니다. 이름 규칙·경로 지정·복구는 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
 
       <h2>Append</h2>
@@ -95,6 +95,7 @@ react-lib  --url`}
         code={`$ npx ctxbin help`}
       />
       <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
+      <p>--skill만 선택하면 에이전트는 제외하고 선택 prune에서도 나머지 이력을 유지합니다. Skillpack 원본 번들과 skillref 참조까지 복구하려면 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

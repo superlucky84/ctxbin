@@ -64,6 +64,7 @@ CTXBIN_STORE_TOKEN=your-token-here`}
         <li>데이터베이스 상세 페이지로 이동</li>
         <li>REST URL과 REST Token 복사</li>
       </ol>
+      <p>이 자격 증명은 복구 미리보기를 포함한 백업·복구에도 적용합니다. 현재 설정이 복구 대상을 정하므로 새 저장소로도 복구할 수 있습니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

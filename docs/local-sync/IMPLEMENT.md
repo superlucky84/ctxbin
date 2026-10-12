@@ -78,13 +78,14 @@
 - Done: requirements/design, sync engine, CLI, source-scoped prune, native rendering,
   rollback/recovery journal, complete help/site/add-on/testing documentation coverage,
   and automated validation.
-- Next: merge the `fix/npm-cli-release` patch and publish `1.4.1` using
-  [the release guide](../RELEASING.md). Native-client discovery, browser checks, and
-  Windows checks remain in the manual checklist. No real user folders were installed.
+- Next: review/merge the follow-up PR for `1.5.0` on `feat/selective-sync-and-backup`,
+  then follow `docs/RELEASING.md`. Version `1.4.1` is published and tagged. Native-client discovery,
+  browser checks, and Windows checks remain in the manual checklist.
 - Blockers: none.
 - Base commit SHA: `c6d6fc9d15c7d42a03b6162ea656f2fd650fddce`.
-  Latest reviewed parent commit: `b922cc3` (merged feature PR #2).
-  The feature commit is recorded in the `feat/local-agent-skill-sync` branch history.
+  Latest reviewed parent commit: `182e181fe4103ee3df74e9ec75eafda6170ac3ff` (`ctxbin@1.4.1`).
+  Original sync commits are recorded in `feat/local-agent-skill-sync`; selection
+  and backup/recovery commits are recorded in `feat/selective-sync-and-backup`.
 
 ## Validation record — 2026-10-12
 
@@ -231,3 +232,56 @@ node dist/cli.js sync --target all
   `pnpm --dir docs build --emptyOutDir` and `git diff --check`: passed.
 - Public registry still reports `latest: 1.4.0`; `1.4.1` is unpublished. No remote
   publication, native-client sync, store mutation, or npm cache deletion was performed.
+
+## Selective sync follow-up — 2026-10-12
+
+### Phase 11: Requirements and design
+
+- [x] Create `feat/selective-local-sync` from released `ctxbin@1.4.1`.
+- [x] Expand scope with backup/recovery and rename to `feat/selective-sync-and-backup`.
+- [x] Define repeatable exact-key selectors, excluded resources, and prune boundaries.
+- [x] Resolve missing-name behavior and common agent authoring documentation.
+- Exit: requirements/design/manual checks aligned, no open decisions.
+
+### Phase 12: Implementation and documentation
+
+- [x] Add CLI options and shared selector validation before configuration access.
+- [x] Filter fetches/roots/content and preserve unselected manifest ownership.
+- [x] Scope prune to selected names; permit absent cleanup with prune.
+- [x] Update help, README, and related English/Korean site pages.
+- Baseline: selector core tests, CLI round trip, generated help inspection.
+- Exit: selection is available without changing default whole-store behavior.
+
+### Phase 13: Test Hardening
+
+- [x] Cover duplicates, invalid/missing selectors, excluded invalid content/paths.
+- [x] Cover prune source boundaries, stale unselected ownership, no-write preview.
+- [x] Cover apply failure/rollback and unchanged selected entries.
+- Baseline: targeted sync tests and type check.
+- Exit: selection cannot delete or adopt unselected installations.
+
+### Phase 14: Integration Test and closeout
+
+- [x] Run complete CLI suite and build the bilingual documentation site.
+- [x] Verify npm package launcher/help through a disposable install.
+- [x] Review diff and record results, limitations, and the follow-up PR scope.
+- Baseline: full tests, type/site checks, package smoke check, diff review.
+- Exit: reviewable implementation and aligned documentation; publication is separate.
+
+### Selective sync and backup integration validation
+
+- Prepared the additive release as `1.5.0`; dependencies and the lockfile are unchanged.
+- `pnpm test`: 90 cases, 88 passed, 2 existing skips, 0 failures. Sync now has 41
+  tests, including repeated/deduplicated selectors, excluded hashes/paths/content,
+  missing names, scoped prune ownership, selected force collisions, rollback, and
+  project-directory CLI installation with shared agent metadata.
+- `pnpm exec tsc --noEmit` and `pnpm --dir docs build --emptyOutDir`: passed.
+- `npm pack` and `npm publish --dry-run`: passed with 11 expected files. An actual
+  isolated npx install of the final tarball printed `1.5.0` and byte-identical help.
+- Common remote Markdown agent frontmatter versus native Claude Markdown/Codex TOML
+  is documented in help, README, and both site languages. Save/load tests distinguish
+  ctxbin's savedAt/by wrapper from the retained YAML name/description frontmatter.
+- Backup/recovery validation is recorded in `docs/backup-restore/IMPLEMENT.md`.
+  Selection defaults remain full sync; selected prune preserves all unselected items.
+- No real store, native user installation, npm publication, release tag, or site
+  deployment was changed. Live native-client/Windows/browser checks remain manual.

@@ -11,3 +11,5 @@ export { safeChmod } from "./chmod";
 export { syncResources, syncSourceId } from "./sync";
 export type { SyncOptions, SyncAction } from "./sync";
 export { normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName } from "./install-format";
+export { backupResources, parseResourceBackup, readResourceBackup, restoreResources } from "./backup";
+export type { ResourceBackup, RestoreAction } from "./backup";
