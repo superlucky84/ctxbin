@@ -331,6 +331,9 @@ pnpm test
 
 For npm and documentation-site releases after merging, see the
 [release guide](docs/RELEASING.md).
+Documentation changes under `docs/**` on main automatically build/deploy the site,
+update the generated `gh-pages` snapshot, and remove obsolete published assets.
+Manual main deployments are available through `gh workflow run deploy-docs.yml --ref main`.
 
 ## License
 MIT

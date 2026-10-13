@@ -6,8 +6,10 @@ skill/agent backup/restore. It retains the CLI launcher protections shipped in
 again after merging. The private documentation app keeps its independent version.
 
 The npm package and GitHub Pages site are published separately. Merging into
-`main` does not publish either one automatically. Run the commands below from the
-repository root, and continue to the next step only when the previous one succeeds.
+`main` does not publish npm. Documentation changes under `docs/**` automatically
+build/deploy the site through `.github/workflows/deploy-docs.yml`; changes to that
+workflow also trigger deployment. Run release commands from the repository root,
+and continue to the next step only when the previous one succeeds.
 
 ## 1. Update main and validate
 
@@ -104,26 +106,51 @@ gh release create 'ctxbin@1.5.0' --verify-tag --title 'ctxbin@1.5.0' --generate-
 
 This records the release; creating a GitHub release does not publish to npm.
 
-## 5. Publish the documentation site
+## 5. Verify automatic documentation deployment
 
-As verified on 2026-10-12, GitHub Pages publishes the root of the `gh-pages`
-branch. Vite uses `/ctxbin/` as its base path. From the repository root, publish
-the `docs/dist` generated in step 1:
+On main, changes to `docs/**` or `.github/workflows/deploy-docs.yml` run
+`Deploy documentation`. The workflow installs frozen docs dependencies, builds
+with Node 22/pnpm 10.13.1 and `--emptyOutDir`, replaces generated `gh-pages` files
+while retaining branch history, and deploys that same dist as a Pages artifact.
+Vite keeps `/ctxbin/` as its base path. Deployments serialize; feature branches
+and pull requests do not deploy.
+
+```sh
+gh run list --workflow deploy-docs.yml --branch main --limit 5
+gh api repos/superlucky84/ctxbin/pages --jq '{status, html_url, build_type, source}'
+```
+
+For a manual rebuild/retry of the current main site:
+
+```sh
+gh workflow run deploy-docs.yml --ref main
+gh run list --workflow deploy-docs.yml --branch main --limit 5
+gh run watch <RUN_ID> --exit-status
+```
+
+Pages is configured with `build_type: workflow`, and the `github-pages`
+environment allows main. No extra PAT is required. `gh-pages` remains the generated
+snapshot branch, but an Actions-token push alone does not trigger a legacy Pages
+build; the official deploy action handles live publication. After this migration,
+manually pushing files to `gh-pages` alone does not update the live site.
+
+The one-time 1.5.0 migration initially published built files using:
 
 ```sh
 pnpm dlx gh-pages@6.3.0 --dist docs/dist --branch gh-pages --nojekyll --message "docs: publish ctxbin v1.5.0"
-gh api repos/superlucky84/ctxbin/pages --jq '{status, html_url, source}'
 ```
 
-The publisher commits and pushes the generated site to `origin/gh-pages`,
-replacing its previous published files. It keeps branch history and does not
-switch the local working branch. The `.nojekyll` marker serves Vite's output
-without Jekyll processing. GitHub Pages deployment can take a few minutes.
+Workflow failures appear in Actions. A deployment failure after branch publication
+can leave a newer snapshot than the live site; retry the workflow and verify its
+deployment result. See [deployment design](site-deployment/DESIGN.md) and
+[manual checks](site-deployment/MANUAL_TEST_CHECKLIST.md).
 
 After deployment, check the English and Korean sync guides in the browser:
 
 - https://superlucky84.github.io/ctxbin/#/commands/sync
 - https://superlucky84.github.io/ctxbin/#/ko/commands/sync
+- https://superlucky84.github.io/ctxbin/#/commands/backup-restore
+- https://superlucky84.github.io/ctxbin/#/ko/commands/backup-restore
 
 ## Local Volta troubleshooting
 
