@@ -7,6 +7,12 @@ Skill/agent installation sync is specified in the canonical feature documents:
 [implementation](docs/local-sync/IMPLEMENT.md), and
 [manual checks](docs/local-sync/MANUAL_TEST_CHECKLIST.md).
 
+Remote skill/agent backup and recovery is specified separately:
+[requirements](docs/backup-restore/REQUIREMENTS.md),
+[design](docs/backup-restore/DESIGN.md),
+[implementation](docs/backup-restore/IMPLEMENT.md), and
+[manual checks](docs/backup-restore/MANUAL_TEST_CHECKLIST.md).
+
 ## What This Is
 
 `ctxbin` is a **minimal, deterministic Node.js CLI tool** executed via `npx`, designed for **AI coding agents** to store, load, append, and delete **markdown-based context, agent roles, and skills (single-file, directory bundles, or GitHub references)** using a **simple key–value store backed by Upstash Redis**.

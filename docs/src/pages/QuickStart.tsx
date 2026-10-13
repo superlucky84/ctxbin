@@ -117,7 +117,7 @@ my-project/feature --value`}
       />
 
       <h2>4. Install Remote Skills and Agents</h2>
-      <p>Use the credentials from step 1 to download all stored skills and agents. Preview downloads and validates the remote content without changing installation directories:</p>
+      <p>Use step 1 credentials to install all definitions by default, or select exact keys with --skill/--agent. Preview downloads and validates the remote content without changing installation directories:</p>
       <CodeBlock language="bash" code={`# Save reusable definitions with existing commands
 npx ctxbin skill save my-skill --dir ./skills/my-skill
 npx ctxbin agent save reviewer --file reviewer.md
@@ -141,6 +141,8 @@ npx ctxbin sync --target codex --prune`} />
         details on how project names are determined and when to use explicit keys.
       </p>
       <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
+      <p>Back up original stored values separately from client installation, then preview recovery with <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
+      <CodeBlock language="bash" code={'npx ctxbin backup --file ./backups/ctxbin.json\nnpx ctxbin restore --file ./backups/ctxbin.json --dry-run'} />
     </div>
   );
 });

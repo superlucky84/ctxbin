@@ -62,7 +62,7 @@ HDEL skill fp-pack`}
       />
 
       <h2>Local Installation State</h2>
-      <p>Sync reads the complete skill and agent hashes with HGETALL. It does not access ctx, create another Redis hash, or write to the remote store. Native local formats are generated from the downloaded definitions.</p>
+      <p>Sync reads included hashes with HGETALL and filters selected names before validation/downloads; excluded resource hashes are unused. It does not access ctx, create another Redis hash, or write to the remote store. Native local formats are generated from the downloaded definitions.</p>
       <p>Each destination stores .ctxbin-sync.json with item ownership and a digest of the source URL. --prune deletes only local installs tracked to the same source and absent remotely. Installing a same-name item from another store transfers ownership; other-store and unmanaged items remain. This manifest is separate from ~/.ctxbin/config.json credentials. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span>.</p>
 
       <h2>Internal Store Interface</h2>
@@ -80,7 +80,7 @@ HDEL skill fp-pack`}
       <ul>
         <li><strong>Deletion is always explicit</strong></li>
         <li>Saving an empty value <strong>never deletes data</strong></li>
-        <li><code>delete</code> is the only way to remove stored content</li>
+        <li>Explicit delete removes remote entries; failed restore rollback may undo its own newly created entries</li>
         <li>No soft-delete</li>
         <li>No confirmation prompts (agent-safe)</li>
       </ul>
@@ -96,6 +96,7 @@ HDEL skill fp-pack`}
         <li>No permissions</li>
         <li>No inference</li>
       </ul>
+      <p>Backup exports raw skill/agent values; restore merges backed-up names, guards conflicts, and preserves unrelated entries. It does not include ctx or create native installations. See <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

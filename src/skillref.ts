@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { createWriteStream } from "node:fs";
+import { pipeline } from "node:stream/promises";
 import { SKILLREF_HEADER, MAX_SKILLREF_DOWNLOAD_BYTES, MAX_SKILLREF_EXTRACT_BYTES, MAX_SKILLREF_FILES, SKILLREF_CONNECT_TIMEOUT_MS, SKILLREF_DOWNLOAD_TIMEOUT_MS } from "./constants";
 import { fail, CtxbinError } from "./errors";
 import { normalizeGithubUrl, normalizeSkillPath, validateCommitSha, assertSafeTarPath } from "./validators";
@@ -115,55 +116,46 @@ async function downloadArchive(repoUrl: string, ref: string, outPath: string): P
   }
 
   const fileStream = createWriteStream(outPath);
+  const closed = new Promise<void>(resolve => fileStream.once("close", resolve));
   let total = 0;
   let magic = Buffer.alloc(0);
 
   try {
-    for await (const chunk of res.body as AsyncIterable<Buffer>) {
-      if (magic.length < 2) {
-        const needed = 2 - magic.length;
-        magic = Buffer.concat([magic, chunk.subarray(0, needed)]);
-        if (magic.length === 2) {
-          if (magic[0] !== 0x1f || magic[1] !== 0x8b) {
-            fileStream.close();
-            controller.abort();
+    await pipeline(res.body as AsyncIterable<Buffer>, async function* (chunks) {
+      for await (const chunk of chunks) {
+        if (magic.length < 2) {
+          const needed = 2 - magic.length;
+          magic = Buffer.concat([magic, chunk.subarray(0, needed)]);
+          if (magic.length === 2 && (magic[0] !== 0x1f || magic[1] !== 0x8b)) {
             return fail("IO", "downloaded file is not gzip data");
           }
         }
-      }
 
-      total += chunk.length;
-      if (total > MAX_SKILLREF_DOWNLOAD_BYTES) {
-        fileStream.close();
-        controller.abort();
-        return fail(
-          "SIZE_LIMIT",
-          `downloaded archive size ${total} exceeds ${MAX_SKILLREF_DOWNLOAD_BYTES} bytes`
-        );
-      }
+        total += chunk.length;
+        if (total > MAX_SKILLREF_DOWNLOAD_BYTES) {
+          return fail(
+            "SIZE_LIMIT",
+            `downloaded archive size ${total} exceeds ${MAX_SKILLREF_DOWNLOAD_BYTES} bytes`
+          );
+        }
 
-      fileStream.write(chunk);
-    }
+        yield chunk;
+      }
+    }, fileStream, { signal: controller.signal });
+    if (magic.length < 2) return fail("IO", "downloaded file is incomplete");
   } catch (err) {
-    fileStream.close();
-    clearTimeout(totalTimer);
+    controller.abort();
     if (err instanceof CtxbinError) {
       throw err;
     }
     return fail("NETWORK", `download failed: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
     clearTimeout(totalTimer);
+    // Pipeline can reject before a pending file open completes. Wait for close
+    // before the caller removes the temporary directory, including on failure.
+    fileStream.destroy();
+    await closed;
   }
-
-  if (magic.length < 2) {
-    fileStream.close();
-    return fail("IO", "downloaded file is incomplete");
-  }
-
-  await new Promise<void>((resolve, reject) => {
-    fileStream.end(() => resolve());
-    fileStream.on("error", reject);
-  });
 }
 
 async function fetchWithRedirect(

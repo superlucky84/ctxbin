@@ -100,7 +100,7 @@ $ npx ctxbin ctx load`}
 
       <div class="mb-12">
         <h2>로컬에 스킬과 에이전트 설치</h2>
-        <p>원격 스킬·에이전트 전체를 Claude Code, Codex 또는 두 도구에 내려받습니다. 같은 이름의 로컬 항목을 교체하기 전에 변경 내용을 확인하세요:</p>
+        <p>기본은 원격 스킬·에이전트 전체이며 --skill·--agent를 반복해 필요한 항목만 설치할 수 있습니다. 같은 이름의 로컬 항목을 교체하기 전에 변경 내용을 확인하세요:</p>
         <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all`} />
         <p>같은 이름 스킬은 폴더 전체를 교체합니다. 로컬에만 있는 항목은 유지하며, --prune은 같은 저장소에서 설치한 항목 중 원격에서 사라진 항목만 삭제합니다. 설치 위치·경로 지정·에이전트 형식은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
@@ -176,6 +176,7 @@ npx ctxbin sync --target all`} />
         </p>
       </div>
       <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
+      <p>원본 스킬·에이전트 데이터를 로컬 복구 파일에 보관하려면 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

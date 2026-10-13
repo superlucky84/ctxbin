@@ -37,6 +37,7 @@ const menuData: MenuSection[] = [
       { text: { en: 'agent Commands', ko: 'agent 명령어' }, link: '/commands/agent' },
       { text: { en: 'skill Commands', ko: 'skill 명령어' }, link: '/commands/skill' },
       { text: { en: 'sync Command', ko: 'sync 명령어' }, link: '/commands/sync' },
+      { text: { en: 'Backup / Restore', ko: '백업 / 복구' }, link: '/commands/backup-restore' },
     ],
   },
   {

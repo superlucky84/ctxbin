@@ -73,6 +73,7 @@ EOF`}
         The config file contains sensitive credentials.
         Ensure proper file permissions (<code>chmod 600 ~/.ctxbin/config.json</code>).
       </p>
+      <p>Backup files contain a source URL digest and no configured URL/token. Restore uses the current config, including a new target store. See <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

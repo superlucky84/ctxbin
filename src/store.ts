@@ -51,8 +51,11 @@ export function createStore(url: string, token: string): Store {
       return fail("NETWORK", "store response was not valid JSON");
     }
 
-    if (data.error) {
+    if (data?.error) {
       return fail("NETWORK", data.error);
+    }
+    if (!data || typeof data !== "object" || !Object.hasOwn(data, "result")) {
+      return fail("NETWORK", "store response was missing result");
     }
 
     return data.result as T;
@@ -71,7 +74,6 @@ export function createStore(url: string, token: string): Store {
     },
     async list(hash) {
       const result = await command<unknown>("HGETALL", hash);
-      if (!result) return [];
       if (!Array.isArray(result)) {
         return fail("NETWORK", "store response for HGETALL was not an array");
       }

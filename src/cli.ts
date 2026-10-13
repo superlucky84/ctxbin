@@ -13,7 +13,8 @@ import { loadSkillrefToDir } from "./skillref";
 import { detectSkillValueType } from "./value";
 import { resolveSaveInput } from "./input";
 import { injectMetadata, stripMetadata, extractMetadata, formatMetadataBlock } from "./metadata";
-import { syncResources, syncSourceId, SyncOptions } from "./sync";
+import { resolveSyncSelection, syncResources, syncSourceId, SyncOptions } from "./sync";
+import { backupResources, readResourceBackup, resolveBackupFile, restoreResources } from "./backup";
 
 type CliOptions = {
   append: boolean;
@@ -52,6 +53,8 @@ async function main(): Promise<void> {
         force: { type: "boolean" },
         "skills-dir": { type: "string" },
         "agents-dir": { type: "string" },
+        skill: { type: "string", multiple: true },
+        agent: { type: "string", multiple: true },
       },
       allowPositionals: true,
     }));
@@ -68,7 +71,28 @@ async function main(): Promise<void> {
     return fail("INVALID_INPUT", "missing resource");
   }
 
-  const syncFlags = ["target", "dry-run", "prune", "force", "skills-dir", "agents-dir"];
+  const syncFlags = ["target", "dry-run", "prune", "force", "skills-dir", "agents-dir", "skill", "agent"];
+  if (resource === "backup" || resource === "restore") {
+    if (command || keyArg || extra.length) return fail("INVALID_INPUT", `${resource} does not accept positional arguments`);
+    const allowed = resource === "backup" ? ["file", "force"] : ["file", "force", "dry-run"];
+    const unexpected = Object.keys(values).filter(flag => !allowed.includes(flag));
+    if (unexpected.length) return fail("INVALID_INPUT", `${resource} does not accept --${unexpected[0]}`);
+    const file = resolveBackupFile(values.file as string);
+    const backup = resource === "restore" ? await readResourceBackup(file) : undefined;
+    const config = await loadConfig();
+    const store = createStore(config.url, config.token);
+    if (resource === "backup") {
+      const result = await backupResources(store, { file, sourceId: syncSourceId(config.url), force: Boolean(values.force) });
+      process.stdout.write(`backup\t${JSON.stringify(result.path)}\t${result.skills}\t${result.agents}\n`);
+      emitOk("backup", "saved", result.path);
+    } else {
+      const actions = await restoreResources(store, backup!, { dryRun: Boolean(values["dry-run"]), force: Boolean(values.force) });
+      for (const action of actions) {
+        process.stdout.write(`${values["dry-run"] ? "dry-run\t" : ""}${action.action}\t${action.resource}\t${JSON.stringify(action.name)}\n`);
+      }
+    }
+    return;
+  }
   if (resource === "sync") {
     if (command || keyArg || extra.length) return fail("INVALID_INPUT", "sync does not accept positional arguments");
     const unexpected = Object.keys(values).filter(flag => !syncFlags.includes(flag));
@@ -79,6 +103,11 @@ async function main(): Promise<void> {
     if (values.target === "all" && (values["skills-dir"] !== undefined || values["agents-dir"] !== undefined)) {
       return fail("INVALID_INPUT", "directory overrides require a single --target");
     }
+    const selection = {
+      skills: values.skill as string[] | undefined,
+      agents: values.agent as string[] | undefined,
+    };
+    resolveSyncSelection(selection);
     const config = await loadConfig();
     const actions = await syncResources(createStore(config.url, config.token), {
       target: values.target as SyncOptions["target"],
@@ -88,6 +117,7 @@ async function main(): Promise<void> {
       force: Boolean(values.force),
       skillsDir: values["skills-dir"] as string | undefined,
       agentsDir: values["agents-dir"] as string | undefined,
+      ...selection,
     });
     for (const action of actions) {
       const prefix = values["dry-run"] ? "dry-run\t" : "";

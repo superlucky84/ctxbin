@@ -16,6 +16,8 @@ export interface SyncOptions {
   home?: string;
   skillsDir?: string;
   agentsDir?: string;
+  skills?: string[];
+  agents?: string[];
   dryRun?: boolean;
   prune?: boolean;
   force?: boolean;
@@ -34,6 +36,20 @@ export function syncSourceId(storeUrl: string): string {
   return createHash("sha256").update(storeUrl.replace(/\/+$/, "")).digest("hex");
 }
 
+export function resolveSyncSelection(opts: Pick<SyncOptions, "skills" | "agents">): Record<SyncAction["resource"], Set<string> | undefined> {
+  const selective = opts.skills !== undefined || opts.agents !== undefined;
+  const names = (values: string[] | undefined, flag: string): Set<string> | undefined => {
+    if (!selective) return undefined;
+    if (values === undefined) return new Set();
+    if (!Array.isArray(values) || values.length === 0 || values.some(name => typeof name !== "string")) {
+      fail("INVALID_INPUT", `${flag} requires a non-empty list of names`);
+    }
+    for (const name of values) validateInstallName(name);
+    return new Set(values);
+  };
+  return { skill: names(opts.skills, "--skill"), agent: names(opts.agents, "--agent") };
+}
+
 export async function syncResources(store: Store, opts: SyncOptions): Promise<SyncAction[]> {
   if (!["claude", "codex", "all"].includes(opts.target)) {
     fail("INVALID_INPUT", "sync requires --target claude, codex, or all");
@@ -43,11 +59,13 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
     fail("INVALID_INPUT", "directory overrides require a single --target");
   }
   if (opts.skillsDir === "" || opts.agentsDir === "") fail("INVALID_PATH", "destination directories must not be empty");
+  const selection = resolveSyncSelection(opts);
   const home = opts.home ?? os.homedir();
   const targets: SyncTarget[] = opts.target === "all" ? ["claude", "codex"] : [opts.target];
   const roots: SyncRoot[] = [];
   for (const target of targets) {
     for (const resource of ["skill", "agent"] as const) {
+      if (selection[resource]?.size === 0) continue;
       const configured = resource === "skill"
         ? opts.skillsDir ?? path.join(home, target === "claude" ? ".claude" : ".agents", "skills")
         : opts.agentsDir ?? path.join(home, `.${target}`, "agents");
@@ -67,9 +85,23 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
     }
   }
 
-  const [skills, agents] = await Promise.all([store.list("skill"), store.list("agent")]);
+  const [skillSnapshot, agentSnapshot] = await Promise.all([
+    selection.skill?.size === 0 ? [] : store.list("skill"),
+    selection.agent?.size === 0 ? [] : store.list("agent"),
+  ]);
+  const skills = skillSnapshot.filter(({ field }) => !selection.skill || selection.skill.has(field));
+  const agents = agentSnapshot.filter(({ field }) => !selection.agent || selection.agent.has(field));
   const failures: Array<{ label: string; error: unknown }> = [];
-  for (const entries of [skills, agents]) {
+  const missing: Array<{ resource: "skill" | "agent"; name: string }> = [];
+  const prunable = { skill: new Set<string>(), agent: new Set<string>() };
+  for (const [resource, entries] of [["skill", skills], ["agent", agents]] as const) {
+    const requested = selection[resource];
+    if (requested) {
+      const available = new Set(entries.map(({ field }) => field));
+      for (const name of requested) {
+        if (!available.has(name)) missing.push({ resource, name });
+      }
+    }
     const names = new Set<string>();
     for (let index = entries.length - 1; index >= 0; index--) {
       const { field } = entries[index];
@@ -78,7 +110,7 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
         if (names.has(field)) fail("INVALID_INPUT", `duplicate remote name: ${field}`);
         names.add(field);
       } catch (error) {
-        failures.push({ label: `${entries === skills ? "skill" : "agent"}:${JSON.stringify(field)}`, error });
+        failures.push({ label: `${resource}:${JSON.stringify(field)}`, error });
         entries.splice(index, 1);
       }
     }
@@ -113,6 +145,7 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
         root.items = { ...previous.items };
         const entries = root.resource === "skill" ? skills : agents;
         const remoteNames = new Set(entries.map(entry => entry.field));
+        const selectedNames = selection[root.resource];
         for (const { field, value } of entries) {
           if (root.resource === "skill" && !stagedSkills.has(field)) continue;
           try {
@@ -140,7 +173,9 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
         }
         if (opts.prune) {
           for (const name of Object.keys(previous.items).sort()) {
+            if (selectedNames && !selectedNames.has(name)) continue;
             if (previous.items[name] !== opts.sourceId || remoteNames.has(name)) continue;
+            prunable[root.resource].add(name);
             try {
               const dest = itemPath(root, name);
               const exists = await assertDestination(root, dest);
@@ -153,6 +188,12 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
           }
         }
       } catch (error) { failures.push({ label: `${root.target}:${root.resource}`, error }); }
+    }
+    for (const { resource, name } of missing) {
+      if (opts.prune && prunable[resource].has(name)) continue;
+      failures.push({ label: `${resource}:${JSON.stringify(name)}`, error: new CtxbinError("NOT_FOUND",
+        `no remote ${resource} named ${JSON.stringify(name)}` +
+        (opts.prune ? "; no same-source installation tracking in the selected targets" : "")) });
     }
     failures.sort((a, b) => a.label.localeCompare(b.label));
     if (failures.length === 1) throw failures[0].error;

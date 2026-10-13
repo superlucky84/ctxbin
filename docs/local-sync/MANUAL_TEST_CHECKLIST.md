@@ -3,9 +3,21 @@
 Use a dedicated test store and disposable destination directories first.
 Automated tests do not install anything into the user's actual skill/agent folders.
 
-- [ ] After publication, run `npx --yes ctxbin@1.4.1 --version` and
-  `npx --yes ctxbin@1.4.1 help` from a directory outside the checkout.
-  Pass: version is `1.4.1` and help prints normally through the npm launcher.
+- [ ] Select two skills and one agent using repeated `--skill`/`--agent` flags,
+  preview, and install into project destination overrides. Pass: only selected names
+  appear in both preview and installed files; no global installation roots change.
+- [ ] Select only one resource while the other has malformed entries/unsafe paths.
+  Pass: the excluded hash/root is unused and does not block selected installation.
+- [ ] Remove selected and unselected tracked remote entries; selectively prune.
+  Pass: only selected same-source tracking is removed, other entries/tracking survive.
+  Repeat cleanup or supply a typo; pass: NOT_FOUND before writes once tracking is gone.
+  Absent names tracked in one selected target are valid cleanup candidates.
+- [ ] Save shared Markdown with YAML name/description, sync both providers, and load
+  the remote agent again. Pass: frontmatter survives save/load; Claude receives Markdown,
+  Codex receives TOML with the same description and rules in developer_instructions.
+- [ ] After publication, run `npx --yes ctxbin@1.5.0 --version` and
+  `npx --yes ctxbin@1.5.0 help` from a directory outside the checkout.
+  Pass: version is `1.5.0` and help prints normally through the npm launcher.
   The `1.4.0` release had a shebang-less TypeScript output; invoking the file with
   `node` alone does not verify the installed launcher.
 - [x] Run built `ctxbin help` and the bundled fallback; inspect discovery metadata,

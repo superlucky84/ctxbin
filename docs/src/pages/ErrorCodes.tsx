@@ -102,6 +102,7 @@ $ npx ctxbin ctx load 2>&1 | grep -oP 'CTXBIN_ERR \\K[A-Z_]+'
 # Check for specific error
 $ npx ctxbin ctx load 2>&1 | grep -q "CTXBIN_ERR NOT_FOUND" && echo "not found"`}
       />
+      <p>Missing sync selectors return NOT_FOUND unless prune finds same-source tracking in a selected target. Invalid backup/checksum, existing files without force, and empty/source-change replacement guards return INVALID_INPUT. File faults return IO; incomplete restore rollback retains the original apply code, including NETWORK, with one CTXBIN_ERR prefix. Preview still requires remote access. See <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

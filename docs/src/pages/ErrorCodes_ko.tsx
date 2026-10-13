@@ -102,6 +102,7 @@ $ npx ctxbin ctx load 2>&1 | grep -oP 'CTXBIN_ERR \\K[A-Z_]+'
 # 특정 에러 확인
 $ npx ctxbin ctx load 2>&1 | grep -q "CTXBIN_ERR NOT_FOUND" && echo "not found"`}
       />
+      <p>없는 선택 이름은 선택 대상의 같은 저장소 설치 이력이 prune 후보로 확인되지 않으면 NOT_FOUND입니다. 잘못된 백업·체크섬, force 없는 파일 교체, 빈 결과·다른 저장소 백업 교체 거부는 INVALID_INPUT입니다. 파일 오류는 IO이며 미완료 복구 롤백은 최초 오류 코드(NETWORK 포함)를 유지하고 CTXBIN_ERR 접두어를 한 번만 출력합니다. 미리보기에도 원격 접근이 필요합니다. 자세한 내용은 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

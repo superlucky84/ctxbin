@@ -61,7 +61,7 @@ $ npx ctxbin skill save my-skill \\
       <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all
 npx ctxbin sync --target codex --skills-dir ~/.codex/skills`} />
-      <p>Sync installs all remote skills and agents. Skills go to ~/.claude/skills/&lt;name&gt;/SKILL.md or ~/.agents/skills/&lt;name&gt;/SKILL.md by default. String, skillpack, and skillref values work; bundles need root SKILL.md and supplied names must match remote keys. Missing name/description fields receive deterministic defaults while other skill metadata and supporting files survive.</p>
+      <p>Sync installs all remote skills/agents by default; --skill/--agent selects exact names. Skills go to ~/.claude/skills/&lt;name&gt;/SKILL.md or ~/.agents/skills/&lt;name&gt;/SKILL.md by default. String, skillpack, and skillref values work; bundles need root SKILL.md and supplied names must match remote keys. Missing name/description fields receive deterministic defaults while other skill metadata and supporting files survive.</p>
       <p>Unlike the file-copy behavior of load --dir, sync replaces matching skill folders entirely, removing stale files inside them. Local-only entries remain; --prune removes only this store's tracked installs absent remotely. Existing skill save --dir handles uploads. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for naming rules, overrides, and recovery.</p>
 
       <h2>Append</h2>
@@ -95,6 +95,7 @@ react-lib  --url`}
         code={`$ npx ctxbin help`}
       />
       <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
+      <p>Selecting only --skill skips agents; selective --prune keeps unselected tracking. For original-value recovery, including stored skillpacks and skillref pointers, see <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

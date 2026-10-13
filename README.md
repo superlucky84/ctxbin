@@ -49,6 +49,8 @@ See the [sync command guide](https://superlucky84.github.io/ctxbin/#/commands/sy
 - `skillref`: GitHub directory reference (default branch or pinned commit)
 - `list` command with type mapping (`--value`, `--dir`, `--url`)
 - Remote-to-local skill/agent installation for Claude Code and Codex (`sync`)
+- Select individual remote skills/agents with repeatable `--skill` / `--agent` flags
+- Original-value skill/agent backup and remote recovery (`backup` / `restore`)
 
 ## Companion Project: ctxloc
 - `ctxbin` is the remote-storage-oriented CLI.
@@ -156,7 +158,8 @@ npx ctxbin skill save fp-pack \
 
 ### Install remote skills and agents locally
 
-`sync` downloads all stored skills and agents. Choose a target explicitly:
+`sync` installs all stored skills and agents by default. Use repeatable selectors
+for individual entries. Choose a target explicitly:
 It uses the existing store credentials, including for preview; no Git repository
 or key argument is required.
 
@@ -173,11 +176,28 @@ npx ctxbin sync --target codex --prune
 | `--dry-run` | Download, validate, and preview without destination changes |
 | `--prune` | Delete this store's tracked installs that are now absent remotely |
 | `--force` | Allow replacement of matching local items not tracked by ctxbin |
+| `--skill <name>` | Select one exact skill key; repeat for more |
+| `--agent <name>` | Select one exact agent key; repeat for more |
 | `--skills-dir <path>` | Override skill root for one target |
 | `--agents-dir <path>` | Override agent root for one target |
 
-Sync flags belong to sync only; save/load input flags are rejected. Path overrides
+Target/selector/path/prune flags belong to sync only; save/load input flags are rejected. Path overrides
 require a single target. `--raw` is not needed for installation.
+
+Any selector enables selection mode: omitted resources are excluded, duplicate
+names are deduplicated, and unselected content is not validated/downloaded from
+GitHub. Excluded resource hashes and installation roots are unused. Combine
+selection with project paths, for example:
+
+```bash
+npx ctxbin sync --target claude --skill workflow --skill reference --agent reviewer \
+  --skills-dir .claude/skills --agents-dir .claude/agents --dry-run
+```
+
+Missing selected names return `NOT_FOUND` before changes. With `--prune`, an absent
+name needs same-source installation tracking in at least one selected target.
+Unknown/already pruned names fail; unmanaged/other-store installations remain untouched. Unselected tracking
+survives for future full-store pruning.
 
 Matching skill directories are replaced completely, including removal of stale
 files inside them. Identical managed items are reported `unchanged` without rewriting.
@@ -206,8 +226,11 @@ root `SKILL.md`; supporting files and normalized executable permissions are kept
 Portable remote keys use 1–64 lowercase letters/digits with single `-` or `_`
 separators. Unsafe/reserved names fail. A supplied frontmatter `name` must match the key.
 
-Shared agent Markdown accepts only `name` and `description` frontmatter, followed
-by the rules. Sync generates native Claude Markdown or Codex TOML from it:
+Author one shared agent Markdown source with YAML `name` and `description`
+frontmatter, followed by the rules. Describe the role and when an AI should use it.
+Sync generates Claude Markdown with YAML frontmatter, or Codex TOML whose
+`developer_instructions` contains the Markdown body. Save the shared Markdown
+source when updating Codex rules; TOML is the generated installation format:
 
 ```markdown
 ---
@@ -228,6 +251,8 @@ description containing unquoted colon-space is quoted locally when that alone fi
 the YAML. Other malformed documents fail. All item preflight errors are collected.
 Provider-specific agent model/tool settings are not translated; unsupported
 shared agent frontmatter fails with an error.
+Default `agent load` removes only ctxbin's savedAt/by wrapper; the authored YAML
+frontmatter remains. That wrapper and the agent's name/description are separate.
 
 Sync stages and validates every item before replacement, locks each destination,
 and rolls back entries/manifests on ordinary apply failures. Tracking is stored in
@@ -251,6 +276,45 @@ to the remote sync list.
 
 See [feature design](docs/local-sync/DESIGN.md) and
 [release checks](docs/local-sync/MANUAL_TEST_CHECKLIST.md).
+
+## Remote skill/agent backup and recovery
+
+Backup preserves ctxbin data for recovery and does not install client definitions.
+It exports every skill/agent key and original value into one JSON file; ctx and
+store credentials are excluded. Skillpacks include stored bundles/assets. Skillrefs
+retain stored references only, without downloading external repository files.
+
+```bash
+npx ctxbin backup --file ./backups/ctxbin.json
+npx ctxbin restore --file ./backups/ctxbin.json --dry-run
+npx ctxbin restore --file ./backups/ctxbin.json
+```
+
+The backup has a versioned schema, timestamp, source URL digest, and payload
+checksum. Original metadata/frontmatter and legacy values are kept exactly.
+Existing backup files require `backup --force` to replace; a complete file is
+published with private permissions after capture succeeds.
+Even force cannot replace a valid other-store backup or empty a previously populated
+skill/agent resource; retain those snapshots under a new filename. On drives without
+hard-link support, the error explains how to use explicit force/staged rename or
+choose another directory. Leading UTF-8 BOMs are accepted; ordering is locale-independent.
+
+Restore validates the file before remote access, then creates missing keys and
+skips identical values. Conflicting existing values require `restore --force`;
+preview reports replacements without writing. Remote names absent from the file
+remain. Recovery targets the currently configured store, including a new store.
+No fresh savedAt/by metadata is injected. No target, selection, or prune flags apply.
+
+Restore rechecks changed keys and attempts rollback on ordinary failures. Incomplete
+rollback is reported; the backup remains available.
+The original apply error code is retained. After the first NETWORK rollback failure,
+remaining attempted keys are reported without waiting for a timeout for each key.
+Capture/recovery is not atomic
+against concurrent edits, process interruption, or network outages. Avoid editing
+the store during recovery and inspect its state before retrying after an error.
+
+See [backup design](docs/backup-restore/DESIGN.md) and
+[recovery checks](docs/backup-restore/MANUAL_TEST_CHECKLIST.md).
 
 ## Built-in guidance
 Print the bundled ctxbin usage guide:

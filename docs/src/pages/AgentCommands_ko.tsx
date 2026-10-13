@@ -29,7 +29,7 @@ $ npx ctxbin agent save frontend-reviewer --file agent.md`}
       />
 
       <h2>공통 에이전트 규칙 설치</h2>
-      <p>도구에 공통으로 사용할 Markdown을 저장한 뒤 원격 에이전트·스킬 전체를 Claude Code와 Codex에 설치합니다. 에이전트 메타데이터는 name·description만 지원하며 name은 원격 키와 같아야 합니다.</p>
+      <p>도구에 공통으로 사용할 Markdown을 저장한 뒤 기본은 전체이며 --agent·--skill로 필요한 이름만 Claude Code와 Codex에 설치합니다. 에이전트 메타데이터는 name·description만 지원하며 name은 원격 키와 같아야 합니다.</p>
       <CodeBlock language="markdown" code={`---
 name: reviewer
 description: 코드 변경의 정확성과 누락된 테스트를 검토합니다.
@@ -73,6 +73,7 @@ Field           : {agent-name}
 Value           : 마크다운 문자열`}
       />
       <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
+      <p>두 도구의 원본은 YAML name/description이 있는 공통 Markdown입니다. 역할과 사용 시점을 설명하고 기본 agent load에서도 frontmatter를 유지합니다. Sync는 Claude Markdown 또는 본문이 developer_instructions인 Codex TOML로 변환합니다. 원본 값 복구는 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

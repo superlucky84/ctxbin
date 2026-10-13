@@ -2,7 +2,8 @@
 
 ## Sandbox/Network Policy (Important)
 All `ctx`, `agent`, and `skill` `save`, `load`, `list`, and `delete` commands require outbound HTTPS to the remote Upstash store.
-`sync` also requires remote-store access; skillrefs additionally download from GitHub.
+`sync`, `backup`, and `restore` also require remote-store access, including previews.
+Sync downloads selected skillrefs from GitHub; backup/restore preserve their stored references.
 Do not run those commands first in a restricted sandbox, network-disabled runner, or any environment that is likely to block outbound HTTPS.
 `help` is local-only; the remote store is not involved.
 
@@ -52,7 +53,9 @@ or Codex when the user requests it.
 | `ctx save/load/list/delete` | Store and retrieve branch context |
 | `agent save/load/list/delete` | Manage remote agent Markdown |
 | `skill save/load/list/delete` | Manage remote Markdown, directory bundles, and GitHub references |
-| `sync --target claude\|codex\|all` | Install every remote skill and agent into the selected local clients |
+| `sync --target claude\|codex\|all` | Install all or explicitly selected remote skills/agents locally |
+| `backup --file <path>` | Export all remote skills/agents as original stored values |
+| `restore --file <path>` | Recover backed-up values into the configured remote store |
 | `help` | Print this bundled guide without remote access |
 | `init` | Configure remote-store credentials interactively |
 
@@ -99,6 +102,8 @@ npx ctxbin ctx load
 
 Default load hides metadata and prints only body text.
 Use `--meta` to include metadata in output.
+This savedAt/by wrapper is separate from YAML frontmatter: default agent load
+preserves the agent's name/description frontmatter. Backup/restore preserve both.
 
 ```bash
 # Save with actor id
@@ -162,6 +167,8 @@ npx ctxbin ctx delete my-project/main
 
 ## agent Save/Load
 `agent` requires a key and stores string values only.
+For agents intended for sync, author shared Markdown with YAML name/description
+as shown under Shared rule format. Describe the role and when an AI should use it.
 
 ```bash
 npx ctxbin agent save reviewer --value "# Agent role"
@@ -197,15 +204,35 @@ npx ctxbin sync --target codex --skills-dir ~/.codex/skills
 | `--dry-run` | Download, validate, and preview without destination changes |
 | `--prune` | Remove tracked installs from this store that are now absent remotely |
 | `--force` | Allow whole-item replacement of unmanaged matching local entries |
+| `--skill <name>` | Select one exact skill key; repeat for more skills |
+| `--agent <name>` | Select one exact agent key; repeat for more agents |
 | `--skills-dir <path>` | Override the skills root for a single target |
 | `--agents-dir <path>` | Override the agents root for a single target |
 
-These flags apply only to `sync`. Directory overrides cannot be used with
+Target/selector/path/prune flags apply only to `sync`. Backup/restore define their
+own --force/--dry-run behavior below. Directory overrides cannot be used with
 `--target all`. Save/load flags such as `--file`, `--dir`, `--raw`, and `--append`
 are not accepted by sync. Sync never uploads or accesses `ctx`.
 Preview labels unmanaged collisions `replace-unmanaged`; apply requires `--force`
 for them. Identical managed entries are `unchanged` without rewrites. Quoted leading
 `~` paths expand to the user home.
+
+Without selectors, install all remote skills/agents. Any --skill/--agent enables
+selection mode: only named entries are installed, and an omitted resource is excluded.
+Names are exact keys, not comma-separated lists or wildcards; duplicates are deduplicated.
+Unselected content is not validated or fetched from GitHub, and excluded resource
+hashes/installation roots are unused. Selection retains unselected installation tracking.
+
+```bash
+# Project-specific installation of two skills and one agent
+npx ctxbin sync --target claude --skill workflow --skill reference --agent reviewer \
+  --skills-dir .claude/skills --agents-dir .claude/agents --dry-run
+```
+
+Missing selected names return NOT_FOUND before changes, except with --prune:
+an absent name needs this store's installation tracking in a selected target.
+Selective prune touches only named items; unknown/already pruned names fail, and
+unmanaged/other-store installations remain untouched.
 
 ### Shared rule format
 
@@ -221,9 +248,12 @@ description: Review code changes for correctness and missing tests.
 Inspect changed code and report actionable findings.
 ```
 
-Shared agents accept only `name` and `description` frontmatter. Provider-specific
-model/tool fields cause an error rather than being silently dropped. Names must match
-remote keys; sync renders Claude Markdown or Codex TOML.
+The remote source is one shared Markdown document with YAML frontmatter for both clients.
+Shared agents accept only `name` and `description`; name must match the remote key.
+Sync generates Claude Markdown with YAML frontmatter or Codex TOML with name,
+description, and developer_instructions (the Markdown body). Upload the shared
+Markdown source when editing Codex rules; native Codex TOML is an installation format.
+Provider-specific model/tool frontmatter fields cause an error.
 Missing remote agent descriptions first preserve valid local native descriptions.
 Fallback descriptions are `Agent rules for <name>.` for agents and
 `Reusable instructions for <name>.` for skills; supply a description to improve discovery.
@@ -237,7 +267,7 @@ Existing `skill load <key> --dir <path>` copies matching files and leaves extra 
 alone. Sync replaces complete matching skill directories, so removed remote files
 inside those directories also disappear locally; agents are replaced as complete files.
 Upload local changes with existing
-`skill save --dir` / `agent save --file` commands.
+`skill save --dir` / `agent save --file` commands, using shared Markdown for agents.
 
 ### Tracking and recovery
 
@@ -271,6 +301,47 @@ Malformed metadata/options return `INVALID_INPUT`; unsafe names/destinations ret
 `INVALID_PATH`; store/GitHub failures return `NETWORK`. Errors go to stderr and exit 1;
 action output appears only after successful validation/apply. Preview has the same
 validation and network error behavior.
+
+## Back up and restore remote skills/agents
+
+Backup is for recovering ctxbin data, separate from installing client definitions.
+It always exports all skill/agent entries and does not include ctx or credentials.
+
+```bash
+npx ctxbin backup --file ./backups/ctxbin.json
+# Preview recovery into the currently configured store
+npx ctxbin restore --file ./backups/ctxbin.json --dry-run
+npx ctxbin restore --file ./backups/ctxbin.json
+```
+
+- Backup accepts --file and optional --force. Existing files require force to replace;
+  new files have private permissions and are published only after complete capture.
+  Force cannot replace a valid other-store backup or empty a previously populated
+  resource; choose a new filename. Unsupported hard links report an error; explicit
+  force uses staged rename after checking the destination.
+- The JSON file includes format/version, creation time, a source URL digest, raw
+  resource entries, and a checksum. Values retain original metadata/frontmatter.
+  Skillpacks include stored bundles/assets; skillrefs include pointers only, without
+  downloading GitHub files. Native installation name/format checks do not apply.
+  A leading UTF-8 BOM is accepted; new entry ordering is independent of locale.
+- Restore accepts --file, --dry-run, and --force. Schema/checksum validation precedes
+  remote access. It creates missing names, skips identical values, and preserves
+  remote names outside the backup. Different existing values require --force; preview
+  reports replacements without writing. Backup source identity does not restrict recovery
+  into a different configured store. Restore never injects fresh savedAt/by metadata.
+- Restore rechecks changed keys and attempts rollback on ordinary apply failures.
+  Incomplete rollback is reported explicitly; the backup remains available for retry.
+  The original error code is retained. Rollback stops after its first NETWORK failure
+  and reports all unresolved keys, avoiding a separate timeout for each remaining key.
+  Process interruption, network outage, and concurrent writes are not transaction-atomic.
+  Avoid editing the store during capture/recovery; cross-hash reads are not one snapshot.
+- These commands use no target, selectors, prune, or native installation directories.
+  Backup file output is backup/path/skill-count/agent-count; restore output is
+  create|replace|unchanged/resource/name, tab-separated, with JSON-quoted paths/names.
+  Preview prefixes restore actions with dry-run. Errors use existing CTXBIN_ERR codes.
+
+Use a new filename for each retained backup. If you intentionally replace a backup
+file or conflicting remote values, repeat the relevant command with --force.
 
 ## skill Save/Load
 `skill` requires a key.

@@ -110,6 +110,7 @@ npx ctxbin sync --target all`} />
         <li>Isolated extraction and validation before copying into the destination</li>
       </ul>
       <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
+      <p>Original-value backup preserves only the stored reference, without downloading or snapshotting the external GitHub repository. See <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });
