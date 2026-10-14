@@ -4,6 +4,8 @@ import typescript from 'highlight.js/lib/languages/typescript';
 import javascript from 'highlight.js/lib/languages/javascript';
 import bash from 'highlight.js/lib/languages/bash';
 import json from 'highlight.js/lib/languages/json';
+import markdown from 'highlight.js/lib/languages/markdown';
+import xml from 'highlight.js/lib/languages/xml';
 
 // Register languages
 hljs.registerLanguage('typescript', typescript);
@@ -11,6 +13,8 @@ hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('js', javascript);
 hljs.registerLanguage('bash', bash);
 hljs.registerLanguage('json', json);
+hljs.registerLanguage('xml', xml);
+hljs.registerLanguage('markdown', markdown);
 hljs.registerLanguage('text', () => ({ contains: [] }));
 
 interface CodeBlockProps {
@@ -26,6 +30,8 @@ export const CodeBlock = lmount<CodeBlockProps>(() => {
 
     const lang =
       codeRef.value.className.match(/language-(\w+)/)?.[1] || 'bash';
+
+    if (!hljs.getLanguage(lang)) return;
 
     // Bash는 별도 처리
     if (lang === 'bash') {
