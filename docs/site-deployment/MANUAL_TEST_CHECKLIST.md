@@ -2,7 +2,7 @@
 
 - [x] Push documentation changes to main. Pass: workflow runs, builds, commits
   current dist to gh-pages, and publishes the matching Pages artifact.
-- [ ] Check English/Korean sync and backup/restore routes. Pass: updated text is
+- [x] Check English/Korean sync and backup/restore routes. Pass: updated text is
   visible and CSS/JS/image requests succeed under `/ctxbin/`.
 - [x] Load and navigate English/Korean agent and sync pages in a real browser.
   Pass: Markdown examples highlight, no console errors/page exceptions occur, and
@@ -19,10 +19,13 @@
 
 Run [38335310903](https://github.com/superlucky84/ctxbin/actions/runs/38335310903)
 passed all deployment steps. Exact generated-branch/artifact hashes and live HTML,
-JS, CSS, and image bytes matched. English/Korean browser interactions and deliberate
-negative/retry cases remain unchecked. See IMPLEMENT.md for commits and configuration.
+JS, CSS, and image bytes matched. This initial run left browser interactions for the
+subsequent rendering regression checks below. Deliberate operational negative/retry
+cases remain unchecked. See IMPLEMENT.md for commits and configuration.
 
 2026-10-14: the Markdown crash was reproduced on the published site. Fixed production
 browser checks passed all 32 routes, agent/sync hash navigation, unknown-language
-escaping, Markdown/XML highlighting, and Bash prompt preservation. Live verification
-after automatic deployment is the final integration gate for this fix.
+escaping, Markdown/XML highlighting, and Bash prompt preservation. After deployment
+[38506764083](https://github.com/superlucky84/ctxbin/actions/runs/38506764083), all 32
+published routes were directly loaded in Chrome and agent/sync hash navigation passed
+with no console errors or page exceptions. The fix's integration gate is complete.

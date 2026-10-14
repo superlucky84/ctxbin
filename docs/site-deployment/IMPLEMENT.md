@@ -28,11 +28,12 @@
 ## Handoff
 
 - Done: 1.5.0 annotated tag/English release, initial site publication, main auto
-  deployment, exact branch/artifact comparison, and live asset verification.
-- Next: ordinary main documentation changes deploy automatically. Manual UI traversal
-  and negative-case/retry checks remain in the manual checklist.
+  deployment, exact branch/artifact comparison, live asset verification, and the
+  Markdown renderer fix with live browser checks across all 32 routes.
+- Next: ordinary main documentation changes deploy automatically. Operational
+  negative-case/retry checks remain in the manual checklist.
 - Blockers: none.
-- Latest verified deployment source: `807f71ed4706f22582c7ade2e7020a43c28d79a6`.
+- Latest verified deployment source: `2a185414d1c572722eaa5aa7674d7fdbcc8a1e0b`.
 - Automation PR #5 merged. The verification closeout commit is recorded on main.
 
 ## Initial validation
@@ -72,10 +73,11 @@
 - [x] Implementation: add grammars and a missing-language guard in CodeBlock.
 - [x] Test Hardening: reproduce the reported browser crash, verify affected routes,
   registered-language coverage, and unsupported-language plain-text fallback.
-- [ ] Integration Test: build, publish through the existing Action, and verify live routes.
-- Done: renderer fix, build/type checking, published-error reproduction, and local
-  production browser validation. Next: merge/deploy and verify live rendering.
-- Working branch: `fix/docs-markdown-highlighting`. Blockers: none.
+- [x] Integration Test: build, publish through the existing Action, and verify live routes.
+- Done: renderer fix, build/type checking, published-error reproduction, local
+  production browser validation, merge, automatic deployment, and live browser checks.
+- PR #6 merged; verification closeout is recorded on main. Next: routine documentation
+  maintenance through automatic deployment. Blockers: none.
 
 ### Browser validation
 
@@ -87,3 +89,9 @@
   preservation/escaping, Markdown heading and embedded-XML highlighting, and unchanged
   Bash prompt styling. Browser tooling/fixtures are in disposable `/tmp` directories;
   no application dependency or npm release changed.
+- [PR #6](https://github.com/superlucky84/ctxbin/pull/6) merged as
+  `2a185414d1c572722eaa5aa7674d7fdbcc8a1e0b`.
+- [Automatic deployment 38506764083](https://github.com/superlucky84/ctxbin/actions/runs/38506764083)
+  succeeded. Headless Chrome then directly loaded all 32 published routes and
+  navigated among English/Korean agent and sync pages with zero console errors or
+  page exceptions. Markdown examples retained their source text on the affected pages.
