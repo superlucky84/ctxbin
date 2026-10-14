@@ -21,6 +21,15 @@ the branch still records the new snapshot while the live site may retain its old
 deployment; inspect the run and retry. Branch and live-site publication are not one
 atomic transaction. No workflow triggers on gh-pages, so publication cannot recurse.
 
+## Code block runtime
+
+`CodeBlock.tsx` imports the highlight.js core and explicitly registers its grammars.
+Markdown examples need the Markdown grammar and XML for embedded HTML. Check
+`getLanguage` before highlighting; unsupported labels leave the rendered text intact.
+Keep the Bash prompt treatment and existing code-block styling. Building TypeScript
+alone does not detect missing runtime language registration; verify page loading,
+navigation, console errors, and highlighted text in the production browser bundle.
+
 ## References
 
 - [GitHub Pages source configuration](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)

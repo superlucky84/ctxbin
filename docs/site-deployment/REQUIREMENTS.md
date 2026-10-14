@@ -16,6 +16,9 @@ Branch: `ci/auto-deploy-docs`, based on `aca0afe` (`ctxbin@1.5.0`).
   deployment failures must remain visible in Actions.
 - P6: Document manual retry, source configuration, permissions, and verification.
   npm publication and remote ctxbin data are outside this workflow.
+- P7: Code blocks on published routes must not crash page rendering. Register the
+  Markdown grammar and its XML dependency; unsupported languages retain plain text.
+  Validate runtime rendering in a browser, including English/Korean agent and sync pages.
 
 ## Decisions
 
@@ -25,6 +28,8 @@ Branch: `ci/auto-deploy-docs`, based on `aca0afe` (`ctxbin@1.5.0`).
 - [x] PD3: Trigger on `docs/**` and workflow edits; manual runs also require main.
 - [x] PD4: Use a serialized job with contents/pages/id-token write permissions for
   branch publication and official deployment, with no additional token secret.
+- [x] PD5: Register used grammars explicitly; keep unknown-language content as the
+  already escaped DOM text rather than calling highlight with an unknown grammar.
 
 Validation: local frozen install/build, YAML/workflow validation, remote file-list
 comparison, actual main workflow run, and published HTML/asset checks.

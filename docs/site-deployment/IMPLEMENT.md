@@ -64,3 +64,26 @@
   match the deployed artifact byte-for-byte. Browser interactions remain manual.
 - This docs-only closeout on main also exercises the ordinary documentation path
   trigger. Check its subsequent run in Actions; site source/assets are unchanged.
+
+## Markdown rendering fix — 2026-10-14
+
+- Reviewed parent: `ac22e4c80b4dafd50b01fd57d55e62efbbe3a697`.
+- [x] Requirements/design: register Markdown/XML and preserve unknown-language text.
+- [x] Implementation: add grammars and a missing-language guard in CodeBlock.
+- [x] Test Hardening: reproduce the reported browser crash, verify affected routes,
+  registered-language coverage, and unsupported-language plain-text fallback.
+- [ ] Integration Test: build, publish through the existing Action, and verify live routes.
+- Done: renderer fix, build/type checking, published-error reproduction, and local
+  production browser validation. Next: merge/deploy and verify live rendering.
+- Working branch: `fix/docs-markdown-highlighting`. Blockers: none.
+
+### Browser validation
+
+- Reproduced `Unknown language: "markdown"` on the published agent page in headless Chrome.
+- `pnpm --dir docs build --emptyOutDir` passed, including TypeScript checking (51 modules).
+- The fixed production bundle passed all 32 routes plus hash navigation among English/
+  Korean agent and sync pages, with no console errors or page exceptions.
+- A fixture using the actual CodeBlock component passed unsupported-language text
+  preservation/escaping, Markdown heading and embedded-XML highlighting, and unchanged
+  Bash prompt styling. Browser tooling/fixtures are in disposable `/tmp` directories;
+  no application dependency or npm release changed.
