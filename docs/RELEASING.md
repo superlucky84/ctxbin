@@ -7,10 +7,28 @@ selective installation, backup/restore (`1.5.0`), and the CLI launcher protectio
 again after merging. The private documentation app keeps its independent version.
 
 The npm package and GitHub Pages site are published separately. Merging into
-`main` does not publish npm. Documentation changes under `docs/**` automatically
-build/deploy the site through `.github/workflows/deploy-docs.yml`; changes to that
-workflow also trigger deployment. Run release commands from the repository root,
-and continue to the next step only when the previous one succeeds.
+`main` does not publish npm: pushing a `ctxbin@<version>` tag that points at a
+`main` commit runs `.github/workflows/publish.yml`, which publishes that version with
+npm trusted publishing (OIDC, no npm token). Documentation changes under `docs/**`
+automatically build/deploy the site through `.github/workflows/deploy-docs.yml`;
+changes to that workflow also trigger deployment. Run release commands from the
+repository root, and continue to the next step only when the previous one succeeds.
+
+## One-time npm trusted publisher setup
+
+Before the first tag-driven release, an npm account that owns `ctxbin` opens
+<https://www.npmjs.com/package/ctxbin/access> and adds a trusted publisher:
+
+- Publisher: GitHub Actions
+- Organization or user: `superlucky84`
+- Repository: `ctxbin`
+- Workflow filename: `publish.yml`
+- Environment: leave empty
+
+Trusted publishing requires npm 11.5.1 or later in the workflow (it upgrades npm
+when needed) and a `repository.url` matching this GitHub repository. After the first
+successful tag release, the package's publishing access can be restricted to trusted
+publishers so that local tokens can no longer publish.
 
 ## 1. Update main and validate
 
@@ -43,65 +61,60 @@ Review the remaining native-client, browser, and platform checks in
 [the sync checklist](local-sync/MANUAL_TEST_CHECKLIST.md). Automated sync tests use
 disposable destinations; they do not confirm discovery by the installed clients.
 
-## 2. Authenticate and preview the npm package
+## 2. Rehearse the release workflow (optional)
+
+Run the publish workflow by hand on `main`. It performs every release check and
+`npm publish --dry-run` without uploading:
 
 ```sh
-npm whoami --registry=https://registry.npmjs.org/
+gh workflow run publish.yml --ref main
+gh run list --workflow publish.yml --limit 5
+gh run watch <RUN_ID> --exit-status
 ```
 
-If authentication is missing or expired, log in with an account that can publish
-`ctxbin`, then repeat `npm whoami`:
+The workflow checks that the commit is on `main`, installs frozen dependencies with
+pnpm 10.13.1, runs `pnpm test` and `tsc --noEmit`, packs the tarball, and runs it
+through `npx` to confirm that `--version` prints the package version and that `help`
+is byte-identical to `dist/skills/ctxbin/SKILL.md`. The dry-run log should identify
+`ctxbin@1.6.0` and list `dist/cli.js`, `dist/index.js`, `dist/skills/ctxbin/SKILL.md`,
+`dist/agent-addon.md`, the source skill/add-on, README, LICENSE, and package.json.
+Do not use `--ignore-scripts` with pack/publish: it skips the required rebuild.
+
+## 3. Tag, publish, and verify npm
+
+Tag the validated `main` commit with the package version and push the tag:
 
 ```sh
-npm login --registry=https://registry.npmjs.org/
+git tag -a 'ctxbin@1.6.0' -m "Release ctxbin v1.6.0"
+git push origin 'ctxbin@1.6.0'
+gh run list --workflow publish.yml --limit 5
+gh run watch <RUN_ID> --exit-status
 ```
 
-Preview the package without uploading it:
+The workflow fails without publishing if the tag is not on `main` or does not match
+`ctxbin@<package.json version>`. A tag that fails before publishing can be deleted,
+fixed on `main`, and pushed again. After the run succeeds:
 
 ```sh
-npm publish --dry-run --access public --tag latest --registry=https://registry.npmjs.org/
-```
-
-Check that the preview identifies `ctxbin@1.6.0` and includes `dist/cli.js`,
-`dist/index.js`, `dist/skills/ctxbin/SKILL.md`, `dist/agent-addon.md`, the source
-skill/add-on, README, LICENSE, and package.json. The generated skill metadata
-must also say `version: 1.6.0`.
-
-Verify the installed launcher before publishing, using the exact local tarball.
-`node dist/cli.js` alone cannot detect a missing shebang:
-
-```sh
-CTXBIN_RELEASE_CHECK_DIR=$(mktemp -d)
-npm pack --pack-destination "$CTXBIN_RELEASE_CHECK_DIR"
-npx --yes --registry=https://registry.npmjs.org/ --package="$CTXBIN_RELEASE_CHECK_DIR/ctxbin-1.6.0.tgz" ctxbin --version
-npx --yes --registry=https://registry.npmjs.org/ --package="$CTXBIN_RELEASE_CHECK_DIR/ctxbin-1.6.0.tgz" ctxbin help
-```
-
-The version should print `1.6.0`, and help should print without shell errors.
-This installs only a temporary package for verification. Do not use
-`--ignore-scripts` with pack/publish: it skips the required rebuild.
-
-## 3. Publish and verify npm
-
-```sh
-npm publish --access public --tag latest --registry=https://registry.npmjs.org/
 npm view ctxbin@1.6.0 version --registry=https://registry.npmjs.org/
 npm view ctxbin dist-tags --json --registry=https://registry.npmjs.org/
 npx --yes --registry=https://registry.npmjs.org/ ctxbin@1.6.0 --version
 npx --yes --registry=https://registry.npmjs.org/ ctxbin@1.6.0 help
 ```
 
-Follow any authentication prompts from npm. Both version checks should report
-`1.6.0`, and `latest` should point to `1.6.0`. A published name/version cannot be
-reused; if a problem is found after publishing, fix it in a new patch release.
+Both version checks should report `1.6.0`, and `latest` should point to `1.6.0`.
+A published name/version cannot be reused; if a problem is found after publishing,
+fix it in a new patch release.
+
+If the workflow cannot be used (for example, before the trusted publisher is
+configured), publish manually from the tagged commit after `npm whoami` succeeds:
+`npm publish --access public --tag latest --registry=https://registry.npmjs.org/`.
 
 ## 4. Record the release in GitHub
 
-After npm publication succeeds, tag the same `main` commit that was built:
+After npm publication succeeds, create the GitHub release from the pushed tag:
 
 ```sh
-git tag -a 'ctxbin@1.6.0' -m "Release ctxbin v1.6.0"
-git push origin 'ctxbin@1.6.0'
 gh release create 'ctxbin@1.6.0' --verify-tag --title 'ctxbin@1.6.0' --generate-notes
 ```
 
@@ -170,5 +183,6 @@ pnpm --version
 ## References
 
 - [npm publish](https://docs.npmjs.com/cli/v11/commands/npm-publish/)
+- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers)
 - [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 - [gh-pages publisher](https://github.com/tschaub/gh-pages)

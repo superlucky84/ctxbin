@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/superlucky84/ctxbin.git"
+    "url": "git+https://github.com/superlucky84/ctxbin.git"
   },
   "bugs": {
     "url": "https://github.com/superlucky84/ctxbin/issues"
