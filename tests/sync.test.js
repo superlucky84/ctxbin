@@ -37,7 +37,8 @@ function memoryStore(skills = {}, agents = {}) {
 }
 
 async function fixture(t) {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-sync-test-"));
+  // Canonical home: macOS tmpdir is a symlink (/var -> /private/var) and sync reports resolved paths.
+  const home = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-sync-test-")));
   t.after(() => fs.rm(home, { recursive: true, force: true }));
   return { home, target: "all", sourceId };
 }
