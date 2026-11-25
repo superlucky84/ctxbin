@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fail } from "./errors";
 import { copyDirContents } from "./fs-ops";
-import { validateInstallName, SyncTarget } from "./install-format";
+import { isSyncTarget, validateInstallName, SyncTarget } from "./install-format";
 
 const MANIFEST = ".ctxbin-sync.json";
 const LOCK = ".ctxbin-sync.lock";
@@ -90,6 +90,10 @@ export async function readManifest(root: SyncRoot): Promise<{ raw: string; items
   let parsed: any;
   try { parsed = JSON.parse(raw); }
   catch { return fail("INVALID_INPUT", `invalid JSON sync manifest: ${file}`); }
+  if (parsed?.version === 1 && parsed.resource === root.resource && parsed.target !== root.target && isSyncTarget(parsed.target)) {
+    // Shared roots (e.g. a project's .agents/skills for Codex and Antigravity) keep one owner.
+    fail("INVALID_INPUT", `sync destination is tracked for target ${parsed.target}; use --target ${parsed.target} for ${root.dir}`);
+  }
   if (parsed?.version !== 1 || parsed.target !== root.target || parsed.resource !== root.resource ||
     !parsed.items || typeof parsed.items !== "object" || Array.isArray(parsed.items)) {
     fail("INVALID_INPUT", `invalid sync manifest schema: ${file}`);

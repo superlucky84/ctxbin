@@ -53,6 +53,19 @@ Automated tests do not install anything into the user's actual skill/agent folde
   Pass: leftover lock/transaction is reported; inspect backup contents before removing
   locks or recovery data and retrying. No crash-atomicity guarantee is claimed.
 
+### Antigravity target (1.6.0)
+
+- [ ] Preview and apply `--target antigravity` with a test store into approved real
+  `~/.gemini/config` folders, then open the Antigravity App or CLI.
+  Pass: skills appear in the skill list; agents appear in `/agents` (CLI) or the agent
+  picker, can be invoked as subagents, and instructions match the remote rules.
+- [ ] Install into a project with `--skills-dir .agents/skills --agents-dir .agents/agents`.
+  Pass: Antigravity discovers the workspace items and prefers them over global ones.
+- [ ] Run `--target all --dry-run` and read the output.
+  Pass: actions list `claude`, `codex`, and `antigravity` for every selected item.
+- [ ] After publication, run `npx --yes ctxbin@1.6.0 --version` and `help` outside the checkout.
+  Pass: version is `1.6.0`; help lists the Antigravity target, paths, and `all` change.
+
 ## Execution record
 
 Review regression checks: preserve template-valued frontmatter without warnings;

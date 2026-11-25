@@ -7,8 +7,10 @@ import { CtxbinError, fail, formatError } from "./errors";
 import { extractSkillpackToDir } from "./skillpack";
 import { loadSkillrefToDir } from "./skillref";
 import { detectSkillValueType } from "./value";
-import { localAgentDescription, normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName, SyncTarget } from "./install-format";
+import { isSyncTarget, localAgentDescription, normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName, SYNC_TARGETS, SyncTarget } from "./install-format";
 import { applySyncPlans, assertDestination, canonicalDirectory, isSkillLink, readManifest, sameContents, warnSync, SyncRoot } from "./sync-files";
+
+export const SYNC_TARGET_ERROR = "sync requires --target claude, codex, antigravity, or all";
 
 export interface SyncOptions {
   target: SyncTarget | "all";
@@ -51,8 +53,8 @@ export function resolveSyncSelection(opts: Pick<SyncOptions, "skills" | "agents"
 }
 
 export async function syncResources(store: Store, opts: SyncOptions): Promise<SyncAction[]> {
-  if (!["claude", "codex", "all"].includes(opts.target)) {
-    fail("INVALID_INPUT", "sync requires --target claude, codex, or all");
+  if (opts.target !== "all" && !isSyncTarget(opts.target)) {
+    fail("INVALID_INPUT", SYNC_TARGET_ERROR);
   }
   if (!/^[a-f0-9]{64}$/.test(opts.sourceId)) fail("INVALID_INPUT", "invalid sync source identity");
   if (opts.target === "all" && (opts.skillsDir !== undefined || opts.agentsDir !== undefined)) {
@@ -61,14 +63,16 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
   if (opts.skillsDir === "" || opts.agentsDir === "") fail("INVALID_PATH", "destination directories must not be empty");
   const selection = resolveSyncSelection(opts);
   const home = opts.home ?? os.homedir();
-  const targets: SyncTarget[] = opts.target === "all" ? ["claude", "codex"] : [opts.target];
+  // "all" means every supported client, in layout-table order (claude, codex, antigravity).
+  const targets = opts.target === "all" ? Object.keys(SYNC_TARGETS) as SyncTarget[] : [opts.target];
   const roots: SyncRoot[] = [];
   for (const target of targets) {
     for (const resource of ["skill", "agent"] as const) {
       if (selection[resource]?.size === 0) continue;
+      const layout = SYNC_TARGETS[target];
       const configured = resource === "skill"
-        ? opts.skillsDir ?? path.join(home, target === "claude" ? ".claude" : ".agents", "skills")
-        : opts.agentsDir ?? path.join(home, `.${target}`, "agents");
+        ? opts.skillsDir ?? path.join(home, ...layout.skills)
+        : opts.agentsDir ?? path.join(home, ...layout.agents);
       roots.push({
         target, resource, dir: await canonicalDirectory(configured, home),
         manifest: "", items: {}, operations: [],
@@ -154,7 +158,7 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
             const link = exists && await isSkillLink(dest);
             let staged = stagedSkills.get(field)!;
             if (root.resource === "agent") {
-              staged = path.join(temp, `${root.target}-agents`, `${field}.${root.target === "claude" ? "md" : "toml"}`);
+              staged = path.join(temp, `${root.target}-agents`, `${field}.${SYNC_TARGETS[root.target].agentExt}`);
               await fs.mkdir(path.dirname(staged), { recursive: true });
               const localDescription = exists
                 ? localAgentDescription(await fs.readFile(dest, "utf8"), field, root.target) : undefined;
@@ -212,5 +216,5 @@ export async function syncResources(store: Store, opts: SyncOptions): Promise<Sy
 }
 
 function itemPath(root: SyncRoot, name: string): string {
-  return path.join(root.dir, root.resource === "skill" ? name : `${name}.${root.target === "claude" ? "md" : "toml"}`);
+  return path.join(root.dir, root.resource === "skill" ? name : `${name}.${SYNC_TARGETS[root.target].agentExt}`);
 }

@@ -1,7 +1,7 @@
 {
   "name": "ctxbin",
-  "version": "1.5.0",
-  "description": "Minimal deterministic CLI to store/load context, agents, and skills via Redis hashes and install remote skills/agents into Claude Code and Codex",
+  "version": "1.6.0",
+  "description": "Minimal deterministic CLI to store/load context, agents, and skills via Redis hashes and install remote skills/agents into Claude Code, Codex, and Antigravity",
   "author": "superlucky84",
   "license": "MIT",
   "type": "commonjs",

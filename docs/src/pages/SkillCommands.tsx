@@ -61,7 +61,7 @@ $ npx ctxbin skill save my-skill \\
       <CodeBlock language="bash" code={`npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all
 npx ctxbin sync --target codex --skills-dir ~/.codex/skills`} />
-      <p>Sync installs all remote skills/agents by default; --skill/--agent selects exact names. Skills go to ~/.claude/skills/&lt;name&gt;/SKILL.md or ~/.agents/skills/&lt;name&gt;/SKILL.md by default. String, skillpack, and skillref values work; bundles need root SKILL.md and supplied names must match remote keys. Missing name/description fields receive deterministic defaults while other skill metadata and supporting files survive.</p>
+      <p>Sync installs all remote skills/agents by default; --skill/--agent selects exact names. Skills go to ~/.claude/skills/&lt;name&gt;/SKILL.md, ~/.agents/skills/&lt;name&gt;/SKILL.md, or ~/.gemini/config/skills/&lt;name&gt;/SKILL.md by default. String, skillpack, and skillref values work; bundles need root SKILL.md and supplied names must match remote keys. Missing name/description fields receive deterministic defaults while other skill metadata and supporting files survive.</p>
       <p>Unlike the file-copy behavior of load --dir, sync replaces matching skill folders entirely, removing stale files inside them. Local-only entries remain; --prune removes only this store's tracked installs absent remotely. Existing skill save --dir handles uploads. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for naming rules, overrides, and recovery.</p>
 
       <h2>Append</h2>

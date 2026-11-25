@@ -16,7 +16,7 @@ The same branch adds separate [remote backup/recovery](../backup-restore/REQUIRE
 
 ## Requirements
 
-- R1: `ctxbin sync --target claude|codex|all` installs every remote `skill` and
+- R1: `ctxbin sync --target claude|codex|antigravity|all` installs every remote `skill` and
   `agent` by default; the target is required. Repeatable `--skill`/`--agent`
   selectors install only the named entries. It never accesses or changes `ctx`.
 - R2: Same-name local skills are replaced as complete directories; obsolete
@@ -85,6 +85,25 @@ The same branch adds separate [remote backup/recovery](../backup-restore/REQUIRE
   with YAML name/description from installed Claude Markdown and Codex TOML. Recommend
   explicit descriptions describing the role and when to use it; preserve frontmatter
   separately from ctxbin's savedAt/by wrapper on save/load.
+- R23: `ctxbin sync --target antigravity` installs skills at
+  `~/.gemini/config/skills/<name>/SKILL.md` and agents at
+  `~/.gemini/config/agents/<name>.md`, the documented Antigravity global locations.
+  Agents are Markdown with YAML `name`/`description` frontmatter (the same
+  rendering as Claude); skills use the existing normalized SKILL.md bundles.
+- R24: `--target all` selects every supported client: Claude, Codex, and Antigravity.
+  This changes the previous two-client meaning; help, README, site, and release
+  notes state it explicitly. Single targets keep their current behavior.
+- R25: Every existing sync contract applies unchanged to Antigravity: selectors,
+  preview, prune, force, single-target overrides, tracking manifests
+  (`"target": "antigravity"`), locks, rollback, symlink and overlap checks, and
+  preservation of valid local agent descriptions parsed from Markdown frontmatter.
+- R26: Antigravity project installation uses existing overrides
+  (`--skills-dir .agents/skills --agents-dir .agents/agents`); no scope flag is added.
+  A destination root tracked for one target is never silently adopted by another.
+- R27: Help (including discovery metadata), README, package metadata, and every
+  English/Korean site page that lists sync targets or paths include Antigravity.
+- R28: Release as the additive minor version `1.6.0`; release documentation
+  references the new version.
 
 ## Boundaries and operational limits
 
@@ -104,6 +123,14 @@ Process termination/power loss and manual concurrent edits are outside that guar
 a leftover lock or retained transaction directory must be inspected before retrying.
 Installing into real user directories is a manual release check, not an automated test.
 
+Antigravity boundaries: no Antigravity rules (`.agents/rules`, `GEMINI.md`), plugin,
+workflow, or `agent.md`-folder layout installation; no mapping of Antigravity-only
+agent fields (`tools`, `model`, `mainAgent`, `subagent`, `commandExecutionPolicy`,
+`mcpServers`, `skills`), which keep Antigravity defaults. As with `~/.claude` and
+`~/.codex`, a symlinked destination root or its parent (`~/.gemini/config`) is refused.
+Codex and Antigravity both read project skills from `<project>/.agents/skills`; one
+sync target owns such a shared root, and the other target fails closed there.
+
 ## Decisions
 
 - [x] DC1: Require explicit target; a bare `sync` must not alter both providers.
@@ -119,6 +146,17 @@ Installing into real user directories is a manual release check, not an automate
 - [x] DC9: Missing selected names fail unless prune finds same-source installation
   tracking in a selected target. No-op unknown selectors are not successful cleanup.
 - [x] DC10: Skip excluded resource roots/hashes and preserve unselected manifest items.
+- [x] DC11: `--target all` includes Antigravity (user decision, 2026-11-24). Rationale:
+  "all" should mean every supported client; the behavior change is called out in
+  help, README, site, and release notes instead of adding a second "all" variant.
+- [x] DC12: Default Antigravity paths are `~/.gemini/config/skills` and
+  `~/.gemini/config/agents` per the official skills/subagents documentation (user
+  decision, 2026-11-24). Project installation uses existing overrides (R21, R26).
+- [x] DC13: Antigravity agents reuse the Claude Markdown renderer and DC6's
+  `name`/`description`-only shared format; both fields are required by Antigravity.
+- [x] DC14: Keep one manifest per root and target. A root tracked by another target
+  fails with `INVALID_INPUT` naming the owning target, instead of being adopted;
+  skill content is target-independent, so syncing a shared project root once suffices.
 
 ## Validation map
 
@@ -132,6 +170,11 @@ repair, and isolated tarball execution through npx before publication.
 R18–21/DC8–10 → selection/duplicates/missing-name tests, excluded invalid content and
 paths, filtered prune/ownership preservation, rollback, and CLI mock-store checks.
 R22 → generated help/source comparison, metadata round trips, and bilingual site build.
+R23/DC12–13 → Antigravity default-path and Markdown agent rendering tests;
+R24/DC11 → all-target three-client installation, preview, and rollback tests;
+R25 → Antigravity prune/selection/local-description tests on the existing engine;
+R26/DC14 → project override test and cross-target manifest rejection test;
+R27–28 → CLI target validation, generated help comparison, site build, package smoke check.
 
 See [design](DESIGN.md), [implementation](IMPLEMENT.md), and
 [manual checks](MANUAL_TEST_CHECKLIST.md).

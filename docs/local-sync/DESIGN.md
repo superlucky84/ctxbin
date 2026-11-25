@@ -6,11 +6,13 @@
 ctxbin sync --target all
 ctxbin sync --target claude --dry-run
 ctxbin sync --target codex --prune
+ctxbin sync --target antigravity --dry-run
 ctxbin sync --target codex --skills-dir ~/.codex/skills
 ctxbin sync --target claude --skill workflow --skill reference --agent reviewer
 ```
 
-`--target` is required. Only `--target`, `--dry-run`, `--prune`, `--force`, `--skill`,
+`--target` is required and accepts `claude`, `codex`, `antigravity`, or `all`
+(all three clients). Only `--target`, `--dry-run`, `--prune`, `--force`, `--skill`,
 `--agent`, `--skills-dir`, and `--agents-dir` are accepted by sync. Directory overrides require a single target.
 Sync flags on old commands are rejected before accessing configuration or Redis.
 Validation and I/O errors use existing `CTXBIN_ERR` codes and exit 1.
@@ -25,6 +27,28 @@ together; errors prevent all application, including otherwise valid items.
 | --- | --- | --- |
 | Claude | `~/.claude/skills/<name>/SKILL.md` | `~/.claude/agents/<name>.md` |
 | Codex | `~/.agents/skills/<name>/SKILL.md` | `~/.codex/agents/<name>.toml` |
+| Antigravity | `~/.gemini/config/skills/<name>/SKILL.md` | `~/.gemini/config/agents/<name>.md` |
+
+`--target all` expands to Claude, Codex, and Antigravity in that order (DC11). Before
+`1.6.0` it meant Claude and Codex only; release notes and help call out the change.
+
+## Antigravity target
+
+`install-format.ts` owns a single target layout table (`SYNC_TARGETS`) with each
+client's default skill/agent root and agent file extension, so the planner, CLI
+validation, and item paths cannot drift. Antigravity uses the Markdown agent renderer
+shared with Claude: quoted YAML `name`/`description` followed by the authored body.
+Antigravity requires both fields; ctxbin always writes them. Antigravity-only fields
+inherit Antigravity defaults (main agent and subagent enabled, model `inherit`).
+Legacy agent descriptions are recovered from existing local Markdown exactly as for
+Claude, so extra Antigravity fields in a local file do not block that recovery.
+
+Project installation uses the existing overrides, for example
+`--target antigravity --skills-dir .agents/skills --agents-dir .agents/agents`.
+Codex also reads `<project>/.agents/skills`. Manifests record their target; reading a
+manifest whose `target` is another known client fails with `INVALID_INPUT` naming that
+target (DC14), so one target owns a shared root. Skill installation output is
+identical across targets, so syncing skills into a shared root once serves both.
 
 ## Selection contract
 
@@ -139,6 +163,11 @@ rollback retains locks/backups; stale locks are not auto-removed.
   Test: lock collision and injected filesystem failure restore files and manifests.
 - [x] IC5: No claim of crash-safe multi-root transactions. Preserve recovery data
   when rollback cannot complete; document manual inspection.
+- [x] IC6: One target layout table drives defaults, CLI validation, and item paths.
+  Test: Antigravity default paths/Markdown agents, all-target three-client install,
+  unknown target rejection in library and CLI.
+- [x] IC7: Cross-target manifests fail closed (DC14).
+  Test: a Codex-tracked project skill root rejects an Antigravity sync with no writes.
 
 ## Documentation contract
 
@@ -166,8 +195,9 @@ and links to `/commands/sync` using the language-aware navigation helper:
 Historical `agent-addon-orig.md` is not an active documentation entrypoint.
 
 Authoring guidance recommends YAML name/description in one shared Markdown source
-for both clients, with a role and use case in the description. Codex TOML is generated
-installation output, not shared agent source. Default load strips the savedAt/by
+for every client, with a role and use case in the description. Codex TOML and the
+Claude/Antigravity Markdown files are generated installation output, not shared agent
+source. Default load strips the savedAt/by
 wrapper while preserving authored frontmatter. Original-value disaster recovery is
 specified separately in [backup/restore design](../backup-restore/DESIGN.md).
 
@@ -189,3 +219,11 @@ an installed tarball with `npx` from a disposable directory.
 - [Codex agents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 - [npm packaging lifecycle](https://docs.npmjs.com/cli/v11/using-npm/scripts/)
 - [TypeScript noEmit](https://www.typescriptlang.org/tsconfig/noEmit.html)
+
+## Antigravity references checked 2026-11-24
+
+- [Antigravity skills](https://antigravity.google/docs/skills/): workspace
+  `.agents/skills/`, global `~/.gemini/config/skills/<skill-folder>/`.
+- [Antigravity custom subagents](https://antigravity.google/docs/subagents/):
+  workspace `.agents/agents/<name>.md`, global `~/.gemini/config/agents/<name>.md`;
+  YAML `name` and `description` are required, other fields are optional.

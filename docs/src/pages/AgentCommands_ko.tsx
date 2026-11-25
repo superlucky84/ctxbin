@@ -29,7 +29,7 @@ $ npx ctxbin agent save frontend-reviewer --file agent.md`}
       />
 
       <h2>공통 에이전트 규칙 설치</h2>
-      <p>도구에 공통으로 사용할 Markdown을 저장한 뒤 기본은 전체이며 --agent·--skill로 필요한 이름만 Claude Code와 Codex에 설치합니다. 에이전트 메타데이터는 name·description만 지원하며 name은 원격 키와 같아야 합니다.</p>
+      <p>도구에 공통으로 사용할 Markdown을 저장한 뒤 기본은 전체이며 --agent·--skill로 필요한 이름만 Claude Code, Codex, Antigravity에 설치합니다. 에이전트 메타데이터는 name·description만 지원하며 name은 원격 키와 같아야 합니다.</p>
       <CodeBlock language="markdown" code={`---
 name: reviewer
 description: 코드 변경의 정확성과 누락된 테스트를 검토합니다.
@@ -39,7 +39,7 @@ description: 코드 변경의 정확성과 누락된 테스트를 검토합니�
       <CodeBlock language="bash" code={`npx ctxbin agent save reviewer --file reviewer.md
 npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all`} />
-      <p>Claude에는 ~/.claude/agents/&lt;name&gt;.md, Codex에는 ~/.codex/agents/&lt;name&gt;.toml을 생성합니다. 기존 일반 Markdown에는 키로 이름을 채우고 유효한 로컬 설명을 유지한 뒤 “Agent rules for &lt;name&gt;.”을 기본값으로 사용합니다. 모델·도구 등 지원하지 않는 메타데이터는 오류를 반환합니다. 변경 업로드에는 기존 agent save --file을 사용하며 sync는 원격을 읽기만 합니다. 덮어쓰기·설치 이력 기반 삭제·경로 지정은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
+      <p>Claude에는 ~/.claude/agents/&lt;name&gt;.md, Antigravity에는 ~/.gemini/config/agents/&lt;name&gt;.md, Codex에는 ~/.codex/agents/&lt;name&gt;.toml을 생성합니다. 기존 일반 Markdown에는 키로 이름을 채우고 유효한 로컬 설명을 유지한 뒤 “Agent rules for &lt;name&gt;.”을 기본값으로 사용합니다. 모델·도구 등 지원하지 않는 메타데이터는 오류를 반환합니다. 변경 업로드에는 기존 agent save --file을 사용하며 sync는 원격을 읽기만 합니다. 덮어쓰기·설치 이력 기반 삭제·경로 지정은 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인하세요.</p>
 
       <h2>Append</h2>
       <CodeBlock
@@ -73,7 +73,7 @@ Field           : {agent-name}
 Value           : 마크다운 문자열`}
       />
       <p>같은 이름 미관리 항목의 교체에는 --force가 필요합니다. 미리보기에서 replace-unmanaged로 표시하며, 관리 항목의 내용·권한이 같으면 unchanged로 표시해 다시 쓰지 않습니다.</p>
-      <p>두 도구의 원본은 YAML name/description이 있는 공통 Markdown입니다. 역할과 사용 시점을 설명하고 기본 agent load에서도 frontmatter를 유지합니다. Sync는 Claude Markdown 또는 본문이 developer_instructions인 Codex TOML로 변환합니다. 원본 값 복구는 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
+      <p>모든 도구의 원본은 YAML name/description이 있는 공통 Markdown입니다. 역할과 사용 시점을 설명하고 기본 agent load에서도 frontmatter를 유지합니다. Sync는 Claude/Antigravity Markdown 또는 본문이 developer_instructions인 Codex TOML로 변환합니다. 원본 값 복구는 <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">백업·복구 안내</span>.</p>
     </div>
   );
 });

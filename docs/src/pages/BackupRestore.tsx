@@ -5,7 +5,7 @@ import { navigateTo } from '@/store';
 const page = (ko: boolean) => (
   <div class="page-sheet">
     <h1>{ko ? '스킬·에이전트 백업과 복구' : 'Skill and Agent Backup / Restore'}</h1>
-    <p>{ko ? '원격 ctxbin 데이터가 사라졌을 때 복구하도록 원본 스킬·에이전트 값을 로컬 JSON 파일에 보관합니다. Claude·Codex 설치와 별개이며 ctx나 자격 증명은 포함하지 않습니다.' : 'Keep original remote skills and agents in local JSON for recovery after data loss. This is separate from Claude/Codex installation; ctx and credentials are excluded.'}</p>
+    <p>{ko ? '원격 ctxbin 데이터가 사라졌을 때 복구하도록 원본 스킬·에이전트 값을 로컬 JSON 파일에 보관합니다. Claude·Codex·Antigravity 설치와 별개이며 ctx나 자격 증명은 포함하지 않습니다.' : 'Keep original remote skills and agents in local JSON for recovery after data loss. This is separate from Claude/Codex/Antigravity installation; ctx and credentials are excluded.'}</p>
     <CodeBlock language="bash" code={'npx ctxbin backup --file ./backups/ctxbin.json\nnpx ctxbin restore --file ./backups/ctxbin.json --dry-run\nnpx ctxbin restore --file ./backups/ctxbin.json'} />
     <h2>{ko ? '백업에 포함되는 내용' : 'What the backup contains'}</h2>
     <ul>

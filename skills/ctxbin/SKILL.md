@@ -43,8 +43,8 @@ npx ctxbin ctx save --file ctx-pending.md
 
 ## Purpose
 Help agents preserve and restore branch-scoped project context so the next agent can continue work without re-explanation.
-Store reusable skills and agent rules remotely, then install them into local Claude Code
-or Codex when the user requests it.
+Store reusable skills and agent rules remotely, then install them into local Claude Code,
+Codex, or Antigravity when the user requests it.
 
 ## Command overview
 
@@ -53,7 +53,7 @@ or Codex when the user requests it.
 | `ctx save/load/list/delete` | Store and retrieve branch context |
 | `agent save/load/list/delete` | Manage remote agent Markdown |
 | `skill save/load/list/delete` | Manage remote Markdown, directory bundles, and GitHub references |
-| `sync --target claude\|codex\|all` | Install all or explicitly selected remote skills/agents locally |
+| `sync --target claude\|codex\|antigravity\|all` | Install all or explicitly selected remote skills/agents locally |
 | `backup --file <path>` | Export all remote skills/agents as original stored values |
 | `restore --file <path>` | Recover backed-up values into the configured remote store |
 | `help` | Print this bundled guide without remote access |
@@ -188,19 +188,23 @@ npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all
 npx ctxbin sync --target claude
 npx ctxbin sync --target codex --prune
+npx ctxbin sync --target antigravity
 # Existing local layout (single-target override)
 npx ctxbin sync --target codex --skills-dir ~/.codex/skills
 ```
 
 - Claude paths: `~/.claude/skills/<name>/SKILL.md`, `~/.claude/agents/<name>.md`.
 - Codex paths: `~/.agents/skills/<name>/SKILL.md`, `~/.codex/agents/<name>.toml`.
+- Antigravity paths: `~/.gemini/config/skills/<name>/SKILL.md`, `~/.gemini/config/agents/<name>.md`.
+- `--target all` installs into Claude, Codex, and Antigravity. Before 1.6.0 it meant
+  Claude and Codex only; choose single targets to keep the old two-client behavior.
 - Keys: 1–64 lowercase letters/digits with single `-`/`_` separators; unsafe/reserved names fail.
 
 ### Sync options
 
 | Option | Meaning |
 | --- | --- |
-| `--target claude\|codex\|all` | Required; select one client or both |
+| `--target claude\|codex\|antigravity\|all` | Required; select one client or all three |
 | `--dry-run` | Download, validate, and preview without destination changes |
 | `--prune` | Remove tracked installs from this store that are now absent remotely |
 | `--force` | Allow whole-item replacement of unmanaged matching local entries |
@@ -227,7 +231,14 @@ hashes/installation roots are unused. Selection retains unselected installation 
 # Project-specific installation of two skills and one agent
 npx ctxbin sync --target claude --skill workflow --skill reference --agent reviewer \
   --skills-dir .claude/skills --agents-dir .claude/agents --dry-run
+# Antigravity workspace folders
+npx ctxbin sync --target antigravity --skills-dir .agents/skills --agents-dir .agents/agents
 ```
+
+Codex and Antigravity both read project skills from `.agents/skills`. A root is tracked
+for the target that first synced into it; another target fails there with
+`INVALID_INPUT` naming the owner. Skill files are identical for every target, so sync
+skills into a shared root once and use the other target only for its agents.
 
 Missing selected names return NOT_FOUND before changes, except with --prune:
 an absent name needs this store's installation tracking in a selected target.
@@ -248,12 +259,13 @@ description: Review code changes for correctness and missing tests.
 Inspect changed code and report actionable findings.
 ```
 
-The remote source is one shared Markdown document with YAML frontmatter for both clients.
+The remote source is one shared Markdown document with YAML frontmatter for every client.
 Shared agents accept only `name` and `description`; name must match the remote key.
-Sync generates Claude Markdown with YAML frontmatter or Codex TOML with name,
+Sync generates Claude/Antigravity Markdown with YAML frontmatter or Codex TOML with name,
 description, and developer_instructions (the Markdown body). Upload the shared
 Markdown source when editing Codex rules; native Codex TOML is an installation format.
-Provider-specific model/tool frontmatter fields cause an error.
+Provider-specific model/tool frontmatter fields cause an error; Antigravity-only agent
+settings such as `model` or `tools` keep Antigravity defaults.
 Missing remote agent descriptions first preserve valid local native descriptions.
 Fallback descriptions are `Agent rules for <name>.` for agents and
 `Reusable instructions for <name>.` for skills; supply a description to improve discovery.
@@ -295,6 +307,7 @@ absolute path, separated by tabs. Preview adds a leading `dry-run` field:
 ```text
 dry-run	create	claude	skill	my-skill	/Users/example/.claude/skills/my-skill
 dry-run	create	codex	agent	reviewer	/Users/example/.codex/agents/reviewer.toml
+dry-run	create	antigravity	agent	reviewer	/Users/example/.gemini/config/agents/reviewer.md
 ```
 
 Malformed metadata/options return `INVALID_INPUT`; unsafe names/destinations return
