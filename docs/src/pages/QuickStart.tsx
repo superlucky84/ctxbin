@@ -122,11 +122,12 @@ my-project/feature --value`}
 npx ctxbin skill save my-skill --dir ./skills/my-skill
 npx ctxbin agent save reviewer --file reviewer.md
 
-# Preview and install both clients
+# Preview and install every client
 npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all
 
-# One client, including removal of its tracked stale entries
+# One client (claude, codex, or antigravity)
+npx ctxbin sync --target antigravity
 npx ctxbin sync --target codex --prune`} />
       <p>The skill bundle needs root SKILL.md. Shared agent Markdown accepts name and description frontmatter; legacy plain Markdown also works. Matching skill folders are replaced entirely and local-only entries remain. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for the agent example, paths, directory overrides, and recovery details.</p>
       <p>To upload local changes, use the existing skill save --dir or agent save --file commands. Sync only reads the remote store and does not require Git or a key.</p>

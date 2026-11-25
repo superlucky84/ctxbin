@@ -3,7 +3,18 @@ import { parse as parseToml } from "smol-toml";
 import { fail } from "./errors";
 import { stripMetadata } from "./metadata";
 
-export type SyncTarget = "claude" | "codex";
+export type SyncTarget = "claude" | "codex" | "antigravity";
+
+// Default home-relative installation roots and agent file formats per client.
+export const SYNC_TARGETS: Readonly<Record<SyncTarget, { skills: string[]; agents: string[]; agentExt: "md" | "toml" }>> = {
+  claude: { skills: [".claude", "skills"], agents: [".claude", "agents"], agentExt: "md" },
+  codex: { skills: [".agents", "skills"], agents: [".codex", "agents"], agentExt: "toml" },
+  antigravity: { skills: [".gemini", "config", "skills"], agents: [".gemini", "config", "agents"], agentExt: "md" },
+};
+
+export function isSyncTarget(value: unknown): value is SyncTarget {
+  return typeof value === "string" && Object.hasOwn(SYNC_TARGETS, value);
+}
 
 export function validateInstallName(name: string): void {
   if (
@@ -114,16 +125,17 @@ export function normalizeSkillMarkdown(value: string, name: string): string {
 export function renderAgentMarkdown(value: string, name: string, target: SyncTarget, localDescription?: string): string {
   const { body, metadata } = parseMarkdown(value, name, "agent", localDescription);
   assertBody(metadata.description, name);
-  if (target === "codex") {
+  if (SYNC_TARGETS[target].agentExt === "toml") {
     const quote = (text: string) => JSON.stringify(text).replace(/\u007f/g, "\\u007f");
     return `name = ${quote(name)}\ndescription = ${quote(metadata.description)}\ndeveloper_instructions = ${quote(body)}\n`;
   }
+  // Claude and Antigravity both read Markdown agents with YAML name/description frontmatter.
   return `---\nname: ${JSON.stringify(name)}\ndescription: ${JSON.stringify(metadata.description)}\n---\n${body}`;
 }
 
 export function localAgentDescription(value: string, name: string, target: SyncTarget): string | undefined {
   try {
-    if (target === "codex") {
+    if (SYNC_TARGETS[target].agentExt === "toml") {
       const fields = parseToml(value);
       if (fields.name === name && typeof fields.description === "string" && fields.description.trim()) {
         assertBody(fields.description, name);

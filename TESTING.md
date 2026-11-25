@@ -89,6 +89,7 @@ node dist/cli.js sync --target all --dry-run
 # Install into disposable folders instead of real user directories
 node dist/cli.js sync --target claude --skills-dir ./tmp/claude-skills --agents-dir ./tmp/claude-agents
 node dist/cli.js sync --target codex --skills-dir ./tmp/codex-skills --agents-dir ./tmp/codex-agents
+node dist/cli.js sync --target antigravity --skills-dir ./tmp/agy-skills --agents-dir ./tmp/agy-agents
 
 # Preview and apply source-scoped cleanup
 node dist/cli.js sync --target claude --skills-dir ./tmp/claude-skills --agents-dir ./tmp/claude-agents --prune --dry-run
@@ -106,8 +107,7 @@ without writing through to their targets, and identical managed runs leave files
 Verify template-valued YAML remains unchanged, unquoted colon-space descriptions
 are repaired locally, native legacy descriptions survive, and preflight lists all failures.
 Check quoted tilde overrides, DEL round trips, exact SKILL.md casing, and cleanup warnings.
-Confirm that
-and native Claude Markdown/Codex TOML preserve shared rules. After deleting an item
+Confirm that native Claude/Antigravity Markdown and Codex TOML preserve shared rules. After deleting an item
 from the dedicated remote store, normal sync should retain its local install;
 prune should remove only this store's previously tracked entry. Keep manifests
 to preserve tracking; inspect locks and transaction journals after interruption.

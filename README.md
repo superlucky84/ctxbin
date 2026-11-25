@@ -1,7 +1,7 @@
 # <img src="https://superlucky84.github.io/ctxbin/ctxbin.png" alt="ctxbin" width="24" height="24" style="vertical-align: -4px; margin-right: 8px;" /> ctxbin
 
 Minimal, deterministic CLI to save and load **context**, **agents**, and **skills** in Upstash Redis hashes,
-and install remote skills and agents into local **Claude Code** and **Codex**.
+and install remote skills and agents into local **Claude Code**, **Codex**, and **Antigravity**.
 It is designed for fast handoff between AI agents working on the same repo/branch,
 with branch-based [context keys inferred](https://superlucky84.github.io/ctxbin/#/guide/key-inference) inside git repositories.
 
@@ -37,7 +37,7 @@ The add-on tells agents how to format context (summary, next steps, decisions) a
 `npx ctxbin ctx save/load` correctly.
 
 You can also ask agents to save/load skills with simple commands like `--url` or `--dir`. See [Quick Start](https://superlucky84.github.io/ctxbin/#/guide/quick-start) for examples.
-To install all remote skills and agents into local Claude Code/Codex, preview with
+To install all remote skills and agents into local Claude Code/Codex/Antigravity, preview with
 `npx ctxbin sync --target all --dry-run`, then run `npx ctxbin sync --target all`.
 See the [sync command guide](https://superlucky84.github.io/ctxbin/#/commands/sync)
 ([한국어](https://superlucky84.github.io/ctxbin/#/ko/commands/sync)).
@@ -48,7 +48,7 @@ See the [sync command guide](https://superlucky84.github.io/ctxbin/#/commands/sy
 - `skillpack`: tar.gz + Base64 directory bundles (deterministic)
 - `skillref`: GitHub directory reference (default branch or pinned commit)
 - `list` command with type mapping (`--value`, `--dir`, `--url`)
-- Remote-to-local skill/agent installation for Claude Code and Codex (`sync`)
+- Remote-to-local skill/agent installation for Claude Code, Codex, and Antigravity (`sync`)
 - Select individual remote skills/agents with repeatable `--skill` / `--agent` flags
 - Original-value skill/agent backup and remote recovery (`backup` / `restore`)
 
@@ -56,7 +56,7 @@ See the [sync command guide](https://superlucky84.github.io/ctxbin/#/commands/sy
 - `ctxbin` is the remote-storage-oriented CLI.
 - [`ctxloc`](https://github.com/superlucky84/ctxloc) is a local-first companion focused on `ctx` + explicit sync.
 - Context replication lives in `ctxloc` (`ctxloc sync`). `ctxbin sync` installs
-  remote skills and agents into Claude Code/Codex and does not access `ctx`.
+  remote skills and agents into Claude Code/Codex/Antigravity and does not access `ctx`.
 
 ## Install
 Recommended (no install):
@@ -168,11 +168,15 @@ npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all
 npx ctxbin sync --target claude
 npx ctxbin sync --target codex --prune
+npx ctxbin sync --target antigravity
 ```
+
+> **1.6.0 change:** `--target all` now installs into Claude Code, Codex, **and Antigravity**.
+> It previously meant Claude Code and Codex only; use single targets to keep that behavior.
 
 | Option | Purpose |
 | --- | --- |
-| `--target claude\|codex\|all` | Required installation target |
+| `--target claude\|codex\|antigravity\|all` | Required installation target |
 | `--dry-run` | Download, validate, and preview without destination changes |
 | `--prune` | Delete this store's tracked installs that are now absent remotely |
 | `--force` | Allow replacement of matching local items not tracked by ctxbin |
@@ -213,13 +217,21 @@ installation directories or tracking state. Sync only reads the remote store.
 | --- | --- | --- |
 | Claude Code | `~/.claude/skills/<name>/SKILL.md` | `~/.claude/agents/<name>.md` |
 | Codex | `~/.agents/skills/<name>/SKILL.md` | `~/.codex/agents/<name>.toml` |
+| Antigravity | `~/.gemini/config/skills/<name>/SKILL.md` | `~/.gemini/config/agents/<name>.md` |
 
 Override destinations for a single target, for example an existing Codex layout:
 
 ```bash
 npx ctxbin sync --target codex --skills-dir "~/.codex/skills"
 npx ctxbin sync --target claude --skills-dir ./local-skills --agents-dir ./local-agents
+# Antigravity workspace folders
+npx ctxbin sync --target antigravity --skills-dir .agents/skills --agents-dir .agents/agents
 ```
+
+Codex and Antigravity both read project skills from `.agents/skills`. Each root is
+tracked for the target that first synced into it, and another target fails there
+with `INVALID_INPUT` naming the owner. Skill files are identical for every target,
+so sync skills into a shared root once.
 
 Skills may be Markdown strings, skillpacks, or skillrefs. Bundles must include a
 root `SKILL.md`; supporting files and normalized executable permissions are kept.
@@ -228,9 +240,11 @@ separators. Unsafe/reserved names fail. A supplied frontmatter `name` must match
 
 Author one shared agent Markdown source with YAML `name` and `description`
 frontmatter, followed by the rules. Describe the role and when an AI should use it.
-Sync generates Claude Markdown with YAML frontmatter, or Codex TOML whose
+Sync generates Claude/Antigravity Markdown with YAML frontmatter, or Codex TOML whose
 `developer_instructions` contains the Markdown body. Save the shared Markdown
-source when updating Codex rules; TOML is the generated installation format:
+source when updating Codex rules; TOML is the generated installation format.
+Antigravity-only agent settings (`model`, `tools`, ...) are not mapped and keep
+Antigravity defaults:
 
 ```markdown
 ---

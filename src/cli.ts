@@ -13,7 +13,8 @@ import { loadSkillrefToDir } from "./skillref";
 import { detectSkillValueType } from "./value";
 import { resolveSaveInput } from "./input";
 import { injectMetadata, stripMetadata, extractMetadata, formatMetadataBlock } from "./metadata";
-import { resolveSyncSelection, syncResources, syncSourceId, SyncOptions } from "./sync";
+import { resolveSyncSelection, syncResources, syncSourceId, SyncOptions, SYNC_TARGET_ERROR } from "./sync";
+import { isSyncTarget } from "./install-format";
 import { backupResources, readResourceBackup, resolveBackupFile, restoreResources } from "./backup";
 
 type CliOptions = {
@@ -97,8 +98,8 @@ async function main(): Promise<void> {
     if (command || keyArg || extra.length) return fail("INVALID_INPUT", "sync does not accept positional arguments");
     const unexpected = Object.keys(values).filter(flag => !syncFlags.includes(flag));
     if (unexpected.length) return fail("INVALID_INPUT", `sync does not accept --${unexpected[0]}`);
-    if (!["claude", "codex", "all"].includes(values.target as string)) {
-      return fail("INVALID_INPUT", "sync requires --target claude, codex, or all");
+    if (values.target !== "all" && !isSyncTarget(values.target)) {
+      return fail("INVALID_INPUT", SYNC_TARGET_ERROR);
     }
     if (values.target === "all" && (values["skills-dir"] !== undefined || values["agents-dir"] !== undefined)) {
       return fail("INVALID_INPUT", "directory overrides require a single --target");

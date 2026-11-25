@@ -29,7 +29,7 @@ $ npx ctxbin agent save frontend-reviewer --file agent.md`}
       />
 
       <h2>Install Shared Agent Rules</h2>
-      <p>Save provider-neutral Markdown, then install all entries or select names with --agent/--skill into Claude Code/Codex. Shared agent frontmatter supports name and description only; the name must match the remote key.</p>
+      <p>Save provider-neutral Markdown, then install all entries or select names with --agent/--skill into Claude Code, Codex, and Antigravity. Shared agent frontmatter supports name and description only; the name must match the remote key.</p>
       <CodeBlock language="markdown" code={`---
 name: reviewer
 description: Review code changes for correctness and missing tests.
@@ -39,7 +39,7 @@ Inspect changed code and report actionable findings.`} />
       <CodeBlock language="bash" code={`npx ctxbin agent save reviewer --file reviewer.md
 npx ctxbin sync --target all --dry-run
 npx ctxbin sync --target all`} />
-      <p>Claude gets ~/.claude/agents/&lt;name&gt;.md; Codex gets ~/.codex/agents/&lt;name&gt;.toml. Legacy Markdown receives a name from the key and preserves a valid local description before falling back to “Agent rules for &lt;name&gt;.” Unsupported model/tool metadata returns an error. Use existing agent save --file to upload changes; sync reads the remote store only. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for replacement, source-scoped pruning, and overrides.</p>
+      <p>Claude gets ~/.claude/agents/&lt;name&gt;.md, Antigravity gets ~/.gemini/config/agents/&lt;name&gt;.md, and Codex gets ~/.codex/agents/&lt;name&gt;.toml. Legacy Markdown receives a name from the key and preserves a valid local description before falling back to “Agent rules for &lt;name&gt;.” Unsupported model/tool metadata returns an error. Use existing agent save --file to upload changes; sync reads the remote store only. See <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync commands</span> for replacement, source-scoped pruning, and overrides.</p>
 
       <h2>Append</h2>
       <CodeBlock
@@ -73,7 +73,7 @@ Field           : {agent-name}
 Value           : markdown string`}
       />
       <p>Replacing an unmanaged matching local item requires --force. Preview labels it replace-unmanaged; identical managed entries are unchanged without rewrites.</p>
-      <p>Author shared Markdown with YAML name/description for both clients; describe the role and when to use it. Default agent load keeps this frontmatter. Sync generates Claude Markdown or Codex TOML with the body in developer_instructions. Recover raw stored rules with <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
+      <p>Author shared Markdown with YAML name/description for every client; describe the role and when to use it. Default agent load keeps this frontmatter. Sync generates Claude/Antigravity Markdown or Codex TOML with the body in developer_instructions. Recover raw stored rules with <span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
     </div>
   );
 });

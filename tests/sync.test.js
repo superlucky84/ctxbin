@@ -10,12 +10,16 @@ const YAML = require("yaml");
 const TOML = require("smol-toml");
 const {
   syncResources, syncSourceId, createSkillpackFromDir, createSkillrefValue,
-  normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName,
+  normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName, SYNC_TARGETS,
 } = require("../dist/index.js");
 
 const sourceId = syncSourceId("https://test-store.invalid");
 const secondSource = syncSourceId("https://second-store.invalid");
 const manifestName = ".ctxbin-sync.json";
+// Default skill roots for `--target all` (Claude, Codex, Antigravity).
+const skillRoots = home => [
+  path.join(home, ".claude", "skills"), path.join(home, ".agents", "skills"), path.join(home, ".gemini", "config", "skills"),
+];
 
 function memoryStore(skills = {}, agents = {}) {
   const data = { skill: skills, agent: agents };
@@ -33,7 +37,8 @@ function memoryStore(skills = {}, agents = {}) {
 }
 
 async function fixture(t) {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-sync-test-"));
+  // Canonical home: macOS tmpdir is a symlink (/var -> /private/var) and sync reports resolved paths.
+  const home = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "ctxbin-sync-test-")));
   t.after(() => fs.rm(home, { recursive: true, force: true }));
   return { home, target: "all", sourceId };
 }
@@ -113,9 +118,10 @@ test("all-target sync installs strings and packs at native paths without remote 
   await fs.writeFile(path.join(packDir, "scripts", "run.sh"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
   const store = memoryStore({ text: "# Skill\nText rules", pack: await createSkillpackFromDir(packDir) }, { review: "# Agent\nReview carefully." });
   const actions = await syncResources(store, opts);
-  assert.equal(actions.length, 6);
+  assert.equal(actions.length, 9);
+  assert.deepEqual([...new Set(actions.map(action => action.target))], ["claude", "codex", "antigravity"]);
   assert.deepEqual(store.calls.sort(), ["agent", "skill"]);
-  for (const root of [path.join(opts.home, ".claude", "skills"), path.join(opts.home, ".agents", "skills")]) {
+  for (const root of skillRoots(opts.home)) {
     assert.equal(skillFields(await fs.readFile(path.join(root, "text", "SKILL.md"), "utf8")).fields.name, "text");
     assert.ok(await exists(path.join(root, "pack", "scripts", "run.sh")));
     if (process.platform !== "win32") assert.equal((await fs.stat(path.join(root, "pack", "scripts", "run.sh"))).mode & 0o777, 0o755);
@@ -125,6 +131,8 @@ test("all-target sync installs strings and packs at native paths without remote 
   }
   assert.equal(TOML.parse(await fs.readFile(path.join(opts.home, ".codex", "agents", "review.toml"), "utf8")).developer_instructions, "# Agent\nReview carefully.");
   assert.ok(await exists(path.join(opts.home, ".claude", "agents", "review.md")));
+  assert.deepEqual(skillFields(await fs.readFile(path.join(opts.home, ".gemini", "config", "agents", "review.md"), "utf8")),
+    { fields: { name: "review", description: "Agent rules for review." }, body: "# Agent\nReview carefully." });
   assert.ok(Object.keys(await snapshot(opts.home)).every(name => !name.includes(".ctxbin-sync-txn-") && !name.endsWith(".ctxbin-sync.lock")));
 });
 
@@ -149,15 +157,15 @@ test("dry-run validates content and previews replacement/prune without any desti
   const opts = await fixture(t);
   const store = memoryStore({ review: "Old" }, { reviewer: "Old" });
   const initial = await snapshot(opts.home);
-  assert.equal((await syncResources(store, { ...opts, dryRun: true })).length, 4);
+  assert.equal((await syncResources(store, { ...opts, dryRun: true })).length, 6);
   assert.deepEqual(await snapshot(opts.home), initial);
   await syncResources(store, opts);
   const before = await snapshot(opts.home);
   store.data.skill = {};
   store.data.agent.reviewer = "Updated";
   const actions = await syncResources(store, { ...opts, dryRun: true, prune: true });
-  assert.equal(actions.filter(action => action.action === "delete").length, 2);
-  assert.equal(actions.filter(action => action.action === "replace").length, 2);
+  assert.equal(actions.filter(action => action.action === "delete").length, 3);
+  assert.equal(actions.filter(action => action.action === "replace").length, 3);
   assert.deepEqual(await snapshot(opts.home), before);
 });
 
@@ -582,7 +590,7 @@ test("cleanup faults warn without masking successful apply or an original apply 
   assert.equal(skillFields(await fs.readFile(file, "utf8")).body, "Original");
 });
 
-test("selection deduplicates names, skips invalid unselected content and refs, and previews both targets", async t => {
+test("selection deduplicates names, skips invalid unselected content and refs, and previews every target", async t => {
   const opts = { ...await fixture(t), skills: ["beta", "alpha", "alpha"], agents: ["reviewer", "reviewer"] };
   const store = memoryStore({
     alpha: "Alpha rules", beta: "Beta rules", broken: "---\nname: [bad\n---\nRules",
@@ -594,12 +602,12 @@ test("selection deduplicates names, skips invalid unselected content and refs, a
   try {
     const before = await snapshot(opts.home);
     const preview = await syncResources(store, { ...opts, dryRun: true });
-    assert.equal(preview.length, 6);
+    assert.equal(preview.length, 9);
     assert.deepEqual(await snapshot(opts.home), before);
     const applied = await syncResources(store, opts);
     assert.deepEqual(applied, preview);
     assert.ok(applied.every(item => ["alpha", "beta", "reviewer"].includes(item.name)));
-    for (const root of [path.join(opts.home, ".claude", "skills"), path.join(opts.home, ".agents", "skills")]) {
+    for (const root of skillRoots(opts.home)) {
       assert.deepEqual(Object.keys(JSON.parse(await fs.readFile(path.join(root, manifestName), "utf8")).items), ["alpha", "beta"]);
       assert.equal(await exists(path.join(root, "broken")), false);
     }
@@ -679,7 +687,7 @@ test("selective prune keeps unselected tracking, other-source installs, and unma
   const store = memoryStore({ drop: "Remove", retained: "Unselected stale", foreign: "Original" }, { reviewer: "Agent" });
   await syncResources(store, opts);
   await syncResources(memoryStore({ foreign: "Other store" }), { ...opts, sourceId: secondSource, skills: ["foreign"] });
-  const roots = [path.join(opts.home, ".claude", "skills"), path.join(opts.home, ".agents", "skills")];
+  const roots = skillRoots(opts.home);
   for (const root of roots) {
     await fs.mkdir(path.join(root, "local"));
     await fs.writeFile(path.join(root, "local", "notes.md"), "Unmanaged work");
@@ -694,7 +702,7 @@ test("selective prune keeps unselected tracking, other-source installs, and unma
     assert.deepEqual(await snapshot(opts.home), before);
   }
   const preview = await syncResources(store, { ...selected, dryRun: true });
-  assert.equal(preview.length, 2);
+  assert.equal(preview.length, 3);
   assert.ok(preview.every(item => item.action === "delete" && item.name === "drop"));
   assert.deepEqual(await snapshot(opts.home), before);
   assert.deepEqual(await syncResources(store, selected), preview);
@@ -710,7 +718,7 @@ test("selective prune keeps unselected tracking, other-source installs, and unma
   await assert.rejects(syncResources(store, selected), err => err.code === "NOT_FOUND");
   assert.deepEqual(await snapshot(opts.home), after);
   const fullPrune = await syncResources(store, { ...opts, prune: true });
-  assert.equal(fullPrune.filter(item => item.name === "retained" && item.action === "delete").length, 2);
+  assert.equal(fullPrune.filter(item => item.name === "retained" && item.action === "delete").length, 3);
   for (const root of roots) assert.ok(await exists(path.join(root, "foreign", "SKILL.md")));
 });
 
@@ -904,4 +912,146 @@ test("CLI mock-store sync prints stable actions and never uploads", async t => {
   assert.ok(calls.every(([command]) => command === "HGETALL"));
   const state = await fs.readFile(path.join(skills, manifestName), "utf8");
   assert.doesNotMatch(state, /test-token|127\.0\.0\.1/);
+});
+
+// Antigravity target (R23–R26, DC11–DC14, IC6–IC7).
+
+test("antigravity renders shared Markdown agents and recovers local descriptions with extra native fields", () => {
+  const value = "---\nname: reviewer\ndescription: \"Review code: carefully\"\n---\n# 검토\nRules.\n";
+  assert.equal(renderAgentMarkdown(value, "reviewer", "antigravity"), renderAgentMarkdown(value, "reviewer", "claude"));
+  assert.deepEqual(skillFields(renderAgentMarkdown(value, "reviewer", "antigravity")), {
+    fields: { name: "reviewer", description: "Review code: carefully" }, body: "# 검토\nRules.\n",
+  });
+  assert.equal(SYNC_TARGETS.antigravity.agentExt, "md");
+  assert.deepEqual(Object.keys(SYNC_TARGETS), ["claude", "codex", "antigravity"]);
+  assert.throws(() => renderAgentMarkdown("---\nmodel: pro\n---\nbody", "reviewer", "antigravity"), /unsupported/);
+});
+
+test("antigravity target installs only into ~/.gemini/config with its own manifests", async t => {
+  const opts = { ...await fixture(t), target: "antigravity" };
+  const store = memoryStore({ review: "# Skill\nRules" }, { reviewer: "---\nname: reviewer\ndescription: Reviews changes.\n---\nReview." });
+  const before = await snapshot(opts.home);
+  const preview = await syncResources(store, { ...opts, dryRun: true });
+  assert.deepEqual(await snapshot(opts.home), before);
+  const actions = await syncResources(store, opts);
+  assert.deepEqual(actions, preview);
+  const config = path.join(opts.home, ".gemini", "config");
+  assert.deepEqual(actions.map(({ action, target, resource, path: file }) => [action, target, resource, file]), [
+    ["create", "antigravity", "skill", path.join(config, "skills", "review")],
+    ["create", "antigravity", "agent", path.join(config, "agents", "reviewer.md")],
+  ]);
+  assert.equal(skillFields(await fs.readFile(path.join(config, "skills", "review", "SKILL.md"), "utf8")).fields.name, "review");
+  assert.deepEqual(skillFields(await fs.readFile(path.join(config, "agents", "reviewer.md"), "utf8")),
+    { fields: { name: "reviewer", description: "Reviews changes." }, body: "Review." });
+  for (const [dir, resource] of [[path.join(config, "skills"), "skill"], [path.join(config, "agents"), "agent"]]) {
+    assert.deepEqual(JSON.parse(await fs.readFile(path.join(dir, manifestName), "utf8")),
+      { version: 1, target: "antigravity", resource, items: resource === "skill" ? { review: sourceId } : { reviewer: sourceId } });
+  }
+  for (const other of [".claude", ".agents", ".codex"]) assert.equal(await exists(path.join(opts.home, other)), false);
+  assert.ok((await syncResources(store, opts)).every(item => item.action === "unchanged"));
+});
+
+test("antigravity keeps local descriptions, requires force for unmanaged items, and prunes its own tracking", async t => {
+  const opts = { ...await fixture(t), target: "antigravity" };
+  const agents = path.join(opts.home, ".gemini", "config", "agents");
+  const skills = path.join(opts.home, ".gemini", "config", "skills");
+  await fs.mkdir(agents, { recursive: true });
+  await fs.writeFile(path.join(agents, "reviewer.md"),
+    "---\nname: reviewer\ndescription: Native Antigravity reviewer.\nmodel: pro\ntools:\n  - view_file\n---\nOld rules.\n");
+  await fs.mkdir(path.join(skills, "local"), { recursive: true });
+  await fs.writeFile(path.join(skills, "local", "SKILL.md"), "Unmanaged local skill");
+  const store = memoryStore({ local: "Remote copy", drop: "Remove later" }, { reviewer: "Legacy remote rules." });
+  const before = await snapshot(opts.home);
+  await assert.rejects(syncResources(store, opts), /unmanaged destination/);
+  assert.deepEqual(await snapshot(opts.home), before);
+  const preview = await syncResources(store, { ...opts, dryRun: true });
+  assert.deepEqual(preview.filter(item => item.action === "replace-unmanaged").map(item => item.name).sort(), ["local", "reviewer"]);
+  await syncResources(store, { ...opts, force: true });
+  assert.equal(skillFields(await fs.readFile(path.join(agents, "reviewer.md"), "utf8")).fields.description, "Native Antigravity reviewer.");
+  delete store.data.skill.drop;
+  const pruned = await syncResources(store, { ...opts, prune: true });
+  assert.deepEqual(pruned.filter(item => item.action === "delete").map(item => [item.target, item.name]), [["antigravity", "drop"]]);
+  assert.equal(await exists(path.join(skills, "drop")), false);
+  assert.deepEqual(Object.keys(JSON.parse(await fs.readFile(path.join(skills, manifestName), "utf8")).items), ["local"]);
+});
+
+test("a project skill root tracked for codex rejects antigravity without writes, and vice versa", async t => {
+  const opts = await fixture(t);
+  const skillsDir = path.join(opts.home, "project", ".agents", "skills");
+  const store = memoryStore({ review: "Rules" }, {});
+  await syncResources(store, { ...opts, target: "codex", skillsDir, skills: ["review"] });
+  store.data.skill.review = "Changed";
+  const before = await snapshot(opts.home);
+  for (const dryRun of [true, false]) {
+    await assert.rejects(
+      syncResources(store, { ...opts, target: "antigravity", skillsDir, skills: ["review"], dryRun }),
+      err => err.code === "INVALID_INPUT" && /tracked for target codex; use --target codex/.test(err.message));
+    assert.deepEqual(await snapshot(opts.home), before);
+  }
+  const other = path.join(opts.home, "other", ".agents", "skills");
+  await syncResources(store, { ...opts, target: "antigravity", skillsDir: other, skills: ["review"] });
+  await assert.rejects(syncResources(store, { ...opts, target: "codex", skillsDir: other, skills: ["review"] }),
+    /tracked for target antigravity/);
+});
+
+test("unknown targets fail before store reads and all-target rollback restores every client", async t => {
+  const opts = await fixture(t);
+  const store = memoryStore({ review: "Original" }, { reviewer: "Original" });
+  for (const target of ["gemini", "Antigravity", "", "constructor"]) {
+    await assert.rejects(syncResources(store, { ...opts, target }), /claude, codex, antigravity, or all/);
+  }
+  assert.deepEqual(store.calls, []);
+  await syncResources(store, opts);
+  const before = await snapshot(opts.home);
+  store.data.skill.review = "Changed";
+  store.data.agent.reviewer = "Changed";
+  const originalRename = fs.rename;
+  let injected = false;
+  fs.rename = async (from, to) => {
+    if (!injected && from.includes(".ctxbin-sync-txn-") && to.endsWith(path.join(".gemini", "config", "agents", "reviewer.md"))) {
+      injected = true;
+      throw new Error("injected antigravity failure");
+    }
+    return originalRename(from, to);
+  };
+  try { await assert.rejects(syncResources(store, opts), /injected antigravity failure/); }
+  finally { fs.rename = originalRename; }
+  assert.ok(injected);
+  assert.deepEqual(await snapshot(opts.home), before);
+});
+
+test("CLI accepts --target antigravity with default home paths and lists it in target errors", async t => {
+  const opts = await fixture(t);
+  const server = http.createServer((req, res) => {
+    const chunks = [];
+    req.on("data", chunk => chunks.push(chunk));
+    req.on("end", () => {
+      const [command, hash] = JSON.parse(Buffer.concat(chunks));
+      assert.equal(command, "HGETALL");
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ result: hash === "skill" ? ["review", "Skill rules"] : ["reviewer", "Agent rules"] }));
+    });
+  });
+  await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const env = { ...process.env, HOME: opts.home, USERPROFILE: opts.home,
+    CTXBIN_STORE_URL: `http://127.0.0.1:${server.address().port}`, CTXBIN_STORE_TOKEN: "test-token" };
+  const invalid = await runCli(["sync", "--target", "gemini"], env);
+  assert.equal(invalid.status, 1);
+  assert.match(invalid.stderr, /CTXBIN_ERR INVALID_INPUT.*claude, codex, antigravity, or all/);
+  const config = path.join(opts.home, ".gemini", "config");
+  const preview = await runCli(["sync", "--target", "antigravity", "--dry-run"], env);
+  assert.equal(preview.status, 0, preview.stderr);
+  assert.equal(preview.stdout,
+    `dry-run\tcreate\tantigravity\tskill\treview\t${path.join(config, "skills", "review")}\n` +
+    `dry-run\tcreate\tantigravity\tagent\treviewer\t${path.join(config, "agents", "reviewer.md")}\n`);
+  assert.equal(await exists(path.join(opts.home, ".gemini")), false);
+  const applied = await runCli(["sync", "--target", "antigravity"], env);
+  assert.equal(applied.status, 0, applied.stderr);
+  assert.equal(skillFields(await fs.readFile(path.join(config, "agents", "reviewer.md"), "utf8")).body, "Agent rules");
+  const all = await runCli(["sync", "--target", "all", "--dry-run"], env);
+  assert.equal(all.status, 0, all.stderr);
+  assert.deepEqual(all.stdout.trim().split("\n").map(line => line.split("\t").slice(1, 3).join(":")), [
+    "create:claude", "create:claude", "create:codex", "create:codex", "unchanged:antigravity", "unchanged:antigravity",
+  ]);
 });

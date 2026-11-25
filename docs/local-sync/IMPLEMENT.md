@@ -75,17 +75,17 @@
 
 ## Handoff
 
-- Done: requirements/design, sync engine, CLI, source-scoped prune, native rendering,
-  rollback/recovery journal, complete help/site/add-on/testing documentation coverage,
-  and automated validation.
-- Next: review/merge the follow-up PR for `1.5.0` on `feat/selective-sync-and-backup`,
-  then follow `docs/RELEASING.md`. Version `1.4.1` is published and tagged. Native-client discovery,
-  browser checks, and Windows checks remain in the manual checklist.
+- Done: Antigravity sync target (`--target antigravity` and `--target all` expanded to
+  Claude Code, Codex, and Antigravity), target layout table, cross-target manifest
+  rejection, help/README/English-Korean site updates, `1.6.0` package bump, and
+  automated validation (104 tests, type check, site build, isolated `npx` tarball launch).
+- Next: review/merge the PR on `feat/antigravity-sync-target`, then publish `1.6.0`
+  following `docs/RELEASING.md`. Live client discovery, browser checks, and Windows
+  checks remain in `docs/local-sync/MANUAL_TEST_CHECKLIST.md`.
 - Blockers: none.
-- Base commit SHA: `c6d6fc9d15c7d42a03b6162ea656f2fd650fddce`.
-  Latest reviewed parent commit: `182e181fe4103ee3df74e9ec75eafda6170ac3ff` (`ctxbin@1.4.1`).
-  Original sync commits are recorded in `feat/local-agent-skill-sync`; selection
-  and backup/recovery commits are recorded in `feat/selective-sync-and-backup`.
+- Base commit SHA: `ff9f86af0153286d1ca0e4e6e42d28a01bb6abd9` (`main`).
+  Original sync base: `c6d6fc9d15c7d42a03b6162ea656f2fd650fddce`; `ctxbin@1.4.1`
+  parent: `182e181fe4103ee3df74e9ec75eafda6170ac3ff`.
 
 ## Validation record — 2026-10-12
 
@@ -316,3 +316,127 @@ node dist/cli.js sync --target all
   checks passed, including prune typo detection and backup protection/BOM handling.
 - Initial sandbox test failures were localhost listen EPERM; the authorized rerun
   used disposable HTTP mocks. No real store/native user roots or release were changed.
+
+## Antigravity target follow-up — 2026-11-24
+
+Branch `feat/antigravity-sync-target` from `main` `ff9f86af0153286d1ca0e4e6e42d28a01bb6abd9`.
+Baseline before changes: `pnpm test` 98 cases, 96 passed, 2 existing skips, 0 failures
+(Linux, Node `v22.23.5`, pnpm `12.21.0`).
+
+### Phase 15 — Requirements and design: done
+
+Refs: R23, R24, R25, R26, R27, R28, DC11, DC12, DC13, DC14, IC6, IC7
+
+- [x] Inspect feature documents, sync engine, CLI, and tests; record the base commit.
+- [x] Verify Antigravity skill/agent locations and agent frontmatter in official docs.
+- [x] Resolve `--target all`, default paths, and release scope with the user.
+- [x] Record requirements, decisions, design, test gates, and manual checks.
+- Entry: clean `main`, baseline suite passing.
+- Baseline: documentation review only; no code changes.
+- Exit: four aligned documents with no open decisions.
+
+Files:
+- `docs/local-sync/REQUIREMENTS.md` (modified)
+- `docs/local-sync/DESIGN.md` (modified)
+- `docs/local-sync/IMPLEMENT.md` (modified)
+- `docs/local-sync/MANUAL_TEST_CHECKLIST.md` (modified)
+
+### Phase 16 — Target layout and CLI: done
+
+Refs: R23, R24, R25, R26, DC11, DC12, DC13, DC14, IC6, IC7
+
+- [x] Add `antigravity` to `SyncTarget` with one target layout table for default roots
+  and agent extensions; route planner paths and `all` expansion through it.
+- [x] Render Antigravity agents with the Markdown renderer; recover local descriptions.
+- [x] Name the owning target when a manifest belongs to another known target.
+- [x] Accept `--target antigravity` in the CLI; update target error messages.
+- Entry: Phase 15 exit.
+- Baseline tests: existing sync suite plus new Antigravity path/render/CLI tests.
+- Exit: three single targets and `all` work through the unchanged engine.
+
+Files:
+- `src/install-format.ts` (modified)
+- `src/sync.ts` (modified)
+- `src/sync-files.ts` (modified)
+- `src/cli.ts` (modified)
+- `src/index.ts` (modified)
+
+### Phase 17 — User documentation and release metadata: done
+
+Refs: R24, R27, R28, DC11
+
+- [x] Update help source, README, package description, and `1.6.0` version.
+- [x] Update English/Korean site pages that list targets, paths, or `all`.
+- [x] Update release instructions for `1.6.0` and the `all` behavior change.
+- Entry: Phase 16 exit.
+- Baseline tests: build, help/fallback validation tests, site build.
+- Exit: every user-facing entrypoint documents Antigravity and the new `all`.
+
+Files:
+- `package.json` (modified)
+- `scripts/copy-skills.js` (modified)
+- `skills/ctxbin/SKILL.md` (modified)
+- `README.md` (modified)
+- `DESIGN.md` (modified)
+- `TESTING.md` (modified)
+- `docs/RELEASING.md` (modified)
+- `docs/src/pages/SyncCommands.tsx` (modified)
+- `docs/src/pages/Introduction.tsx` (modified)
+- `docs/src/pages/Introduction_ko.tsx` (modified)
+- `docs/src/pages/QuickStart.tsx` (modified)
+- `docs/src/pages/QuickStart_ko.tsx` (modified)
+- `docs/src/pages/SkillCommands.tsx` (modified)
+- `docs/src/pages/SkillCommands_ko.tsx` (modified)
+- `docs/src/pages/AgentCommands.tsx` (modified)
+- `docs/src/pages/AgentCommands_ko.tsx` (modified)
+- `docs/src/pages/CtxCommands.tsx` (modified)
+- `docs/src/pages/CtxCommands_ko.tsx` (modified)
+- `docs/src/pages/AgentAddon.tsx` (modified)
+- `docs/src/pages/AgentAddon_ko.tsx` (modified)
+- `docs/src/pages/ErrorCodes.tsx` (modified)
+- `docs/src/pages/ErrorCodes_ko.tsx` (modified)
+- `docs/src/pages/BackupRestore.tsx` (modified)
+
+### Phase 18 — Test Hardening: done
+
+Refs: R25, R26, DC14, IC6, IC7
+
+- [x] Cover Antigravity prune/selection/force, local description recovery, rollback
+  across three targets, and the cross-target manifest rejection without writes.
+- Entry: Phase 16 exit.
+- Baseline tests: targeted sync tests and TypeScript check.
+- Exit: Antigravity shares every existing safety guarantee with regression coverage.
+
+Files:
+- `tests/sync.test.js` (modified)
+
+### Phase 19 — Integration Test and closeout: done
+
+Refs: R27, R28
+
+- [x] Run the full suite, type check, site build, package/npx smoke check, diff review.
+- [x] Record validation, update the handoff block, open the PR.
+- Entry: Phases 16–18 exit.
+- Baseline: `pnpm test`, `pnpm exec tsc --noEmit`, `pnpm --dir docs build --emptyOutDir`,
+  `npm pack`, isolated `npx` version/help, `git diff --check`.
+- Exit: reviewable PR; npm publication remains a maintainer step.
+
+Files:
+- `docs/local-sync/IMPLEMENT.md` (modified)
+
+### Antigravity target validation — 2026-11-24
+
+Environment: Linux (Ubuntu 24.04), Node `v22.23.5`, pnpm `12.21.0`, npm `12.2.2`.
+
+- `pnpm test`: 104 cases, 102 passed, 2 existing environment skips, 0 failures.
+  `tests/sync.test.js` has 48 tests (6 new Antigravity regressions plus updated
+  three-client assertions for `--target all`).
+- `pnpm exec tsc --noEmit`: passed.
+- `pnpm --dir docs build --emptyOutDir`: passed (51 modules transformed).
+- `npm pack`: rebuilt via `prepack` and produced the expected 11-file `ctxbin-1.6.0.tgz`.
+- Isolated `npx` launch in a fresh directory/cache outside the checkout:
+  `ctxbin --version` printed `1.6.0`; `ctxbin help` was byte-identical to
+  `dist/skills/ctxbin/SKILL.md`.
+- `git diff --check`: passed.
+- No writes to real remote stores or user installation directories; live client
+  discovery, browser checks, and Windows checks remain in the manual checklist.

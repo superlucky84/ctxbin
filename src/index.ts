@@ -10,6 +10,7 @@ export { CtxbinError, formatError } from "./errors";
 export { safeChmod } from "./chmod";
 export { syncResources, syncSourceId } from "./sync";
 export type { SyncOptions, SyncAction } from "./sync";
-export { normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName } from "./install-format";
+export { normalizeSkillMarkdown, renderAgentMarkdown, validateInstallName, SYNC_TARGETS } from "./install-format";
+export type { SyncTarget } from "./install-format";
 export { backupResources, parseResourceBackup, readResourceBackup, restoreResources } from "./backup";
 export type { ResourceBackup, RestoreAction } from "./backup";

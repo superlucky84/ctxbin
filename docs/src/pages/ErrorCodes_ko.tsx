@@ -86,7 +86,7 @@ CTXBIN_ERR TYPE_MISMATCH: --dir cannot be used with string values`}
       />
 
       <h2>Sync 오류와 복구</h2>
-      <CodeBlock language="text" code={`CTXBIN_ERR INVALID_INPUT: sync requires --target claude, codex, or all
+      <CodeBlock language="text" code={`CTXBIN_ERR INVALID_INPUT: sync requires --target claude, codex, antigravity, or all
 CTXBIN_ERR INVALID_INPUT: directory overrides require a single --target
 CTXBIN_ERR INVALID_INPUT: skill my-skill: bundle must contain root SKILL.md
 CTXBIN_ERR INVALID_PATH: sync destination directories must not overlap`} />

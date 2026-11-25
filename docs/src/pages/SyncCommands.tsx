@@ -2,13 +2,14 @@ import { mount } from 'lithent';
 import { CodeBlock } from '@/components/CodeBlock';
 import { navigateTo } from '@/store';
 
-const commands = (ko: boolean) => `# ${ko ? '두 도구의 설치 미리보기' : 'Preview both targets'}
+const commands = (ko: boolean) => `# ${ko ? '모든 대상 도구의 설치 미리보기' : 'Preview every target'}
 npx ctxbin sync --target all --dry-run
 
 # ${ko ? '원격 스킬과 에이전트 전체 설치' : 'Install all remote skills and agents'}
 npx ctxbin sync --target all
 npx ctxbin sync --target claude
-npx ctxbin sync --target codex --prune`;
+npx ctxbin sync --target codex --prune
+npx ctxbin sync --target antigravity`;
 
 const agent = (ko: boolean) => `---
 name: reviewer
@@ -21,8 +22,8 @@ const page = (ko: boolean) => (
   <div class="page-sheet">
     <h1>{ko ? 'sync 명령어' : 'sync Command'}</h1>
     <p>{ko
-      ? '원격 ctxbin의 스킬·에이전트를 로컬 Claude Code와 Codex에 설치합니다. 기본은 전체이며 --skill·--agent로 항목을 고릅니다. --target은 필수입니다.'
-      : 'Install remote ctxbin skills and agents into Claude Code/Codex. Defaults to all entries; select individual keys with --skill/--agent. An explicit --target is required.'}</p>
+      ? '원격 ctxbin의 스킬·에이전트를 로컬 Claude Code, Codex, Antigravity에 설치합니다. 기본은 전체이며 --skill·--agent로 항목을 고릅니다. --target은 필수입니다.'
+      : 'Install remote ctxbin skills and agents into Claude Code, Codex, and Antigravity. Defaults to all entries; select individual keys with --skill/--agent. An explicit --target is required.'}</p>
     <p>{ko ? '미리보기도 기존 저장소 자격 증명과 원격 접근이 필요합니다. Git 저장소나 키는 필요하지 않습니다. 자격 증명은 ' : 'Preview also needs existing store credentials and remote access. No Git repository or key is required. Configure credentials using '}
       <span onClick={() => navigateTo('/config/env')} class="text-indigo-600 hover:underline cursor-pointer">{ko ? '환경 변수' : 'environment variables'}</span>
       {ko ? ' 또는 ~/.ctxbin/config.json을 사용합니다.' : ' or ~/.ctxbin/config.json.'}</p>
@@ -32,7 +33,7 @@ const page = (ko: boolean) => (
     <table>
       <thead><tr><th>{ko ? '옵션' : 'Option'}</th><th>{ko ? '동작' : 'Behavior'}</th></tr></thead>
       <tbody>
-        <tr><td><code>--target claude|codex|all</code></td><td>{ko ? '필수. 한 도구 또는 두 도구 선택' : 'Required. Select one client or both'}</td></tr>
+        <tr><td><code>--target claude|codex|antigravity|all</code></td><td>{ko ? '필수. 도구 하나 또는 세 도구 모두 선택' : 'Required. Select one client or all three'}</td></tr>
         <tr><td><code>--dry-run</code></td><td>{ko ? '내려받고 검증한 뒤 작업만 미리보기' : 'Download, validate, and preview actions'}</td></tr>
         <tr><td><code>--prune</code></td><td>{ko ? '원격에서 사라진 같은 저장소의 설치 이력 항목 삭제' : "Delete this store's tracked installs absent remotely"}</td></tr>
         <tr><td><code>--force</code></td><td>{ko ? 'ctxbin 이력에 없는 같은 이름 로컬 항목 교체 허용' : 'Allow whole-item replacement of unmanaged matching local entries'}</td></tr>
@@ -42,7 +43,7 @@ const page = (ko: boolean) => (
         <tr><td><code>--agents-dir &lt;path&gt;</code></td><td>{ko ? '단일 대상 에이전트 경로 지정' : 'Override agents root for one target'}</td></tr>
       </tbody>
     </table>
-    <p>{ko ? '경로 지정 옵션은 --target all과 함께 사용할 수 없습니다. 대상·선택·경로·prune 옵션은 sync 전용이며 --file, --dir, --append, --raw 등 save/load 옵션은 지원하지 않습니다. 설치에 --raw는 필요하지 않습니다.' : 'Path overrides cannot be combined with --target all. Target/selector/path/prune flags are sync-only; save/load flags such as --file, --dir, --append, and --raw are rejected. Installation does not require --raw.'}</p>
+    <p>{ko ? '1.6.0부터 --target all은 Claude Code, Codex, Antigravity 세 도구를 모두 포함합니다(이전에는 Claude Code와 Codex만 포함). 경로 지정 옵션은 --target all과 함께 사용할 수 없습니다. 대상·선택·경로·prune 옵션은 sync 전용이며 --file, --dir, --append, --raw 등 save/load 옵션은 지원하지 않습니다. 설치에 --raw는 필요하지 않습니다.' : 'Starting in 1.6.0, --target all includes Claude Code, Codex, and Antigravity (previously Claude Code and Codex only). Path overrides cannot be combined with --target all. Target/selector/path/prune flags are sync-only; save/load flags such as --file, --dir, --append, and --raw are rejected. Installation does not require --raw.'}</p>
 
     <h2>{ko ? '덮어쓰기와 삭제' : 'Replacement and pruning'}</h2>
     <p>{ko ? '미리보기는 미관리 항목을 replace-unmanaged로 구분합니다. 이 항목을 실제로 교체하려면 --force가 필요합니다. 내용과 권한이 같은 관리 항목은 unchanged로 표시하며 다시 쓰지 않습니다. --force는 전체 교체를 허용하므로 미리보기에서 대상과 로컬 작업물을 확인하세요.' : 'Preview labels unmanaged matches replace-unmanaged; apply requires --force to replace those items. Managed entries with identical content and permissions are unchanged and are not rewritten. Force authorizes complete replacement, so inspect the preview and local workspace first.'}</p>
@@ -66,16 +67,18 @@ const page = (ko: boolean) => (
       <tbody>
         <tr><td>Claude Code</td><td><code>~/.claude/skills/&lt;name&gt;/SKILL.md</code></td><td><code>~/.claude/agents/&lt;name&gt;.md</code></td></tr>
         <tr><td>Codex</td><td><code>~/.agents/skills/&lt;name&gt;/SKILL.md</code></td><td><code>~/.codex/agents/&lt;name&gt;.toml</code></td></tr>
+        <tr><td>Antigravity</td><td><code>~/.gemini/config/skills/&lt;name&gt;/SKILL.md</code></td><td><code>~/.gemini/config/agents/&lt;name&gt;.md</code></td></tr>
       </tbody>
     </table>
-    <p>{ko ? '단일 대상에서는 --skills-dir과 --agents-dir로 경로를 지정할 수 있습니다. 기존 Codex 설치 경로를 사용하는 예:' : 'For a single target, override paths with --skills-dir and --agents-dir. For example, use an existing Codex skills layout:'}</p>
+    <p>{ko ? '단일 대상에서는 --skills-dir과 --agents-dir로 경로를 지정할 수 있습니다. 기존 Codex 경로 또는 Antigravity 프로젝트 폴더를 사용하는 예:' : 'For a single target, override paths with --skills-dir and --agents-dir. For example, an existing Codex layout or Antigravity workspace folders:'}</p>
     <CodeBlock language="bash" code="npx ctxbin sync --target codex --skills-dir ~/.codex/skills" />
     <CodeBlock language="bash" code="npx ctxbin sync --target claude --skills-dir ./local-skills --agents-dir ./local-agents" />
-    <p>{ko ? '따옴표로 감싼 "~/.codex/skills"도 사용자 홈으로 확장합니다. 스킬 폴더의 심볼릭 링크는 대상에 쓰지 않고 링크 자체만 교체하며, 원래 대상 폴더는 유지합니다. 미관리 링크를 교체하려면 --force가 필요합니다.' : 'Quoted "~/.codex/skills" expands to the user home. Skill-entry symlinks are replaced as links without writing into their targets, leaving the original target directories intact. Unmanaged links require --force.'}</p>
+    <CodeBlock language="bash" code="npx ctxbin sync --target antigravity --skills-dir .agents/skills --agents-dir .agents/agents" />
+    <p>{ko ? 'Codex와 Antigravity는 모두 프로젝트 스킬을 .agents/skills에서 읽습니다. 설치 경로마다 먼저 동기화한 대상 하나가 소유권을 가지며, 다른 대상은 소유 대상을 알리는 INVALID_INPUT으로 실패합니다. 스킬 결과물은 모든 대상에서 같으므로 공유 폴더는 한 번만 동기화하세요. 따옴표로 감싼 "~/.codex/skills"도 사용자 홈으로 확장합니다. 스킬 폴더의 심볼릭 링크는 대상에 쓰지 않고 링크 자체만 교체하며, 원래 대상 폴더는 유지합니다. 미관리 링크를 교체하려면 --force가 필요합니다.' : 'Codex and Antigravity both read workspace skills from .agents/skills. Each root is tracked for the target that first synced into it; another target fails there with INVALID_INPUT naming the owner. Skill output is identical across targets, so sync a shared root once. Quoted "~/.codex/skills" expands to the user home. Skill-entry symlinks are replaced as links without writing into their targets, leaving the original target directories intact. Unmanaged links require --force.'}</p>
 
     <h2>{ko ? '저장 형식' : 'Stored formats'}</h2>
     <p>{ko ? '스킬 문자열, skillpack, skillref를 지원합니다. 번들에는 루트 SKILL.md가 필요하며 보조 파일과 실행 권한을 유지합니다. 키는 1~64자의 소문자·숫자와 단일 하이픈·밑줄 구분자를 사용합니다. 위험하거나 예약된 이름은 거부하며, 메타데이터 name은 키와 같아야 합니다.' : 'Skills support strings, skillpacks, and skillrefs. Bundles need root SKILL.md; supporting files and normalized executable permissions survive. Keys use 1–64 lowercase letters/digits with single hyphen/underscore separators. Unsafe/reserved names fail; supplied frontmatter names must match keys.'}</p>
-    <p>{ko ? '원격 원본은 두 도구가 공유하는 Markdown과 YAML name/description입니다. 역할과 사용할 시점을 description에 적으세요. Sync는 Claude에는 YAML frontmatter가 있는 Markdown을, Codex에는 name·description·developer_instructions(본문)의 TOML을 생성합니다. Codex 룰을 수정해 업로드할 때도 공통 Markdown 원본을 사용합니다.' : 'The remote source is shared Markdown with YAML name/description for both clients. Describe the role and when to use it. Sync generates Claude Markdown with YAML frontmatter, or Codex TOML with name, description, and developer_instructions (the body). Upload the shared Markdown source when editing Codex rules.'}</p>
+    <p>{ko ? '원격 원본은 모든 도구가 공유하는 Markdown과 YAML name/description입니다. 역할과 사용할 시점을 description에 적으세요. Sync는 Claude와 Antigravity에는 YAML frontmatter가 있는 Markdown을, Codex에는 name·description·developer_instructions(본문)의 TOML을 생성합니다. Codex 룰을 수정해 업로드할 때도 공통 Markdown 원본을 사용합니다. Antigravity 전용 에이전트 필드(model, tools 등)는 변환하지 않고 Antigravity 기본값을 사용합니다.' : 'The remote source is shared Markdown with YAML name/description for every client. Describe the role and when to use it. Sync generates Claude/Antigravity Markdown with YAML frontmatter, or Codex TOML with name, description, and developer_instructions (the body). Upload the shared Markdown source when editing Codex rules. Antigravity-only agent fields (model, tools, ...) keep Antigravity defaults.'}</p>
     <CodeBlock language="markdown" code={agent(ko)} />
     <CodeBlock language="bash" code="npx ctxbin agent save reviewer --file reviewer.md" />
     <p>{ko ? '기본 agent load는 ctxbin의 savedAt/by 래퍼만 제거하고 작성한 YAML frontmatter는 유지합니다. 원본 데이터를 복구용으로 보관하려면 ' : 'Default agent load removes only the savedAt/by wrapper and keeps authored YAML frontmatter. For original-value recovery, use '}<span onClick={() => navigateTo('/commands/backup-restore')} class="text-indigo-600 hover:underline cursor-pointer">backup / restore</span>.</p>
@@ -90,7 +93,8 @@ const page = (ko: boolean) => (
     <p>{ko ? '잘못된 옵션·메타데이터·이력은 INVALID_INPUT, 위험한 이름·대상은 INVALID_PATH, 원격 접근 실패는 NETWORK를 반환합니다. 오류는 stderr와 종료 코드 1로 표시합니다. 미리보기에서도 잘못된 원격 자료나 네트워크 오류가 발생할 수 있습니다.' : 'Invalid options/metadata/state return INVALID_INPUT; unsafe names/destinations return INVALID_PATH; remote access failures return NETWORK. Errors use stderr and exit 1. Preview can also fail on invalid remote data or network errors.'}</p>
     <p>{ko ? '출력은 작업·대상·리소스·이름·절대 경로를 탭으로 구분합니다. 미리보기에는 dry-run 필드가 맨 앞에 붙습니다. 설치 이력 .ctxbin-sync.json에는 원격 주소의 해시를 기록하며 인증 정보는 기록하지 않습니다.' : 'Output is tab-separated action, target, resource, name, and absolute path; preview adds a leading dry-run field. Each destination stores .ctxbin-sync.json with source URL digests and no credentials.'}</p>
     <CodeBlock language="text" code={`dry-run\tcreate\tclaude\tskill\tmy-skill\t/Users/example/.claude/skills/my-skill
-dry-run\tcreate\tcodex\tagent\treviewer\t/Users/example/.codex/agents/reviewer.toml`} />
+dry-run\tcreate\tcodex\tagent\treviewer\t/Users/example/.codex/agents/reviewer.toml
+dry-run\tcreate\tantigravity\tagent\treviewer\t/Users/example/.gemini/config/agents/reviewer.md`} />
     <p>{ko ? '작업 출력은 검증·적용이 성공한 뒤에만 표시합니다. 빈 저장소에서 정리할 항목도 없으면 작업 출력 없이 성공합니다.' : 'Actions are printed only after successful validation/apply. An empty store with nothing to prune succeeds without action output.'}</p>
   </div>
 );

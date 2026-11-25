@@ -75,7 +75,7 @@ export const AgentAddonKo = mount(() => {
       <p>이 애드온은 의도적으로 최소화되어 있습니다. 전체 ctxbin 사용 가이드는 아래로 확인하세요:</p>
       <CodeBlock language="bash" code={`$ npx ctxbin help`} />
 
-      <p>가이드에는 컨텍스트 전달과 원격 스킬·에이전트의 Claude Code/Codex 설치가 포함됩니다. 일반 작업에서는 로컬 정의를 사용하고, 사용자가 동기화를 요청하면 --target으로 대상을 선택하세요. 미리보기와 설치 이력에 한정한 삭제는 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인할 수 있습니다.</p>
+      <p>가이드에는 컨텍스트 전달과 원격 스킬·에이전트의 Claude Code, Codex, Antigravity 설치가 포함됩니다. 일반 작업에서는 로컬 정의를 사용하고, 사용자가 동기화를 요청하면 --target으로 대상을 선택하세요. 미리보기와 설치 이력에 한정한 삭제는 <span onClick={() => navigateTo('/commands/sync')} class="text-indigo-600 hover:underline cursor-pointer">sync 명령어</span>에서 확인할 수 있습니다.</p>
 
       <p class="mt-6 text-sm">
         원본: <a href="https://github.com/superlucky84/ctxbin/blob/main/agent-addon.md" target="_blank" rel="noopener noreferrer">GitHub의 agent-addon.md</a>
